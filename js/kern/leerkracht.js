@@ -291,7 +291,26 @@
         .rapport .g { color: #2e7d4f; font-weight: bold; } .rapport .r { color: #b83a2e; font-weight: bold; }
         .rapport tr, .rapport .blok { page-break-inside: avoid; }
         .rapport .nieuwe-pagina { page-break-before: always; }
+        .rapport .klein { font-size: 10px; color: #555; } .rapport p { margin: 4px 0; }
       </style>`;
+  // Samenvatting van het traject (bewijs van opvolging/remediëring)
+  function samenvatting(det) {
+    const st = det.status, tot = totaalOef(st);
+    const dag = (iso) => new Date(iso).toLocaleDateString('sv-SE');
+    const dagen = new Set(det.per_dag.map(r => String(r.dag).slice(0, 10)));
+    det.testen.forEach(t => { dagen.add(dag(t.gestart)); if (t.ingediend) dagen.add(dag(t.ingediend)); });
+    const lijst = [...dagen].sort();
+    const ingediend = det.testen.filter(t => t.status === 'ingediend');
+    const geslaagd = DELEN().map(d => { const t = ingediend.filter(x => x.deel === d.nr && x.geslaagd)[0]; return t ? { d, t } : null; }).filter(Boolean);
+    if (!lijst.length) return `<h2>Samenvatting</h2><p>Nog geen activiteit.</p>`;
+    const dt = (s) => new Date(s + 'T12:00:00').toLocaleDateString('nl-BE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return `<h2>Samenvatting</h2>
+      <p>${esc(det.leerling.voornaam)} ${esc(det.leerling.naam)} werkte <b>van ${dt(lijst[0])} tot ${dt(lijst[lijst.length - 1])}</b> op <b>${lijst.length} ${lijst.length === 1 ? 'dag' : 'verschillende dagen'}</b> aan dit ${esc(S.P.soort || 'leerpad')}:
+        <b>${tot.aantal}</b> oefeningen (${pct(tot.juist, tot.aantal)} juist), <b>${ingediend.length}</b> ${ingediend.length === 1 ? 'test' : 'testen'} ingediend,
+        <b>${st.geslaagd.length} van de ${DELEN().length}</b> delen geslaagd.</p>
+      ${geslaagd.length ? `<p class="klein">Geslaagd: ${geslaagd.map(({ d, t }) => `deel ${d.nr} op ${datum(t.ingediend, false)} (${t.score}/${t.max_score})`).join(' · ')}</p>` : ''}
+      <p class="klein">Dagen met activiteit: ${lijst.map(dt).join(', ')}</p>`;
+  }
   function rapportBlok(det, volledig = true) {
     const l = det.leerling, st = det.status, tot = totaalOef(st), h = huidig(st);
     const rij = (cellen, th) => `<tr>${cellen.map(c => `<${th ? 'th' : 'td'}>${c}</${th ? 'th' : 'td'}>`).join('')}</tr>`;
@@ -303,6 +322,7 @@
         <div style="text-align:right">${esc(CONFIG.SCHOOL || 'De Resonant')}<br>${datum(new Date().toISOString())}</div></div>
       <table>${rij(['Delen geslaagd', 'Nu bezig met', 'Oefeningen', 'Laatst actief'], true)}
         ${rij([`${st.geslaagd.length} / ${DELEN().length}`, h === 'klaar' ? 'alle delen geslaagd' : h ? `deel ${h.nr}` : '—', `${tot.aantal} (${pct(tot.juist, tot.aantal)} juist)`, datum(l.laatst_actief)])}</table>
+      ${samenvatting(det)}
       <h2>Voortgang per deel</h2>
       <table>${rij(['Deel', 'Status', 'Oefeningen', 'Testpogingen'], true)}
         ${delen.map(d => { const i = info(st, d.nr); return rij([`${d.nr}. ${esc(d.titel)}`, kaal(statusLabel(i, d)), `${i.oef.aantal} (${pct(i.oef.juist, i.oef.aantal)} juist)`,

@@ -288,3 +288,11 @@ table.lijst input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
 td.midden, th.midden { text-align: center; }
 .testregel { padding: 4px 0; border-bottom: 1px dotted var(--lijn); }
 .opg-klein svg { max-width: 260px; height: auto; vertical-align: middle; }
+
+/* V = {…} */
+.antwoordrij.vrij .is .katex { font-size: 1.15em; }
+.antwoordrij.vrij input.veld { width: 130px; }
+input.veld.uitgeschakeld { background: var(--achter); opacity: .45; }
+.antwoordrij .of { font-size: 13px; color: var(--grijs); margin: 0 2px 0 8px; }
+button.keuze.vsp { min-width: 0; padding: 6px 12px; font-size: 15px; }
+.inhoud-blok .antwoordrij.vrij { justify-content: flex-start; }

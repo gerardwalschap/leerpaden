@@ -7,6 +7,7 @@
 //   ongelijkheid {a, ai, b, bi}                                 −2 ≤ x < 5
 //   vakjes       {sjabloon:[{tex}|{veld, sub?, sup?, breed?}], velden:[{expr, vormen?}]}
 //   delen        {delen:[{label, antw}]}                        meerdere antwoorden bij één vraag
+//   V            {waarde, dec?, speciaal?: 'leeg'|'R', metSpeciaal?}  oplossingenverzameling V = {…}, V = ∅ of V = ℝ
 const Antwoord = (() => {
   const esc = W.esc, T = (s) => W.tex(s);
   let laatste = null; // id van het laatst gebruikte tekstveld
@@ -16,6 +17,7 @@ const Antwoord = (() => {
     if (a.soort === 'keuze') return { keuze: null };
     if (a.soort === 'vakjes') return { vakjes: a.velden.map(() => '') };
     if (a.soort === 'delen') return { delen: a.delen.map(d => leeg(d.antw)) };
+    if (a.soort === 'V') return { invoer: '', speciaal: null };
     return { invoer: '' };
   }
 
@@ -54,6 +56,13 @@ const Antwoord = (() => {
     if (a.soort === 'delen') {
       return `<div class="deelvragen">${a.delen.map((d, i) => `<div class="deelvraag"><div class="dlabel">${d.html ? d.label : T(d.label)}</div>
         <div class="dveld">${html(`${id}-d${i}`, d.antw, w.delen[i], uit)}</div></div>`).join('')}</div>`;
+    }
+    if (a.soort === 'V') {
+      const sp = w.speciaal;
+      return `<div class="antwoordrij vrij"><span class="is">${T('V = \\{')}</span>
+          <input type="text" class="veld${sp ? ' uitgeschakeld' : ''}" id="${id}" value="${esc(sp ? '' : w.invoer)}" placeholder="${sp ? '' : 'oplossing'}" autocomplete="off" autocapitalize="none" spellcheck="false" inputmode="text" ${dis}>
+          <span class="is">${T('\\}')}</span>
+          ${a.metSpeciaal ? `<span class="of">of</span><button type="button" class="keuze vsp ${sp === 'leeg' ? 'aan' : ''}" data-vid="${id}" data-s="leeg" ${dis}>${T('V = \\varnothing')}</button><button type="button" class="keuze vsp ${sp === 'R' ? 'aan' : ''}" data-vid="${id}" data-s="R" ${dis}>${T('V = \\mathbb{R}')}</button>` : ''}</div>`;
     }
     const breed = a.soort !== 'getal' ? ' expr' : '';
     return `<div class="antwoordrij">${a.voor !== '' ? `<span class="is">${T(a.voor || (a.soort === 'formule' ? a.doel + ' =' : '='))}</span>` : ''}
@@ -135,6 +144,14 @@ const Antwoord = (() => {
       }
       if (a.soort === 'delen') { a.delen.forEach((d, i) => rec(`${id}-d${i}`, d.antw, w.delen[i])); return; }
       if (a.soort === 'vakjes') { a.velden.forEach((_, i) => { const el = document.getElementById(`${id}-${i}`); if (el) velden.push({ el, zet: (v) => { w.vakjes[i] = v; }, a }); }); return; }
+      if (a.soort === 'V') {
+        const el = document.getElementById(id);
+        const knoppen = document.querySelectorAll(`button.vsp[data-vid="${id}"]`);
+        const toon = () => { knoppen.forEach(x => x.classList.toggle('aan', x.dataset.s === w.speciaal)); if (el) { el.classList.toggle('uitgeschakeld', !!w.speciaal); if (w.speciaal) el.value = ''; } };
+        knoppen.forEach(b => { b.onclick = () => { w.speciaal = w.speciaal === b.dataset.s ? null : b.dataset.s; if (w.speciaal) w.invoer = ''; toon(); opts.bijWijziging && opts.bijWijziging(); }; });
+        if (el) velden.push({ el, zet: (v) => { w.invoer = v; if (v && w.speciaal) { w.speciaal = null; toon(); } }, a });
+        return;
+      }
       const el = document.getElementById(id);
       if (el) velden.push({ el, zet: (v) => { w.invoer = v; }, a, vb: document.getElementById(`${id}-vb`) });
     })(id, a, w);
@@ -166,6 +183,7 @@ const Antwoord = (() => {
     if (a.soort === 'keuze') return w.keuze !== null && w.keuze !== undefined;
     if (a.soort === 'vakjes') return w.vakjes.every(x => String(x).trim());
     if (a.soort === 'delen') return a.delen.every((d, i) => isIngevuld(d.antw, w.delen[i]));
+    if (a.soort === 'V') return !!w.speciaal || !!String(w.invoer || '').trim();
     return !!String(w.invoer || '').trim();
   }
 
@@ -183,8 +201,22 @@ const Antwoord = (() => {
     if (g.decimalen > a.dec && Math.abs(W.rond(g.waarde, a.dec) - doel) < 1e-9) return { status: 'vorm', bericht: `Rond af op ${a.dec} ${a.dec === 1 ? 'decimaal' : 'decimalen'}.` };
     return { status: 'fout' };
   }
+  // V = {…}: exacte waarde (ook als breuk) of juist afgerond op a.dec decimalen
+  const zonderV = (s) => String(s ?? '').replace(/^\s*V\s*=\s*/i, '').replace(/^\s*\{\s*|\s*\}\s*$/g, '').replace(/^\s*x\s*=\s*/i, '');
+  function nakijkV(a, w) {
+    if (w.speciaal) return { status: a.speciaal === w.speciaal ? 'juist' : 'fout' };
+    const inv = zonderV(w.invoer);
+    if (!inv.trim()) return { status: 'leeg', bericht: a.metSpeciaal ? 'Vul de oplossing in, of kies V = ∅ of V = ℝ.' : 'Vul de oplossing in.' };
+    if (/[∅øØ]|leeg|^\s*R\s*$|ℝ/i.test(inv)) return { status: 'ongeldig', bericht: a.metSpeciaal ? 'Klik op de knop V = ∅ of V = ℝ.' : 'Typ één getal.' };
+    const g = Invoer.getal(inv);
+    if (!g.ok) return { status: 'ongeldig', bericht: g.fout };
+    if (a.speciaal) return { status: 'fout' };
+    if (Math.abs(g.waarde - a.waarde) < 1e-9) return { status: 'juist' };
+    return nakijkGetal({ waarde: a.waarde, dec: a.dec ?? 2 }, inv);
+  }
   function nakijk(a, w) {
     switch (a.soort) {
+      case 'V': return nakijkV(a, w);
       case 'keuze':
         if (w.keuze === null || w.keuze === undefined) return { status: 'leeg', bericht: 'Kies een antwoord.' };
         return { status: String(w.keuze) === String(a.juist) ? 'juist' : 'fout' };
@@ -227,6 +259,7 @@ const Antwoord = (() => {
     const g = (x, d) => W.texGetal(d !== undefined && d !== null ? W.rond(x, d) : x);
     switch (a.soort) {
       case 'getal': return g(a.waarde, a.dec) + (a.na ? '\\ ' + a.na : '');
+      case 'V': return a.speciaal === 'leeg' ? 'V = \\varnothing' : a.speciaal === 'R' ? 'V = \\mathbb{R}' : `V = \\{${g(a.waarde, a.dec ?? 2)}\\}`;
       case 'expr': return a.tex || E.texVan(a.expr);
       case 'formule': return `${a.doel} = ${a.tex || Invoer.formuleTex(a.expr, a.doel)}`;
       case 'interval': return Invoer.intervalTex(a);
@@ -267,6 +300,12 @@ const Antwoord = (() => {
         }).join(' ');
         return { tekst: w.vakjes.map(x => String(x).trim() || '…').join(' | '), tex };
       }
+    }
+    if (a.soort === 'V') {
+      if (w.speciaal) return { tekst: w.speciaal === 'leeg' ? 'V = ∅' : 'V = ℝ', tex: w.speciaal === 'leeg' ? 'V = \\varnothing' : 'V = \\mathbb{R}' };
+      const t = zonderV(w.invoer).trim(); if (!t) return { tekst: '—', tex: null };
+      const g = Invoer.getal(t);
+      return { tekst: `V = {${t}}`, tex: g.ok ? `V = \\{${W.texGetal(g.waarde)}\\}` : null };
     }
     const t = String(w.invoer || '').trim();
     if (!t) return { tekst: '—', tex: null };

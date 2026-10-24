@@ -102,6 +102,15 @@ Testregels: 10 vragen met telkens nieuwe getallen, 80% nodig voor het volgende d
 één poging (die telt vanaf de start: herladen of sluiten geeft dezelfde vragen terug),
 oefenen kan onbeperkt en wordt geregistreerd.
 
+## 4b. Het leerpad Eerstegraadsvergelijkingen (remediëring)
+
+16 kleine stappen, elk maar een beetje moeilijker: x + a = b → x − a = b → a·x = b → kommagetallen →
+a·x + b = c → negatieve getallen → x in beide leden → haakjes → minteken voor haakjes → noemers →
+bijzondere gevallen (V = ∅ en V = ℝ) → eindtest. Leerlingen noteren altijd V = {…}; kommagetallen
+juist afgerond op 2 decimalen (een exacte breuk wordt ook goedgekeurd). Het rapport per leerling begint
+met een samenvatting (periode, aantal werkdagen, oefeningen, geslaagde stappen met datum): je bewijs
+van remediëring.
+
 ## 5. Later: een nieuw leerpad toevoegen
 
 Een leerpad is één bestand in `programmas/` (bv. `programmas/machten-wortels.js`) plus één regel

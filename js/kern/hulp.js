@@ -60,7 +60,7 @@ const W = (() => {
       .replace(/\\math(?:open|close)\{([^{}]*)\}/g, '$1').replace(/\\displaystyle/g, '').replace(/\\dfrac|\\tfrac/g, '\\frac').replace(/\\Rightarrow|\\rightarrow/g, '→').replace(/\\left|\\right|\\big|\\Big/g, '')
       .replace(/\{,\}/g, ',').replace(/\\log\s*_\s*\{([^{}]*)\}/g, (m, g) => 'log' + sub(g)).replace(/\\log_(\w)/g, (m, g) => 'log' + sub(g))
       .replace(/\\log/g, 'log').replace(/\\Leftrightarrow|\\iff/g, '⇔').replace(/\\Rightarrow|\\to|\\rightarrow/g, '→').replace(/\\square/g, '□')
-      .replace(/\\mathbb\{([NZQR])\}/g, (m, l) => ({ N: 'ℕ', Z: 'ℤ', Q: 'ℚ', R: 'ℝ' }[l])).replace(/\\setminus/g, '\\').replace(/\\infty/g, '∞')
+      .replace(/\\mathbb\{([NZQR])\}/g, (m, l) => ({ N: 'ℕ', Z: 'ℤ', Q: 'ℚ', R: 'ℝ' }[l])).replace(/\\setminus/g, '\\').replace(/\\infty/g, '∞').replace(/\\varnothing|\\emptyset/g, '∅')
       .replace(/\\pi/g, 'π').replace(/\\rho/g, 'ρ').replace(/\\approx/g, '≈').replace(/\\neq/g, '≠').replace(/\\cup/g, '∪').replace(/\\subset/g, '⊂')
       .replace(/\\in\b/g, '∈').replace(/\\notin/g, '∉').replace(/\\ldots|\\dots/g, '…').replace(/\\\{/g, '⦃').replace(/\\\}/g, '⦄').replace(/\\%/g, '%').replace(/\\text(?:bf|it)?\{/g, '\\text{');
     for (let i = 0; i < 6; i++) {
