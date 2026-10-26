@@ -111,6 +111,24 @@ juist afgerond op 2 decimalen (een exacte breuk wordt ook goedgekeurd). Het rapp
 met een samenvatting (periode, aantal werkdagen, oefeningen, geslaagde stappen met datum): je bewijs
 van remediëring.
 
+## 4c. Het leerpad Merkwaardige producten en ontbinden (remediëring)
+
+18 kleine stappen volgens de cursus *TWiskunde 4BW – 1. Tweedegraadsvergelijkingen*:
+
+* **A · Merkwaardige producten** (1–7): (x + a)² → (ax + by)² → (a − b)² → mintekens → (a + b)(a − b) →
+  derde macht van een som of verschil → werk uit en herleid (factor ervoor, twee producten).
+* **B · Ontbinden in factoren** (8–14): gemeenschappelijke factor (getal, letters, veelterm) → groepering →
+  verschil van twee kwadraten → volkomen kwadraat → product-som methode → volledig ontbinden (stappenplan).
+* **C · De discriminantmethode** (15–17): D en het aantal oplossingen → oplossen met mooie oplossingen →
+  alle gevallen (D = 0, D < 0, D geen kwadraat, eerst herleiden).
+* **D · Eindtest** (18): alles door elkaar.
+
+Leerlingen typen veeltermen zoals `x^2 + 6x + 9` of `3x(x - 4)`. De website werkt hun antwoord zelf uit
+en kijkt het na; staat het juiste antwoord niet in de gevraagde vorm, dan krijgen ze een gerichte tip
+(bv. *Neem gelijksoortige termen nog samen*, *Er kan nog een gemeenschappelijke factor buiten de haakjes*,
+*Je kan nog verder ontbinden*). Oplossingen noteren ze als `V = {2 ; -1/3}` (volgorde vrij, breuk of
+kommagetal afgerond op 2 decimalen) of met de knop V = ∅.
+
 ## 5. Later: een nieuw leerpad toevoegen
 
 Een leerpad is één bestand in `programmas/` (bv. `programmas/machten-wortels.js`) plus één regel
