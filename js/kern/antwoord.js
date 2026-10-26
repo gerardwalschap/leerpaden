@@ -8,6 +8,8 @@
 //   vakjes       {sjabloon:[{tex}|{veld, sub?, sup?, breed?}], velden:[{expr, vormen?}]}
 //   delen        {delen:[{label, antw}]}                        meerdere antwoorden bij één vraag
 //   V            {waarde, dec?, speciaal?: 'leeg'|'R', metSpeciaal?}  oplossingenverzameling V = {…}, V = ∅ of V = ℝ
+//   veelterm     {expr, vorm?: 'uitgewerkt'|'ontbonden', voor?, tex?}  veeltermen (veeltermkern VT)
+//   Vmeer        {waarden:[…], tex?:[…], dec?, leeg?: true}    V = {x₁ ; x₂} (volgorde vrij) of V = ∅
 const Antwoord = (() => {
   const esc = W.esc, T = (s) => W.tex(s);
   let laatste = null; // id van het laatst gebruikte tekstveld
@@ -17,7 +19,7 @@ const Antwoord = (() => {
     if (a.soort === 'keuze') return { keuze: null };
     if (a.soort === 'vakjes') return { vakjes: a.velden.map(() => '') };
     if (a.soort === 'delen') return { delen: a.delen.map(d => leeg(d.antw)) };
-    if (a.soort === 'V') return { invoer: '', speciaal: null };
+    if (a.soort === 'V' || a.soort === 'Vmeer') return { invoer: '', speciaal: null };
     return { invoer: '' };
   }
 
@@ -26,12 +28,13 @@ const Antwoord = (() => {
     const s = String(invoer || '');
     if (!s.trim()) return { leeg: true };
     if (a.soort === 'expr') { const r = E.ontleed(s); return r.ok ? { tex: r.tex } : { fout: r.fout }; }
+    if (a.soort === 'veelterm') { const r = VT.ontleed(s); return r.ok ? { tex: r.tex } : { fout: r.fout }; }
     if (a.soort === 'formule') { const r = Invoer.formule(s, a.doel); return r.ok ? { tex: `${a.doel} = ${r.tex}` } : { fout: r.fout }; }
     if (a.soort === 'interval') { const r = Invoer.interval(s); return r.ok ? { tex: Invoer.intervalTex(r) } : { fout: r.fout }; }
     if (a.soort === 'ongelijkheid') { const r = Invoer.ongelijkheid(s); return r.ok ? { tex: Invoer.ongelijkheidTex(r) } : { fout: r.fout }; }
     return null;
   }
-  const metVoorbeeld = (a) => ['expr', 'formule', 'interval', 'ongelijkheid'].includes(a.soort);
+  const metVoorbeeld = (a) => ['expr', 'veelterm', 'formule', 'interval', 'ongelijkheid'].includes(a.soort);
   function voorbeeld(a, invoer) {
     const l = lezing(a, invoer);
     if (!l || l.leeg) return '<span class="klein">Je antwoord verschijnt hier.</span>';
@@ -39,7 +42,7 @@ const Antwoord = (() => {
   }
 
   // ---------- HTML
-  const PLACEHOLDER = { getal: 'antwoord', expr: 'antwoord', formule: 'formule', interval: 'bv. [−2 ; 5[', ongelijkheid: 'bv. −2 ≤ x < 5' };
+  const PLACEHOLDER = { getal: 'antwoord', expr: 'antwoord', veelterm: 'antwoord', formule: 'formule', interval: 'bv. [−2 ; 5[', ongelijkheid: 'bv. −2 ≤ x < 5' };
   function html(id, a, w, uit) {
     const dis = uit ? 'disabled' : '';
     if (a.soort === 'keuze') {
@@ -56,6 +59,13 @@ const Antwoord = (() => {
     if (a.soort === 'delen') {
       return `<div class="deelvragen">${a.delen.map((d, i) => `<div class="deelvraag"><div class="dlabel">${d.html ? d.label : T(d.label)}</div>
         <div class="dveld">${html(`${id}-d${i}`, d.antw, w.delen[i], uit)}</div></div>`).join('')}</div>`;
+    }
+    if (a.soort === 'Vmeer') {
+      const sp = w.speciaal;
+      return `<div class="antwoordrij vrij"><span class="is">${T('V = \\{')}</span>
+          <input type="text" class="veld${sp ? ' uitgeschakeld' : ''}" id="${id}" value="${esc(sp ? '' : w.invoer)}" placeholder="${sp ? '' : 'bv. 2 ; -3'}" autocomplete="off" autocapitalize="none" spellcheck="false" inputmode="text" ${dis}>
+          <span class="is">${T('\\}')}</span>
+          <span class="of">of</span><button type="button" class="keuze vsp ${sp === 'leeg' ? 'aan' : ''}" data-vid="${id}" data-s="leeg" ${dis}>${T('V = \\varnothing')}</button></div>`;
     }
     if (a.soort === 'V') {
       const sp = w.speciaal;
@@ -74,6 +84,7 @@ const Antwoord = (() => {
   // ---------- toetsenbord
   function toetsen(a, set = new Set()) {
     if (a.soort === 'expr') set.add('wortel');
+    if (a.soort === 'veelterm') set.add('veelterm');
     if (a.soort === 'formule') set.add('formule');
     if (a.soort === 'interval') set.add('interval');
     if (a.soort === 'ongelijkheid') set.add('ongelijkheid');
@@ -89,6 +100,7 @@ const Antwoord = (() => {
     if (s.has('wortel')) h += k('√()', '√', 'vierkantswortel') + k('∛()', '∛', 'derdemachtswortel') + k('∜()', '∜', 'vierdemachtswortel')
       + `<span class="nwortel"><select class="tk-n" aria-label="wortelexponent">${[5, 6, 7, 8, 9, 10, 12].map(n => `<option value="${n}">${n}</option>`).join('')}</select>${k('N', 'ⁿ√', 'wortel met gekozen exponent')}</span>`
       + k('^()', 'xⁿ', 'exponent') + k('^(/)', 'x<sup>p/q</sup>', 'breuk als exponent') + k('/', '/', 'breukstreep') + k('()', '( )', 'haakjes') + k('·', '·', 'maal');
+    if (s.has('veelterm')) h += k('²', 'x²', 'kwadraat') + k('³', 'x³', 'derde macht') + k('^()', 'xⁿ', 'exponent') + k('()', '( )', 'haakjes') + k('·', '·', 'maal') + k('/', '/', 'breukstreep');
     if (s.has('formule')) h += (s.has('wortel') ? '' : k('√()', '√', 'vierkantswortel') + k('∛()', '∛', 'derdemachtswortel') + k('/', '/', 'breukstreep') + k('()', '( )', 'haakjes') + k('·', '·', 'maal') + k('^()', 'xⁿ', 'exponent'))
       + k('²', 'x²', 'kwadraat') + k('π', 'π', 'pi') + k('ρ', 'ρ', 'rho (massadichtheid)');
     if (s.has('interval')) h += k('[', '[', 'haakje') + k(']', ']', 'haakje') + k(' ; ', ';', 'puntkomma') + k('-∞', '−∞', 'min oneindig') + k('+∞', '+∞', 'plus oneindig');
@@ -144,7 +156,7 @@ const Antwoord = (() => {
       }
       if (a.soort === 'delen') { a.delen.forEach((d, i) => rec(`${id}-d${i}`, d.antw, w.delen[i])); return; }
       if (a.soort === 'vakjes') { a.velden.forEach((_, i) => { const el = document.getElementById(`${id}-${i}`); if (el) velden.push({ el, zet: (v) => { w.vakjes[i] = v; }, a }); }); return; }
-      if (a.soort === 'V') {
+      if (a.soort === 'V' || a.soort === 'Vmeer') {
         const el = document.getElementById(id);
         const knoppen = document.querySelectorAll(`button.vsp[data-vid="${id}"]`);
         const toon = () => { knoppen.forEach(x => x.classList.toggle('aan', x.dataset.s === w.speciaal)); if (el) { el.classList.toggle('uitgeschakeld', !!w.speciaal); if (w.speciaal) el.value = ''; } };
@@ -183,7 +195,7 @@ const Antwoord = (() => {
     if (a.soort === 'keuze') return w.keuze !== null && w.keuze !== undefined;
     if (a.soort === 'vakjes') return w.vakjes.every(x => String(x).trim());
     if (a.soort === 'delen') return a.delen.every((d, i) => isIngevuld(d.antw, w.delen[i]));
-    if (a.soort === 'V') return !!w.speciaal || !!String(w.invoer || '').trim();
+    if (a.soort === 'V' || a.soort === 'Vmeer') return !!w.speciaal || !!String(w.invoer || '').trim();
     return !!String(w.invoer || '').trim();
   }
 
@@ -214,9 +226,34 @@ const Antwoord = (() => {
     if (Math.abs(g.waarde - a.waarde) < 1e-9) return { status: 'juist' };
     return nakijkGetal({ waarde: a.waarde, dec: a.dec ?? 2 }, inv);
   }
+  // V = {x₁ ; x₂}: elke oplossing exact (ook als breuk) of juist afgerond op a.dec decimalen, volgorde vrij
+  function nakijkVmeer(a, w) {
+    const verwacht = a.leeg ? [] : a.waarden;
+    if (w.speciaal) return { status: verwacht.length === 0 ? 'juist' : 'fout' };
+    const inv = zonderV(w.invoer);
+    if (!inv.trim()) return { status: 'leeg', bericht: 'Vul de oplossing(en) in, of kies V = ∅.' };
+    if (/[∅øØ]|leeg/i.test(inv)) return { status: 'ongeldig', bericht: 'Klik op de knop V = ∅.' };
+    if (/\d\s*,\s+-?\d|\d\s+,\s*-?\d/.test(inv)) return { status: 'ongeldig', bericht: 'Zet een puntkomma ; tussen de oplossingen (de komma is voor decimalen).' };
+    const delen = inv.split(/;|\bof\b/i).map(x => x.replace(/^\s*x\s*[₁₂12]?\s*=\s*/i, '').trim()).filter(Boolean);
+    const gs = [];
+    for (const d of delen) { const g = Invoer.getal(d); if (!g.ok) return { status: 'ongeldig', bericht: g.fout }; gs.push({ d, g }); }
+    const uniek = gs.filter((x, i) => gs.findIndex(y => Math.abs(y.g.waarde - x.g.waarde) < 1e-9) === i);
+    if (uniek.length !== verwacht.length) return { status: 'fout' };
+    const vrij = verwacht.slice(); let vorm = null;
+    for (const x of uniek) {
+      const i = vrij.findIndex(v => Math.abs(v - x.g.waarde) < 1e-9 || nakijkGetal({ waarde: v, dec: a.dec ?? 2 }, x.d).status === 'juist');
+      if (i >= 0) { vrij.splice(i, 1); continue; }
+      const j = vrij.findIndex(v => nakijkGetal({ waarde: v, dec: a.dec ?? 2 }, x.d).status === 'vorm');
+      if (j >= 0) { vrij.splice(j, 1); vorm = `Rond af op ${a.dec ?? 2} decimalen.`; continue; }
+      return { status: 'fout' };
+    }
+    return vorm ? { status: 'vorm', bericht: vorm } : { status: 'juist' };
+  }
   function nakijk(a, w) {
     switch (a.soort) {
       case 'V': return nakijkV(a, w);
+      case 'Vmeer': return nakijkVmeer(a, w);
+      case 'veelterm': return VT.controleer(w.invoer, a.expr, a.vorm);
       case 'keuze':
         if (w.keuze === null || w.keuze === undefined) return { status: 'leeg', bericht: 'Kies een antwoord.' };
         return { status: String(w.keuze) === String(a.juist) ? 'juist' : 'fout' };
@@ -261,6 +298,12 @@ const Antwoord = (() => {
       case 'getal': return g(a.waarde, a.dec) + (a.na ? '\\ ' + a.na : '');
       case 'V': return a.speciaal === 'leeg' ? 'V = \\varnothing' : a.speciaal === 'R' ? 'V = \\mathbb{R}' : `V = \\{${g(a.waarde, a.dec ?? 2)}\\}`;
       case 'expr': return a.tex || E.texVan(a.expr);
+      case 'veelterm': return a.tex || VT.texVan(a.expr);
+      case 'Vmeer': {
+        if (a.leeg || !a.waarden.length) return 'V = \\varnothing';
+        const ts = a.waarden.map((x, i) => a.tex && a.tex[i] ? a.tex[i] : g(x, Number.isInteger(x) ? undefined : (a.dec ?? 2)));
+        return `V = \\{${ts.join('\\,;\\,')}\\}`;
+      }
       case 'formule': return `${a.doel} = ${a.tex || Invoer.formuleTex(a.expr, a.doel)}`;
       case 'interval': return Invoer.intervalTex(a);
       case 'ongelijkheid': return Invoer.ongelijkheidTex(a);
@@ -300,6 +343,13 @@ const Antwoord = (() => {
         }).join(' ');
         return { tekst: w.vakjes.map(x => String(x).trim() || '…').join(' | '), tex };
       }
+    }
+    if (a.soort === 'Vmeer') {
+      if (w.speciaal) return { tekst: 'V = ∅', tex: 'V = \\varnothing' };
+      const t = zonderV(w.invoer).trim(); if (!t) return { tekst: '—', tex: null };
+      const ds = t.split(/;|\bof\b/i).map(x => x.trim()).filter(Boolean);
+      const ts = ds.map(x => Invoer.getal(x).ok ? E.texVan(x) : null);
+      return { tekst: `V = {${t}}`, tex: ts.every(Boolean) ? `V = \\{${ts.join('\\,;\\,')}\\}` : null };
     }
     if (a.soort === 'V') {
       if (w.speciaal) return { tekst: w.speciaal === 'leeg' ? 'V = ∅' : 'V = ℝ', tex: w.speciaal === 'leeg' ? 'V = \\varnothing' : 'V = \\mathbb{R}' };

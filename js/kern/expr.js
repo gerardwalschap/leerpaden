@@ -308,6 +308,6 @@ const E = (() => {
   }
   const texVan = (invoer) => { const s = ontleed(invoer); return s.ok ? s.tex : null; };
 
-  return { Q, ontleed, controleer, texVan, gelijk, waarde, lees, VORMEN, alsBreuk };
+  return { Q, ontleed, controleer, texVan, gelijk, waarde, lees, VORMEN, alsBreuk, tex };
 })();
 if (typeof module !== 'undefined') module.exports = E;
