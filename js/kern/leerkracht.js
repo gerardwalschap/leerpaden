@@ -80,14 +80,15 @@
   function kop() {
     const progs = Leerpaden.lijst;
     return `${API.DEMO ? '<div class="demo-band">DEMO — gegevens blijven enkel in deze browser · leerkracht-wachtwoord: demo · <a href="index.html">naar de leerlingenpagina</a></div>' : ''}
-      <header class="balk"><div class="streep"></div>
-        <div class="logo">${esc(CONFIG.TITEL || 'Leerpaden')}<small>Leerkracht${S.P && !['alle', 'boom'].includes(S.view) ? ' · ' + esc(S.P.titel) : ''}</small></div>
+      <header class="balk"><div class="schoollogo" role="img" aria-label="De Resonant"></div>
+        <div class="logo">${esc(CONFIG.TITEL || 'Leerpaden')}<small>Leerkracht${S.P && !['alle', 'boom', 'afdruk'].includes(S.view) ? ' · ' + esc(S.P.titel) : ''}</small></div>
         ${S.token ? `<div class="rechts"><button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>
       ${S.token && S.view !== 'login' ? `<nav class="progtabs">
         <button class="ptab ${S.view === 'boom' ? 'actief' : ''}" data-a="boom" data-niveau="${S.boomVak ? 'vak' : S.boomKlas ? 'klas' : 'klassen'}" data-klas="${esc(S.boomKlas || '')}" data-vak="${esc(S.boomVak || '')}">🏫 Klassen en leerpaden</button>
-        ${S.P && !['boom', 'alle'].includes(S.view) ? `<button class="ptab actief" data-a="overzicht">${esc(S.P.titel)}</button>` : ''}
-        <button class="ptab ${S.view === 'alle' ? 'actief' : ''}" data-a="alle">👥 Alle leerlingen</button></nav>` : ''}`;
+        ${S.P && !['boom', 'alle', 'afdruk'].includes(S.view) ? `<button class="ptab actief" data-a="overzicht">${esc(S.P.titel)}</button>` : ''}
+        <button class="ptab ${S.view === 'alle' ? 'actief' : ''}" data-a="alle">👥 Alle leerlingen</button>
+        <button class="ptab ${S.view === 'afdruk' ? 'actief' : ''}" data-a="afdruk">🖨️ Afdrukcentrum</button></nav>` : ''}`;
   }
   function render() {
     let h = '';
@@ -97,6 +98,7 @@
     if (S.view === 'toevoegen') h = vToevoegen();
     if (S.view === 'alle') h = vAlle();
     if (S.view === 'boom') h = vBoom();
+    if (S.view === 'afdruk') h = vAfdruk();
     app.innerHTML = kop() + `<main class="breed">${S.melding ? `<div class="melding ok">${S.melding}</div>` : ''}${h}</main>`;
     S.melding = '';
     W.renderIn(app);
@@ -416,7 +418,7 @@
     const opg = (v) => esc(v.rapport || W.platteTekst(v.tex || v.html || ''));
     return `<div class="kopband"><div><h1>Rapport ${esc(S.P.soort || 'leerpad')}: ${esc(S.P.titel)}</h1>
         <div><b>${esc(l.voornaam)} ${esc(l.naam)}</b> · ${esc(l.klas)} · gebruikersnaam ${esc(l.gebruikersnaam)}</div></div>
-        <div style="text-align:right">${esc(CONFIG.SCHOOL || 'De Resonant')}<br>${datum(new Date().toISOString())}</div></div>
+        <div style="text-align:right"><img src="${LOGO}" alt="${esc(CONFIG.SCHOOL || 'De Resonant')}" style="height:28px"><br>${datum(new Date().toISOString())}</div></div>
       <table>${rij(['Delen geslaagd', 'Nu bezig met', 'Oefeningen', 'Laatst actief'], true)}
         ${rij([`${st.geslaagd.length} / ${DELEN().length}`, h === 'klaar' ? 'alle delen geslaagd' : h ? `deel ${h.nr}` : '—', `${tot.aantal} (${pct(tot.juist, tot.aantal)} juist)`, datum(l.laatst_actief)])}</table>
       ${samenvatting(det)}
@@ -438,16 +440,17 @@
     const houder = document.createElement('div');
     houder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff';
     houder.innerHTML = html; document.body.appendChild(houder);
+    const sx = window.scrollX, sy = window.scrollY; window.scrollTo(0, 0);
     try {
       if (!window.html2pdf) throw new Error('PDF-bibliotheek niet geladen. Controleer je internetverbinding.');
       await html2pdf().set({
         margin: [12, 12, 12, 12], filename: naam,
         image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+        html2canvas: { scale: 2, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'], before: '.nieuwe-pagina', avoid: ['tr', '.blok', '.kaartje'] }, ...opties,
       }).from(houder.firstElementChild).save();
-    } finally { houder.remove(); }
+    } finally { houder.remove(); window.scrollTo(sx, sy); }
   }
 
   async function rapport(id) {
@@ -472,6 +475,164 @@
       await maakPDF(html, `Rapporten_${bestandsnaam(S.P.titel)}_${bestandsnaam(S.klas || 'alle')}_${vandaag()}.pdf`);
     } catch (e) { modaal('Rapport mislukt', `<p>${esc(e.message)}</p>`, [['OK', 1]]); }
     knop.disabled = false; knop.textContent = `Rapporten van deze ${ll.length} (PDF)`;
+  }
+
+  // ---------- afdrukcentrum: puntenlijsten en syntheses over klassen en leerpaden heen
+  const LOGO = new URL((location.pathname.includes('/test/') ? '../' : '') + 'img/logo-deresonant.png', location.href).href;
+  const AFD = () => (S.afd ||= { klassen: new Set(), progs: new Set(), poging: 'beste', geslaagdKol: false, enkelGemaakt: true, soort: null, data: null, bezig: '' });
+  const afdKlassen = () => klassenVan(S.alle || []);
+  const afdLeerlingen = () => (S.alle || []).filter(l => AFD().klassen.has(l.klas));
+  function afdProgs() { // leerpaden met minstens één gekoppelde leerling in de gekozen klassen
+    const ll = afdLeerlingen();
+    return Leerpaden.lijst.map(P => ({ P, n: ll.filter(l => l.programmas.includes(P.code)).length })).filter(x => x.n > 0);
+  }
+  const klaarDelen = (P) => P.delen.filter(d => d.klaar);
+  const ingediendVan = (st, nr) => st.testen.filter(t => t.deel === nr && t.status === 'ingediend').sort((a, b) => String(a.ingediend).localeCompare(String(b.ingediend)));
+  function scoreCel(st, nr, poging) {
+    const ts = ingediendVan(st, nr);
+    if (!ts.length) return '';
+    const s = (t) => `<span class="${t.geslaagd ? '' : 'r'}">${t.score}/${t.max}</span>`;
+    if (poging === 'alle') return ts.map(s).join(' · ');
+    if (poging === 'laatste') return s(ts[ts.length - 1]);
+    return s(ts.reduce((b, t) => (t.score / t.max > b.score / b.max ? t : b)));
+  }
+  const AFDSTIJL = `<style>
+      .rapport .afdkop { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #1c4e8a; padding-bottom: 6px; margin-bottom: 10px; }
+      .rapport .afdkop img { height: 34px; } .rapport .afdkop .vul { flex: 1; } .rapport .afdkop h1 { margin: 0; }
+      .rapport td.sc, .rapport th.sc { text-align: center; white-space: nowrap; }
+      .rapport .lpkop { color: #1c4e8a; font-weight: bold; font-size: 12px; margin: 12px 0 4px; }
+      .rapport .synth p { margin: 2px 0 6px; } .rapport .synth .naam { font-weight: bold; font-size: 12px; color: #1c4e8a; margin-top: 8px; }
+    </style>`;
+  const afdKop = (titel, onder) => `<div class="afdkop"><img src="${LOGO}" alt="De Resonant"><div class="vul"><h1>${titel}</h1><div class="klein">${onder}</div></div><div class="klein" style="text-align:right">${datum(new Date().toISOString(), false)}</div></div>`;
+
+  async function afdLaadPunten() {
+    const A = AFD(), uit = [];
+    for (const { P } of afdProgs().filter(x => A.progs.has(x.P.code))) {
+      A.bezig = `Punten ophalen: ${P.titel}…`; render();
+      const ov = await roep('lk_overzicht', { p_programma: P.code });
+      uit.push({ P, drempel: ov.drempel, leerlingen: ov.leerlingen.filter(l => A.klassen.has(l.klas)) });
+    }
+    return uit;
+  }
+  function puntenHTML(data, metStijl) {
+    const A = AFD(), rij = (c, th) => `<tr>${c.map(x => typeof x === 'object' ? `<${th ? 'th' : 'td'} class="${x.k}">${x.t}</${th ? 'th' : 'td'}>` : `<${th ? 'th' : 'td'}>${x}</${th ? 'th' : 'td'}>`).join('')}</tr>`;
+    const klassen = [...A.klassen].sort();
+    const blokken = klassen.map((k, ki) => {
+      const tabellen = data.map(({ P, drempel, leerlingen }) => {
+        const ll = leerlingen.filter(l => l.klas === k);
+        if (!ll.length) return '';
+        let delen = klaarDelen(P);
+        if (A.enkelGemaakt) delen = delen.filter(d => ll.some(l => ingediendVan(l.status, d.nr).length));
+        if (!delen.length) return `<div class="blok"><div class="lpkop">${esc(P.titel)}</div><p class="klein">Nog geen testen afgelegd.</p></div>`;
+        return `<div class="blok"><div class="lpkop">${esc(P.titel)} <span class="klein">· slaagdrempel ${drempel}%</span></div>
+          <table>${rij(['Leerling', ...delen.map(d => ({ k: 'sc', t: `<span title="${esc(d.titel)}">D${d.nr}</span>` })), ...(A.geslaagdKol ? [{ k: 'sc', t: 'Geslaagd' }] : [])], true)}
+          ${ll.map(l => rij([`${esc(l.naam)} ${esc(l.voornaam)}`, ...delen.map(d => ({ k: 'sc', t: scoreCel(l.status, d.nr, A.poging) })),
+            ...(A.geslaagdKol ? [{ k: 'sc', t: `${l.status.geslaagd.length}/${klaarDelen(P).length}` }] : [])])).join('')}</table>
+          <p class="klein">${delen.map(d => `D${d.nr} = ${esc(d.titel)}`).join(' · ')}</p></div>`;
+      }).join('');
+      return `<div class="${ki ? 'nieuwe-pagina' : ''}">${afdKop(`Puntenlijst ${esc(k)}`, `${A.poging === 'beste' ? 'beste poging' : A.poging === 'laatste' ? 'laatste poging' : 'alle pogingen'} per test · rood = niet geslaagd`)}${tabellen || '<p>Geen gegevens.</p>'}</div>`;
+    }).join('');
+    return `<div class="rapport" style="width:1010px">${RAPPORTSTIJL + AFDSTIJL}${blokken}</div>`;
+  }
+
+  // Synthese: korte, feitelijke bespreking per leerling per leerpad (voor de rapportcommentaar)
+  const lijstTekst = (xs) => xs.length <= 1 ? xs.join('') : xs.slice(0, -1).join(', ') + ' en ' + xs[xs.length - 1];
+  const kortTitel = (t) => t.replace(/\s+in\s+[ℕℤℚℝ]$/, '').toLowerCase();
+  function syntheseTekst(P, det) {
+    const vn = det.leerling.voornaam, st = det.status, delen = klaarDelen(P), N = delen.length;
+    const ingediend = det.testen.filter(t => t.status === 'ingediend');
+    const oef = Object.values(st.oefeningen).reduce((a, o) => ({ n: a.n + o.aantal, j: a.j + o.juist }), { n: 0, j: 0 });
+    if (!ingediend.length && !oef.n) return `${vn} is nog niet gestart met ${P.titel}.`;
+    const g = st.geslaagd.filter(nr => delen.some(d => d.nr === nr)).length;
+    const beste = delen.map(d => { const ts = ingediend.filter(t => t.deel === d.nr); return ts.length ? { d, n: ts.length, b: ts.reduce((x, t) => (t.score / t.max_score > x.score / x.max_score ? t : x)), ok: st.geslaagd.includes(d.nr) } : null; }).filter(Boolean);
+    const gem = beste.length ? Math.round(100 * beste.reduce((s, x) => s + x.b.score / x.b.max_score, 0) / beste.length) : null;
+    const extra = [gem !== null ? `gemiddelde testscore ${gem}%` : '', oef.n ? `${oef.n} oefeningen, ${Math.round(100 * oef.j / oef.n)}% juist` : ''].filter(Boolean).join('; ');
+    const zinnen = [`${vn} ${g === N ? `rondde alle ${N} delen af` : `slaagde voor ${g} van de ${N} delen`}${extra ? ` (${extra})` : ''}.`];
+    const moeite = beste.filter(x => x.ok && x.n > 1), niet = beste.filter(x => !x.ok);
+    if (moeite.length) zinnen.push(`Meerdere pogingen nodig voor ${lijstTekst(moeite.slice(0, 3).map(x => kortTitel(x.d.titel)))}.`);
+    if (niet.length) zinnen.push(`Nog niet geslaagd voor ${lijstTekst(niet.slice(0, 3).map(x => `${kortTitel(x.d.titel)} (${x.b.score}/${x.b.max_score})`))}.`);
+    const soortNm = (s) => { const d = P.delen.find(x => x.nr === s.deel); return d && d.soorten && d.soorten[s.soort] ? d.soorten[s.soort].naam.toLowerCase() : null; };
+    const sterk = [...new Set(det.per_soort.filter(s => s.aantal >= 5 && s.juist / s.aantal >= 0.85).sort((a, b) => b.juist / b.aantal - a.juist / a.aantal).map(soortNm).filter(Boolean))];
+    const zwak = [...new Set(det.per_soort.filter(s => s.aantal >= 4 && s.juist / s.aantal < 0.6).sort((a, b) => a.juist / a.aantal - b.juist / b.aantal).map(soortNm).filter(Boolean))];
+    if (sterk.length) zinnen.push(`Sterk in ${lijstTekst(sterk.slice(0, 2))}.`);
+    if (zwak.length) zinnen.push(`Werkpunt: ${lijstTekst(zwak.slice(0, 2))}.`);
+    if (g < N && !niet.length) { const open = delen.find(d => !st.geslaagd.includes(d.nr)); if (open) zinnen.push(`Volgende stap: ${kortTitel(open.titel)}.`); }
+    return zinnen.join(' ');
+  }
+  async function afdLaadSynthese() {
+    const A = AFD(), progs = afdProgs().filter(x => A.progs.has(x.P.code)).map(x => x.P);
+    const ll = afdLeerlingen().filter(l => progs.some(P => l.programmas.includes(P.code)));
+    const taken = ll.flatMap(l => progs.filter(P => l.programmas.includes(P.code)).map(P => ({ l, P })));
+    const uit = new Map();
+    for (let i = 0; i < taken.length; i++) {
+      const { l, P } = taken[i]; A.bezig = `Synthese maken… ${i + 1}/${taken.length}`; render();
+      const det = await roep('lk_leerling', { p_id: l.id, p_programma: P.code });
+      if (!uit.has(l.id)) uit.set(l.id, { l, delen: [] });
+      uit.get(l.id).delen.push({ P, tekst: syntheseTekst(P, det) });
+    }
+    return [...uit.values()].sort((a, b) => (a.l.klas + a.l.naam + a.l.voornaam).localeCompare(b.l.klas + b.l.naam + b.l.voornaam));
+  }
+  function syntheseHTML(data, voorPDF) {
+    const klassen = [...new Set(data.map(x => x.l.klas))].sort();
+    return `<div class="rapport">${RAPPORTSTIJL + AFDSTIJL}${klassen.map((k, ki) => `<div class="${ki ? 'nieuwe-pagina' : ''}">${afdKop(`Synthese ${esc(k)}`, 'korte bespreking van het geleverde werk per leerpad')}
+      ${data.filter(x => x.l.klas === k).map(x => `<div class="blok synth${voorPDF ? '' : ' synth-ll'}">${voorPDF ? `<div class="naam">${esc(x.l.naam)} ${esc(x.l.voornaam)}</div>` :
+        `<div class="werkbalk"><b class="vul">${esc(x.l.naam)} ${esc(x.l.voornaam)}</b><button class="licht klein-knop" data-a="afdkopieer" data-id="${x.l.id}">Kopiëren</button></div>`}
+        ${x.delen.map(d => `<p>${x.delen.length > 1 ? `<b>${esc(d.P.titel)}:</b> ` : ''}${esc(d.tekst)}</p>`).join('')}</div>`).join('')}</div>`).join('')}</div>`;
+  }
+  function vAfdruk() {
+    const A = AFD(), kl = afdKlassen(), progs = afdProgs();
+    for (const c of [...A.progs]) if (!progs.some(x => x.P.code === c)) A.progs.delete(c);
+    const kies = A.klassen.size && A.progs.size;
+    return `<h1>🖨️ Afdrukcentrum</h1>
+      <div class="afd-blok"><h2>1. Klassen</h2>
+        ${kl.length ? `<div class="chips">${kl.map(k => `<label class="chip ${A.klassen.has(k) ? 'aan' : ''}"><input type="checkbox" class="afk" value="${esc(k)}" ${A.klassen.has(k) ? 'checked' : ''}>${esc(k)} <small>(${(S.alle || []).filter(l => l.klas === k).length})</small></label>`).join('')}</div>` : '<p class="klein">Nog geen leerlingen.</p>'}</div>
+      <div class="afd-blok"><h2>2. Leerpaden</h2>
+        ${!A.klassen.size ? '<p class="klein">Kies eerst één of meer klassen.</p>' : progs.length ? `<div class="chips">${progs.map(({ P, n }) => `<label class="chip ${A.progs.has(P.code) ? 'aan' : ''}"><input type="checkbox" class="afp" value="${esc(P.code)}" ${A.progs.has(P.code) ? 'checked' : ''}>${esc(P.titel)} <small>${esc(P.klas || '')} · ${n} ll.</small></label>`).join('')}</div>
+          <p class="klein" style="margin-top:8px"><button class="link" data-a="afdalle">alles selecteren</button></p>` : '<p class="klein">Geen leerlingen van deze klassen gekoppeld aan een leerpad.</p>'}</div>
+      <div class="afd-blok"><h2>3. Afdrukken</h2>
+        <div class="chips" style="margin-bottom:10px">
+          <label class="chip">Score per test: <select id="afdpoging"><option value="beste" ${A.poging === 'beste' ? 'selected' : ''}>beste poging</option><option value="laatste" ${A.poging === 'laatste' ? 'selected' : ''}>laatste poging</option><option value="alle" ${A.poging === 'alle' ? 'selected' : ''}>alle pogingen</option></select></label>
+          <label class="chip"><input type="checkbox" id="afdgemaakt" ${A.enkelGemaakt ? 'checked' : ''}> enkel delen met afgelegde testen</label>
+          <label class="chip"><input type="checkbox" id="afdgesl" ${A.geslaagdKol ? 'checked' : ''}> kolom "geslaagde delen"</label></div>
+        <div class="werkbalk"><button data-a="afdpunten" ${kies ? '' : 'disabled'}>📋 Puntenlijst</button><button data-a="afdsynth" ${kies ? '' : 'disabled'}>📝 Synthese</button>
+          ${A.bezig ? `<span class="klein">${esc(A.bezig)}</span>` : ''}</div></div>
+      ${A.soort && A.data ? `<div class="werkbalk"><h2 class="vul" style="margin:0">${A.soort === 'punten' ? 'Puntenlijst' : 'Synthese'}</h2>
+          <button data-a="afdpdf">Download PDF</button></div>
+        <div class="afd-voorbeeld">${A.soort === 'punten' ? puntenHTML(A.data, true) : syntheseHTML(A.data, false)}</div>` : ''}`;
+  }
+  async function afdActie(a, el) {
+    const A = AFD();
+    if (a === 'afdruk') { if (!S.alle) await laadAlle(); S.view = 'afdruk'; return render(); }
+    if (a === 'afdalle') { afdProgs().forEach(x => A.progs.add(x.P.code)); A.data = null; return render(); }
+    if (a === 'afdpunten' || a === 'afdsynth') {
+      el.disabled = true;
+      try { A.data = a === 'afdpunten' ? await afdLaadPunten() : await afdLaadSynthese(); A.soort = a === 'afdpunten' ? 'punten' : 'synth'; }
+      finally { A.bezig = ''; }
+      render(); return document.querySelector('.afd-voorbeeld')?.scrollIntoView({ behavior: 'smooth' });
+    }
+    if (a === 'afdpdf') {
+      const t = el.textContent; el.disabled = true; el.textContent = 'PDF maken…';
+      const kl = [...A.klassen].sort().join('_');
+      try {
+        if (A.soort === 'punten') await maakPDF(puntenHTML(A.data, true), `Puntenlijst_${bestandsnaam(kl)}_${vandaag()}.pdf`, { jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } });
+        else await maakPDF(syntheseHTML(A.data, true), `Synthese_${bestandsnaam(kl)}_${vandaag()}.pdf`);
+      } finally { el.disabled = false; el.textContent = t; }
+      return;
+    }
+    if (a === 'afdkopieer') {
+      const x = A.data.find(y => y.l.id === el.dataset.id);
+      const tekst = x.delen.map(d => (x.delen.length > 1 ? d.P.titel + ': ' : '') + d.tekst).join('\n');
+      try { await navigator.clipboard.writeText(tekst); el.textContent = '✓ Gekopieerd'; } catch (e) { modaal('Kopiëren', `<textarea style="width:100%;height:160px">${esc(tekst)}</textarea>`, [['OK', 1]]); }
+      return;
+    }
+  }
+  function koppelAfdruk() {
+    const A = AFD();
+    app.querySelectorAll('input.afk').forEach(c => c.onchange = () => { c.checked ? A.klassen.add(c.value) : A.klassen.delete(c.value); A.data = null; render(); });
+    app.querySelectorAll('input.afp').forEach(c => c.onchange = () => { c.checked ? A.progs.add(c.value) : A.progs.delete(c.value); A.data = null; render(); });
+    const p = document.getElementById('afdpoging'); if (p) p.onchange = () => { A.poging = p.value; render(); };
+    const g = document.getElementById('afdgemaakt'); if (g) g.onchange = () => { A.enkelGemaakt = g.checked; render(); };
+    const k = document.getElementById('afdgesl'); if (k) k.onchange = () => { A.geslaagdKol = k.checked; render(); };
   }
 
   // Inlogbrieven: per leerling één A4 met de login én de handleiding.
@@ -551,6 +712,7 @@
     const zk = document.getElementById('zoek');
     if (zk) zk.oninput = () => { S.zoek = zk.value; const pos = zk.selectionStart; render(); const z = document.getElementById('zoek'); z.focus(); z.setSelectionRange(pos, pos); };
 
+    koppelAfdruk();
     // Alle leerlingen: selectie en inschrijvingen
     app.querySelectorAll('input.sel').forEach(c => c.onchange = () => { c.checked ? S.selectie.add(c.dataset.id) : S.selectie.delete(c.dataset.id); render(); });
     const as = document.getElementById('allesel');
@@ -594,6 +756,7 @@
           await roep('lk_inschrijven', { p_ids: nieuw.map(l => l.id), p_programma: code, p_aan: true });
           await laadAlle(); S.melding = `${nieuw.length} leerling(en) van ${esc(k)} gekoppeld aan ${esc(progTitel(code))}.`; return render();
         }
+        if (a.startsWith('afd')) return afdActie(a, el);
         if (a === 'prog') { S.prog = el.dataset.code; S.P = Leerpaden.vind(S.prog); API.sessie.set('lk-prog', S.prog); await naarOverzicht(); return render(); }
         if (a === 'overzicht') { await naarOverzicht(); return render(); }
         if (a === 'alle') { await laadAlle(); S.view = 'alle'; S.nieuw = null; return render(); }

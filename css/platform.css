@@ -23,3 +23,20 @@ button.licht.rood-knop { color: var(--rood); border-color: var(--rood-licht); }
 button.licht.rood-knop:hover { background: var(--rood-licht); border-color: var(--rood); }
 button.rood, button.oranje { color: #fff; }
 .tabel.tekenschema { margin: 8px auto; } .tabel.tekenschema td, .tabel.tekenschema th { text-align: center; min-width: 38px; }
+/* ===== Schoollogo in de kopbalk ===== */
+header.balk .schoollogo { background: #fff url(../img/logo-deresonant.png) no-repeat center / contain; background-origin: content-box;
+  padding: 5px 10px; box-sizing: content-box; width: 145px; height: 30px; border-radius: 8px; flex: none; }
+@media (max-width: 560px) { header.balk .schoollogo { width: 100px; height: 21px; padding: 4px 7px; } }
+/* ===== Afdrukcentrum ===== */
+.afd-blok { background: var(--vlak); border: 1px solid var(--lijn); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: var(--schaduw); }
+.afd-blok h2 { margin: 0 0 10px; font-size: 17px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--lijn); border-radius: 999px; padding: 5px 12px; cursor: pointer; background: #fff; font-size: 14px; }
+.chip.aan { background: var(--blauw-licht); border-color: var(--blauw); }
+.chip input { margin: 0; }
+.chip small { color: #667; }
+.afd-voorbeeld { background: #fff; border: 1px solid var(--lijn); border-radius: 12px; padding: 16px; overflow-x: auto; }
+.afd-voorbeeld .rapport { width: auto !important; }
+.synth-ll { border-bottom: 1px solid var(--lijn); padding: 10px 0; }
+.synth-ll:last-child { border-bottom: 0; }
+.synth-ll .werkbalk { margin-bottom: 4px; }

@@ -81,7 +81,7 @@
     const titel = S.P ? S.P.titel : (CONFIG.TITEL || 'Leerpaden');
     const onder = S.P ? (S.P.ondertitel || '') : (CONFIG.ONDERTITEL || '');
     return `${API.DEMO ? '<div class="demo-band">DEMO — gegevens blijven enkel in deze browser · leerling: demo / demo · <a href="leerkracht.html">naar de leerkrachtpagina</a></div>' : ''}
-      <header class="balk"><div class="streep"></div>
+      <header class="balk"><div class="schoollogo" role="img" aria-label="De Resonant"></div>
         <div class="logo">${esc(titel)}<small>${esc(onder)}</small></div>
         ${S.leerling ? `<div class="rechts"><span>${naam}</span>
           ${S.view === 'deel' ? '<button class="licht" data-a="pad">Leerpad</button>' : ''}
