@@ -149,3 +149,20 @@ De bronbestanden van een leerpad staan in `bron/<naam>/`; `bron/bouw.sh` voegt z
 Upload de gewijzigde bestanden opnieuw naar dezelfde repo. Zie je de wijziging niet meteen,
 herlaad dan de pagina met **Ctrl + F5** (Mac: **Cmd + Shift + R**).
 `supabase/schema.sql` mag je later gerust opnieuw uitvoeren: bestaande gegevens blijven bewaard.
+
+## 7. Het platform: klas → vak → hoofdstuk (nieuw, november 2026)
+
+De structuur van het platform staat in **`js/catalogus.js`**: de klassen (4BW, 4MWW, 5BCW, 5WW, 7VJHO),
+hun vakken (= de wiskundemappen in OneDrive › Vakken) en per vak de hoofdstukken.
+Een leerpad hoort bij een hoofdstuk via `leerpaden: ['code-van-het-leerpad']`.
+
+* **Leerkracht:** *🏫 Klassen en leerpaden* → klas → vak → alle hoofdstukken. Hoofdstukken zonder
+  leerpad staan op *Nog te maken* (enkel voor jou zichtbaar). Per leerpad zie je hoeveel leerlingen van
+  die klas gekoppeld zijn, met een knop **Hele klas koppelen**. Remediëring: koppel enkel wie het nodig heeft.
+* **Leerling:** ziet enkel de leerpaden waaraan hij gekoppeld is, gegroepeerd per vak. Met maar één
+  leerpad opent dat meteen (zoals vroeger); links met `?p=…` blijven werken.
+* Een leerling hoort bij een klas als zijn klasnaam ermee begint (7VJHOa → 7VJHO).
+* **De databank verandert niet.** Alles werkt met de bestaande koppelingen.
+
+**Testversie:** https://gerardwalschap.github.io/leerpaden/test/ en …/test/leerkracht.html
+(zelfde databank, nieuwe weergave). Is alles goed, dan wordt de testversie de gewone versie.

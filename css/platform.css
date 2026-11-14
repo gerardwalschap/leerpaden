@@ -1,0 +1,21 @@
+/* ===== Platform: klassen → vakken → hoofdstukken ===== */
+.tegels { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; margin: 12px 0 18px; }
+.tegel {
+  display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left;
+  background: var(--vlak); color: var(--tekst); border: 1px solid var(--lijn); border-left: 5px solid var(--oranje);
+  border-radius: 12px; padding: 16px 18px; cursor: pointer; box-shadow: var(--schaduw); font-size: 14px;
+}
+.tegel:hover { border-color: var(--blauw); border-left-color: var(--blauw); filter: none; }
+.tegel-titel { font-size: 20px; font-weight: bold; color: var(--blauw); }
+.stap.hoofdstuk { align-items: start; }
+.stap.hoofdstuk.dicht { opacity: .7; }
+.stap .vul { min-width: 0; }
+.lp-lijst { margin-top: 10px; display: grid; gap: 6px; }
+.lp-regel {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  background: var(--blauw-licht); border-radius: 8px; padding: 7px 10px;
+}
+.lp-regel .vul { flex: 1; }
+.vet { font-weight: bold; }
+button.klein-knop { font-size: 13px; padding: 5px 10px; }
+.test-band { background: #fff3cd; color: #6b4e00; text-align: center; font-size: 13px; padding: 5px 10px; border-bottom: 1px solid #e8d48a; }
