@@ -14,9 +14,35 @@
 //   Vcomplex     {waarden:[{re, im}], tex:[…], dec?, exact?}    V = {z₁ ; z₂} in ℂ (volgorde vrij, ± mag)
 //   hoek         {waarde, dec?, tex?}                          hoek in graden; elke gelijkwaardige hoek (± k·360°) is juist
 //   functie      {expr, vorm?: 'topvorm'|'vrij', tex?, voor?}  functievoorschrift in x (rekenkern FX); vergeleken op functiewaarden
+//   breuk        {t, n, voor?, vrij?}                           breuk t/n; moet onvereenvoudigbaar zijn (vrij: true = mag onvereenvoudigd)
 //   verzameling  {stukken:[{a, ai, b, bi}], voor?}              oplossingsverzameling: intervallen, unie ∪, ℝ, ∅, ℝ \ {a}, {a} (rekenkern VZ)
 const Antwoord = (() => {
   const esc = W.esc, T = (s) => W.tex(s);
+  // ---------- breuken t/n (gehele teller en noemer)
+  const ggdB = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
+  function leesBreuk(invoer) {
+    const s = String(invoer ?? '').replace(/[−–—]/g, '-').replace(/\s+/g, '').replace(/:/g, '/');
+    if (!s) return { leeg: true };
+    let m = s.match(/^\(?(-?)\(?(\d+)\)?\/\(?(-?)(\d+)\)?\)?$/);
+    if (m) { const t = +m[2] * (m[1] ? -1 : 1) * (m[3] ? -1 : 1), n = +m[4]; if (n === 0) return { fout: 'Je deelt door nul.' }; return { ok: true, t, n, breuk: true, negNoemer: !!m[3] }; }
+    m = s.match(/^(-?)(\d+)$/);
+    if (m) return { ok: true, t: +m[2] * (m[1] ? -1 : 1), n: 1 };
+    const g = Invoer.getal(s);
+    if (g.ok) return { ok: true, decimaal: true, waarde: g.waarde };
+    return { fout: 'Typ een breuk, bv. 3/4 of -5/2.' };
+  }
+  const breukTex = (t, n) => n === 1 ? W.texGetal(t) : `${t < 0 ? '-' : ''}\\frac{${Math.abs(t)}}{${n}}`;
+  function nakijkBreuk(a, invoer) {
+    const r = leesBreuk(invoer);
+    if (r.leeg) return { status: 'leeg', bericht: 'Vul eerst een antwoord in.' };
+    if (r.fout) return { status: 'ongeldig', bericht: r.fout };
+    const waarde = a.t / a.n;
+    if (r.decimaal) return Math.abs(r.waarde - waarde) < 1e-9 ? { status: 'vorm', bericht: 'Je antwoord is juist, maar schrijf het als breuk.' } : { status: 'fout' };
+    if (r.t * a.n !== a.t * r.n) return { status: 'fout' };
+    if (!a.vrij && ggdB(r.t, r.n) > 1 && r.n !== 1) return { status: 'vorm', bericht: r.t % r.n === 0 ? 'Je antwoord is juist, maar het is een geheel getal: schrijf het zonder breukstreep.' : 'Je antwoord is juist, maar vereenvoudig de breuk nog.' };
+    if (r.negNoemer) return { status: 'vorm', bericht: 'Zet het minteken vóór de breuk, niet in de noemer.' };
+    return { status: 'juist' };
+  }
   let laatste = null; // id van het laatst gebruikte tekstveld
 
   // ---------- toestand
@@ -38,12 +64,13 @@ const Antwoord = (() => {
     if (a.soort === 'interval') { const r = Invoer.interval(s); return r.ok ? { tex: Invoer.intervalTex(r) } : { fout: r.fout }; }
     if (a.soort === 'ongelijkheid') { const r = Invoer.ongelijkheid(s); return r.ok ? { tex: Invoer.ongelijkheidTex(r) } : { fout: r.fout }; }
     if (a.soort === 'complex') { const r = CX.ontleed(s); return r.ok ? { tex: r.tex } : { fout: r.fout }; }
+    if (a.soort === 'breuk') { const r = leesBreuk(s); return r.ok ? { tex: (a.voor ? a.voor + ' ' : '') + (r.decimaal ? W.texGetal(r.waarde) : r.n === 1 ? W.texGetal(r.t) : `${r.t < 0 ? '-' : ''}\\frac{${Math.abs(r.t)}}{${r.n}}`) } : { fout: r.fout }; }
     if (a.soort === 'verzameling') { const r = VZ.ontleed(s); return r.ok ? { tex: (a.voor ? a.voor + ' ' : '') + r.tex } : { fout: r.fout }; }
     if (a.soort === 'functie') { const r = FX.ontleed(s); return r.ok ? { tex: (a.voor ? a.voor + ' ' : '') + r.tex } : { fout: r.fout }; }
     if (a.soort === 'Vcomplex') { const t = CX.texV(s); if (t) return { tex: t }; const f = CX.splitsV(s).map(CX.ontleed).find(x => !x.ok); return { fout: f ? f.fout : 'Dit kan ik niet lezen.' }; }
     return null;
   }
-  const metVoorbeeld = (a) => ['expr', 'veelterm', 'formule', 'interval', 'ongelijkheid', 'complex', 'Vcomplex', 'functie', 'verzameling'].includes(a.soort);
+  const metVoorbeeld = (a) => ['expr', 'veelterm', 'formule', 'interval', 'ongelijkheid', 'complex', 'Vcomplex', 'functie', 'verzameling', 'breuk'].includes(a.soort);
   function voorbeeld(a, invoer) {
     const l = lezing(a, invoer);
     if (!l || l.leeg) return '<span class="klein">Je antwoord verschijnt hier.</span>';
@@ -51,7 +78,7 @@ const Antwoord = (() => {
   }
 
   // ---------- HTML
-  const PLACEHOLDER = { getal: 'antwoord', expr: 'antwoord', veelterm: 'antwoord', formule: 'formule', interval: 'bv. [−2 ; 5[', ongelijkheid: 'bv. −2 ≤ x < 5', complex: 'bv. 3 − 2i', functie: 'bv. 2(x − 1)² + 5', verzameling: 'bv. ]−∞, 2[ ∪ ]3, +∞[', Vcomplex: 'bv. 3 + 2i ; 3 − 2i', hoek: 'graden' };
+  const PLACEHOLDER = { getal: 'antwoord', expr: 'antwoord', veelterm: 'antwoord', formule: 'formule', interval: 'bv. [−2 ; 5[', ongelijkheid: 'bv. −2 ≤ x < 5', complex: 'bv. 3 − 2i', functie: 'bv. 2(x − 1)² + 5', verzameling: 'bv. ]−∞, 2[ ∪ ]3, +∞[', breuk: 'bv. 3/4', Vcomplex: 'bv. 3 + 2i ; 3 − 2i', hoek: 'graden' };
   function html(id, a, w, uit) {
     const dis = uit ? 'disabled' : '';
     if (a.soort === 'keuze') {
@@ -102,6 +129,7 @@ const Antwoord = (() => {
     if (a.soort === 'hoek') set.add('hoek');
     if (a.soort === 'functie') set.add('functie');
     if (a.soort === 'verzameling') set.add('verzameling');
+    if (a.soort === 'breuk') set.add('breuk');
     if (a.soort === 'delen') a.delen.forEach(d => toetsen(d.antw, set));
     if (a.toetsen) a.toetsen.forEach(t => set.add(t));
     return set;
@@ -122,6 +150,7 @@ const Antwoord = (() => {
     if (s.has('complex')) h += k('i', '<i>i</i>', 'complexe eenheid i') + (s.has('wortel') ? '' : k('√()', '√', 'vierkantswortel') + k('/', '/', 'breukstreep') + k('()', '( )', 'haakjes') + k('·', '·', 'maal')) + k('²', 'x²', 'kwadraat');
     if (s.has('Vcomplex')) h += k(' ; ', ';', 'puntkomma tussen de oplossingen') + k('±', '±', 'plus of min');
     if (s.has('hoek')) h += k('°', '°', 'graden');
+    if (s.has('breuk') && !s.has('functie') && !s.has('complex')) h += k('/', '/', 'breukstreep');
     if (s.has('verzameling')) h += k('[', '[', 'haakje [') + k(']', ']', 'haakje ]') + k(', ', ',', 'komma tussen de grenzen') + k(' ∪ ', '∪', 'unie') + k('-∞', '−∞', 'min oneindig') + k('+∞', '+∞', 'plus oneindig')
       + k('ℝ', 'ℝ', 'alle reële getallen') + k('∅', '∅', 'lege verzameling') + k(' \\ ', '\\', 'zonder') + k('{}', '{ }', 'accolades');
     if (s.has('functie')) h += k('x', '<i>x</i>', 'x') + k('²', 'x²', 'kwadraat') + k('³', 'x³', 'derde macht') + k('√()', '√', 'vierkantswortel') + k('()', '( )', 'haakjes') + k('/', '/', 'breukstreep');
@@ -281,6 +310,7 @@ const Antwoord = (() => {
       case 'complex': return CX.controleer(w.invoer, a);
       case 'functie': return FX.controleer(w.invoer, a);
       case 'verzameling': return VZ.controleer(w.invoer, a);
+      case 'breuk': return nakijkBreuk(a, w.invoer);
       case 'Vcomplex': return CX.controleerV(w.invoer, a);
       case 'hoek': {
         const t = CX.zonderGraden(w.invoer), gg = Invoer.getal(t);
@@ -330,6 +360,7 @@ const Antwoord = (() => {
       case 'V': return a.speciaal === 'leeg' ? 'V = \\varnothing' : a.speciaal === 'R' ? 'V = \\mathbb{R}' : `V = \\{${g(a.waarde, a.dec ?? 2)}\\}`;
       case 'expr': return a.tex || E.texVan(a.expr);
       case 'complex': return a.tex || CX.texAbi(a.re, a.im);
+      case 'breuk': return (a.voor ? a.voor + ' ' : '') + breukTex(a.t, a.n);
       case 'verzameling': return (a.voor ? a.voor + ' ' : '') + VZ.texVan(a.stukken);
       case 'functie': return (a.voor ? a.voor + ' ' : '') + (a.tex || FX.texVan(a.expr));
       case 'Vcomplex': return `V = \\{${(a.tex || a.waarden.map(z => CX.texAbi(z.re, z.im))).join('\\,;\\,')}\\}`;

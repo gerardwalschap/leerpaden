@@ -86,7 +86,7 @@ window.CATALOGUS = {
       naam: 'Wiskunde', map: 'WISKUNDE 7VJHO',
       hoofdstukken: [
         { nr: 1, titel: 'Getallenleer', sub: 'Rekenen in ℕ, ℤ, ℚ en ℝ',
-          leerpaden: ['reele-getallen'] },
+          leerpaden: ['getallenleer-n', 'getallenleer-z', 'getallenleer-q', 'reele-getallen'] },
         { nr: 2, titel: 'Functieleer' },
         { nr: 3, titel: 'Kansrekenen en statistiek' },
       ],
