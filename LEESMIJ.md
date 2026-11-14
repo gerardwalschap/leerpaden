@@ -144,6 +144,17 @@ Hoeken altijd in **graden** (geen radialen). Elke gelijkwaardige hoek is juist (
 Leerlingen typen complexe getallen als `3 - 2i`, `-1/2 + i`, `2√2 + 2√2 i`; oplossingen als `3 + 2i ; 3 - 2i` of `3 ± 2i`.
 Bij een bijzondere hoek wordt de exacte waarde gevraagd (met √); een afgerond antwoord geeft dan een tip.
 
+## 4e. Het leerpad Tweedegraadsfuncties: transformaties en kenmerken (4BW, toegepaste wiskunde)
+
+11 delen volgens de cursus en de werkbundel *TWiskunde 4BW – 3. Tweedegraadsfuncties uitdieping*, slaagdrempel **70%**.
+
+* **A · Transformaties** (1–3): f(x) + k · f(x − h) · k·f(x), telkens ook voor x³, √x en 1/x en met grafieken.
+* **B · De topvorm** (4–7): top aflezen en transformaties combineren · kwadraat afsplitsen (a = 1 en a ≠ 1) · voorschrift uit top + punt.
+* **C · Kenmerken** (8–11): domein, bereik, nulwaarden · tekenverloop, stijgen/dalen, extremum · symmetrie · functieoverzicht.
+
+Leerlingen typen voorschriften als `2(x - 1)^2 + 5`, `√(x - 3)` of `1/(x + 2)` (rekenkern `js/kern/functie.js`,
+antwoordsoort `functie`). Een voorschrift wordt vergeleken op functiewaarden; met `vorm: 'topvorm'` moet het in de vorm a(x − h)² + k staan.
+
 ## Inlogbrieven
 
 Na het aanmaken van accounts (of nieuwe wachtwoorden) krijg je per leerling **één A4** met de inloggegevens én de handleiding.
