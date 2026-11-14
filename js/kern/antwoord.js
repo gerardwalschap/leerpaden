@@ -122,6 +122,8 @@ const Antwoord = (() => {
     if (a.soort === 'delen') return { delen: a.delen.map(d => leeg(d.antw)) };
     if (a.soort === 'V' || a.soort === 'Vmeer') return { invoer: '', speciaal: null };
     if (a.soort === 'teken') return { punten: a.rechten.map(() => []), actief: 0 };
+    if (a.soort === 'wt') return LG.wtLeeg(a);
+    if (a.soort === 'schakeling') return LG.bouwLeeg(a);
     if (a.soort === 'combi') return { p: '', q: '' };
     return { invoer: '' };
   }
@@ -187,6 +189,8 @@ const Antwoord = (() => {
         <p class="klein">Kies een rechte en klik twee punten aan. Klik op een punt om het weg te halen.</p>`}
         <div class="tk-svg" id="${id}-svg">${tekenSVG(a, w, uit)}</div></div>`;
     }
+    if (a.soort === 'wt') return LG.wtHTML(id, a, w, uit, T);
+    if (a.soort === 'schakeling') return LG.bouwHTML(id, a, w, uit);
     if (a.soort === 'combi') {
       const v = (k, lab) => `<span class="is">${T(lab)}</span><input type="text" class="veld" id="${id}-${k}" value="${esc(w[k] || '')}" autocomplete="off" spellcheck="false" ${dis} style="width:80px">`;
       return `<div class="antwoordrij">${v('p', a.label1 || '\\text{vgl. 1} \\;\\cdot')}&nbsp;&nbsp;${v('q', a.label2 || '\\text{vgl. 2} \\;\\cdot')}</div>`;
@@ -312,6 +316,8 @@ const Antwoord = (() => {
         return;
       }
       if (a.soort === 'combi') { ['p', 'q'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) velden.push({ el, zet: (v) => { w[k] = v; }, a }); }); return; }
+      if (a.soort === 'wt') { LG.wtKoppel(id, a, w, opts); return; }
+      if (a.soort === 'schakeling') { LG.bouwKoppel(id, a, w, opts); return; }
       if (a.soort === 'vakjes') { a.velden.forEach((_, i) => { const el = document.getElementById(`${id}-${i}`); if (el) velden.push({ el, zet: (v) => { w.vakjes[i] = v; }, a }); }); return; }
       if (a.soort === 'V' || a.soort === 'Vmeer') {
         const el = document.getElementById(id);
@@ -366,7 +372,7 @@ const Antwoord = (() => {
     if (a.soort === 'keuze') return;
     if (a.soort === 'delen') return a.delen.forEach((d, i) => lees(`${id}-d${i}`, d.antw, w.delen[i]));
     if (a.soort === 'vakjes') return a.velden.forEach((_, i) => { const el = document.getElementById(`${id}-${i}`); if (el) w.vakjes[i] = el.value; });
-    if (a.soort === 'teken') return;
+    if (a.soort === 'teken' || a.soort === 'wt' || a.soort === 'schakeling') return;
     if (a.soort === 'combi') { ['p', 'q'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) w[k] = el.value; }); return; }
     const el = document.getElementById(id); if (el) w.invoer = waarde(el);
   }
@@ -377,6 +383,8 @@ const Antwoord = (() => {
     if (a.soort === 'delen') return a.delen.every((d, i) => isIngevuld(d.antw, w.delen[i]));
     if (a.soort === 'V' || a.soort === 'Vmeer') return !!w.speciaal || !!String(w.invoer || '').trim();
     if (a.soort === 'teken') return w.punten.every(ps => ps.length === 2);
+    if (a.soort === 'wt') return LG.wtIngevuld(a, w);
+    if (a.soort === 'schakeling') return LG.bouwIngevuld(a, w);
     if (a.soort === 'combi') return !!String(w.p || '').trim() && !!String(w.q || '').trim();
     return !!String(w.invoer || '').trim();
   }
@@ -445,6 +453,8 @@ const Antwoord = (() => {
       case 'verzameling': return VZ.controleer(w.invoer, a);
       case 'breuk': return nakijkBreuk(a, w.invoer);
       case 'teken': return nakijkTeken(a, w);
+      case 'wt': return LG.wtNakijk(a, w);
+      case 'schakeling': return LG.bouwNakijk(a, w);
       case 'combi': return nakijkCombi(a, w);
       case 'Vcomplex': return CX.controleerV(w.invoer, a);
       case 'hoek': {
@@ -497,6 +507,8 @@ const Antwoord = (() => {
       case 'complex': return a.tex || CX.texAbi(a.re, a.im);
       case 'breuk': return (a.voor ? a.voor + ' ' : '') + breukTex(a.t, a.n);
       case 'teken': return a.rechten.map(r => r.tex).join(' \\quad \\text{en} \\quad ');
+      case 'wt': return LG.wtTex(a);
+      case 'schakeling': return a.tex;
       case 'combi': { const g0 = ggdB(a.c1, a.c2) || 1; let p = a.c2 / g0, q = -a.c1 / g0; if (p < 0) { p = -p; q = -q; } return `\\text{bv. vgl. 1} \\cdot ${W.texGetal(p)} \\text{ en vgl. 2} \\cdot ${q < 0 ? '(' + W.texGetal(q) + ')' : W.texGetal(q)}`; }
       case 'verzameling': return (a.voor ? a.voor + ' ' : '') + VZ.texVan(a.stukken);
       case 'functie': return (a.voor ? a.voor + ' ' : '') + (a.tex || FX.texVan(a.expr));
@@ -522,6 +534,7 @@ const Antwoord = (() => {
   function juistHTML(a) {
     if (a.soort === 'keuze') { const o = a.opties.find(x => String(x.k) === String(a.juist)); return o ? (o.html ? o.l : T(o.l)) : '?'; }
     if (a.soort === 'delen') return a.delen.map(d => `${d.html ? d.label : T(d.label)} ${juistHTML(d.antw)}`).join(' &nbsp;·&nbsp; ');
+    if (a.soort === 'schakeling' && a.boom !== undefined) return `${T(a.tex)}<div class="lg-figuur" style="max-width:420px;margin:4px auto">${LG.vastSVG(a, a.boom)}</div>`;
     return T(juistTex(a));
   }
   function juistTekst(a) {
@@ -548,6 +561,8 @@ const Antwoord = (() => {
         return { tekst: w.vakjes.map(x => String(x).trim() || '…').join(' | '), tex };
       }
     }
+    if (a.soort === 'wt') return { tekst: w.cel.map(c => c.map(x => x || '·').join('')).join(' | '), tex: LG.wtTex(a, true, w) };
+    if (a.soort === 'schakeling') return { tekst: `${a.uitgang} = ${LG.functieVan(a, w)}`, tex: null };
     if (a.soort === 'teken') return { tekst: w.punten.map((ps, i) => `rechte ${i + 1}: ${ps.map(p => `(${p[0]}, ${p[1]})`).join(' ') || '—'}`).join(' · '), tex: null };
     if (a.soort === 'combi') return { tekst: `vgl. 1 · ${w.p || '…'} en vgl. 2 · ${w.q || '…'}`, tex: null };
     if (a.soort === 'Vmeer') {

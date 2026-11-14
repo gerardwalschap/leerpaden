@@ -47,7 +47,8 @@ window.CATALOGUS = {
     'wisk-4bw-mww': {
       naam: 'Wiskunde', map: 'WISKUNDE 4BW_MWW',
       hoofdstukken: [
-        { nr: 1, titel: 'Logica' },
+        { nr: 1, titel: 'Logica', sub: 'Herhaling · Logische poorten · Schakelingen · Domotica',
+          leerpaden: ['logica'] },
         { nr: 2, titel: 'Stelsels van vergelijkingen', sub: 'Grafisch · Gelijkstelling · Substitutie · Combinatie · Vraagstukken',
           leerpaden: ['stelsels', 'remediering-vergelijkingen'] },
         { nr: 3, titel: 'Tweedegraadsfuncties' },

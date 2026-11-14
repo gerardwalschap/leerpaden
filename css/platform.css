@@ -54,3 +54,22 @@ math-field::part(virtual-keyboard-toggle), math-field::part(menu-toggle) { displ
 .tk-legende { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .tk-legende .keuze { border-width: 2px; }
 .tk-svg svg { user-select: none; -webkit-user-select: none; }
+/* ===== Logica: waarheidstabellen en schakelingenbouwer ===== */
+.wt-blok { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+table.wt { border-collapse: collapse; font-size: 16px; }
+table.wt th, table.wt td { border: 1px solid #cfd6e0; padding: 4px 12px; text-align: center; min-width: 38px; }
+table.wt th { background: #eef3fa; }
+table.wt td.wt-uit, table.wt th.wt-uit { background: #fff7f0; }
+.wt-knop { width: 40px; height: 32px; border: 1.5px solid #e8772e; border-radius: 6px; background: #fff; font-size: 17px; font-weight: bold; cursor: pointer; }
+.wt-knop.leeg { color: #c3c9d4; border-color: #cfd6e0; }
+.wt-knop:disabled { cursor: default; opacity: .85; }
+.lg-bouwer { display: flex; flex-direction: column; gap: 6px; align-items: center; width: 100%; }
+.lg-werk { display: flex; gap: 10px; align-items: flex-start; justify-content: center; width: 100%; }
+.lg-doek { flex: 1 1 auto; max-width: 620px; }
+.lg-palet { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px dashed #b9c3d3; border-radius: 10px; background: #f8fafc; max-height: 380px; overflow-y: auto; }
+.lg-pal-item { display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 8px; background: #fff; border: 1px solid #d8dee8; cursor: grab; touch-action: none; user-select: none; font-size: 11px; color: #445; }
+.lg-pal-item:hover { border-color: #1c4e8a; }
+.lg-geest { position: fixed; z-index: 1000; pointer-events: none; opacity: .85; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+.lg-pin { cursor: pointer; }
+.lg-figuur { display: flex; justify-content: center; }
+@media (max-width: 700px) { .lg-werk { flex-direction: column-reverse; align-items: stretch; } .lg-palet { flex-direction: row; flex-wrap: wrap; max-height: none; } }
