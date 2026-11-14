@@ -479,7 +479,7 @@
 
   // ---------- afdrukcentrum: puntenlijsten en syntheses over klassen en leerpaden heen
   const LOGO = new URL((location.pathname.includes('/test/') ? '../' : '') + 'img/logo-deresonant.png', location.href).href;
-  const AFD = () => (S.afd ||= { klassen: new Set(), progs: new Set(), poging: 'beste', geslaagdKol: false, enkelGemaakt: true, soort: null, data: null, bezig: '' });
+  const AFD = () => (S.afd ||= { klassen: new Set(), progs: new Set(), geslaagdKol: false, enkelGemaakt: true, soort: null, data: null, bezig: '' });
   const afdKlassen = () => klassenVan(S.alle || []);
   const afdLeerlingen = () => (S.alle || []).filter(l => AFD().klassen.has(l.klas));
   function afdProgs() { // leerpaden met minstens één gekoppelde leerling in de gekozen klassen
@@ -488,14 +488,8 @@
   }
   const klaarDelen = (P) => P.delen.filter(d => d.klaar);
   const ingediendVan = (st, nr) => st.testen.filter(t => t.deel === nr && t.status === 'ingediend').sort((a, b) => String(a.ingediend).localeCompare(String(b.ingediend)));
-  function scoreCel(st, nr, poging) {
-    const ts = ingediendVan(st, nr);
-    if (!ts.length) return '';
-    const s = (t) => `<span class="${t.geslaagd ? '' : 'r'}">${t.score}/${t.max}</span>`;
-    if (poging === 'alle') return ts.map(s).join(' · ');
-    if (poging === 'laatste') return s(ts[ts.length - 1]);
-    return s(ts.reduce((b, t) => (t.score / t.max > b.score / b.max ? t : b)));
-  }
+  const OP = 5; // alle testen herrekend naar 5 punten
+  const op5 = (t) => String(Math.round(10 * OP * t.score / t.max) / 10).replace('.', ',');
   const AFDSTIJL = `<style>
       .rapport .afdkop { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #1c4e8a; padding-bottom: 6px; margin-bottom: 10px; }
       .rapport .afdkop img { height: 34px; } .rapport .afdkop .vul { flex: 1; } .rapport .afdkop h1 { margin: 0; }
@@ -524,13 +518,16 @@
         let delen = klaarDelen(P);
         if (A.enkelGemaakt) delen = delen.filter(d => ll.some(l => ingediendVan(l.status, d.nr).length));
         if (!delen.length) return `<div class="blok"><div class="lpkop">${esc(P.titel)}</div><p class="klein">Nog geen testen afgelegd.</p></div>`;
-        return `<div class="blok"><div class="lpkop">${esc(P.titel)} <span class="klein">· slaagdrempel ${drempel}%</span></div>
-          <table>${rij(['Leerling', ...delen.map(d => ({ k: 'sc', t: `<span title="${esc(d.titel)}">D${d.nr}</span>` })), ...(A.geslaagdKol ? [{ k: 'sc', t: 'Geslaagd' }] : [])], true)}
-          ${ll.map(l => rij([`${esc(l.naam)} ${esc(l.voornaam)}`, ...delen.map(d => ({ k: 'sc', t: scoreCel(l.status, d.nr, A.poging) })),
+        // elke afgelegde test (elke poging) krijgt een eigen kolom, in volgorde van indienen
+        const kol = delen.flatMap(d => { const n = Math.max(...ll.map(l => ingediendVan(l.status, d.nr).length), 1); return Array.from({ length: n }, (_, i) => ({ d, i, n })); });
+        const cel = (l, c) => { const t = ingediendVan(l.status, c.d.nr)[c.i]; return t ? `<span class="${t.geslaagd ? '' : 'r'}">${op5(t)}</span>` : ''; };
+        return `<div class="blok"><div class="lpkop">${esc(P.titel)} <span class="klein">· slaagdrempel ${drempel}% · scores op ${OP}</span></div>
+          <table>${rij(['Leerling', ...kol.map(c => ({ k: 'sc', t: `<span title="${esc(c.d.titel)}">D${c.d.nr}${c.n > 1 ? ` <small>(${c.i + 1})</small>` : ''}</span>` })), ...(A.geslaagdKol ? [{ k: 'sc', t: 'Geslaagd' }] : [])], true)}
+          ${ll.map(l => rij([`${esc(l.naam)} ${esc(l.voornaam)}`, ...kol.map(c => ({ k: 'sc', t: cel(l, c) })),
             ...(A.geslaagdKol ? [{ k: 'sc', t: `${l.status.geslaagd.length}/${klaarDelen(P).length}` }] : [])])).join('')}</table>
           <p class="klein">${delen.map(d => `D${d.nr} = ${esc(d.titel)}`).join(' · ')}</p></div>`;
       }).join('');
-      return `<div class="${ki ? 'nieuwe-pagina' : ''}">${afdKop(`Puntenlijst ${esc(k)}`, `${A.poging === 'beste' ? 'beste poging' : A.poging === 'laatste' ? 'laatste poging' : 'alle pogingen'} per test · rood = niet geslaagd`)}${tabellen || '<p>Geen gegevens.</p>'}</div>`;
+      return `<div class="${ki ? 'nieuwe-pagina' : ''}">${afdKop(`Puntenlijst ${esc(k)}`, `alle afgelegde testen, herrekend naar ${OP} punten · (1), (2), … = 1ste, 2de poging · rood = niet geslaagd`)}${tabellen || '<p>Geen gegevens.</p>'}</div>`;
     }).join('');
     return `<div class="rapport" style="width:1010px">${RAPPORTSTIJL + AFDSTIJL}${blokken}</div>`;
   }
@@ -545,8 +542,8 @@
     if (!ingediend.length && !oef.n) return `${vn} is nog niet gestart met ${P.titel}.`;
     const g = st.geslaagd.filter(nr => delen.some(d => d.nr === nr)).length;
     const beste = delen.map(d => { const ts = ingediend.filter(t => t.deel === d.nr); return ts.length ? { d, n: ts.length, b: ts.reduce((x, t) => (t.score / t.max_score > x.score / x.max_score ? t : x)), ok: st.geslaagd.includes(d.nr) } : null; }).filter(Boolean);
-    const gem = beste.length ? Math.round(100 * beste.reduce((s, x) => s + x.b.score / x.b.max_score, 0) / beste.length) : null;
-    const extra = [gem !== null ? `gemiddelde testscore ${gem}%` : '', oef.n ? `${oef.n} oefeningen, ${Math.round(100 * oef.j / oef.n)}% juist` : ''].filter(Boolean).join('; ');
+    const gem = ingediend.length ? Math.round(100 * ingediend.reduce((s, t) => s + t.score / t.max_score, 0) / ingediend.length) : null;
+    const extra = [gem !== null ? `gemiddelde over ${ingediend.length} ${ingediend.length === 1 ? 'test' : 'testen'}: ${gem}%` : '', oef.n ? `${oef.n} oefeningen, ${Math.round(100 * oef.j / oef.n)}% juist` : ''].filter(Boolean).join('; ');
     const zinnen = [`${vn} ${g === N ? `rondde alle ${N} delen af` : `slaagde voor ${g} van de ${N} delen`}${extra ? ` (${extra})` : ''}.`];
     const moeite = beste.filter(x => x.ok && x.n > 1), niet = beste.filter(x => !x.ok);
     if (moeite.length) zinnen.push(`Meerdere pogingen nodig voor ${lijstTekst(moeite.slice(0, 3).map(x => kortTitel(x.d.titel)))}.`);
@@ -591,7 +588,6 @@
           <p class="klein" style="margin-top:8px"><button class="link" data-a="afdalle">alles selecteren</button></p>` : '<p class="klein">Geen leerlingen van deze klassen gekoppeld aan een leerpad.</p>'}</div>
       <div class="afd-blok"><h2>3. Afdrukken</h2>
         <div class="chips" style="margin-bottom:10px">
-          <label class="chip">Score per test: <select id="afdpoging"><option value="beste" ${A.poging === 'beste' ? 'selected' : ''}>beste poging</option><option value="laatste" ${A.poging === 'laatste' ? 'selected' : ''}>laatste poging</option><option value="alle" ${A.poging === 'alle' ? 'selected' : ''}>alle pogingen</option></select></label>
           <label class="chip"><input type="checkbox" id="afdgemaakt" ${A.enkelGemaakt ? 'checked' : ''}> enkel delen met afgelegde testen</label>
           <label class="chip"><input type="checkbox" id="afdgesl" ${A.geslaagdKol ? 'checked' : ''}> kolom "geslaagde delen"</label></div>
         <div class="werkbalk"><button data-a="afdpunten" ${kies ? '' : 'disabled'}>📋 Puntenlijst</button><button data-a="afdsynth" ${kies ? '' : 'disabled'}>📝 Synthese</button>
@@ -630,7 +626,6 @@
     const A = AFD();
     app.querySelectorAll('input.afk').forEach(c => c.onchange = () => { c.checked ? A.klassen.add(c.value) : A.klassen.delete(c.value); A.data = null; render(); });
     app.querySelectorAll('input.afp').forEach(c => c.onchange = () => { c.checked ? A.progs.add(c.value) : A.progs.delete(c.value); A.data = null; render(); });
-    const p = document.getElementById('afdpoging'); if (p) p.onchange = () => { A.poging = p.value; render(); };
     const g = document.getElementById('afdgemaakt'); if (g) g.onchange = () => { A.enkelGemaakt = g.checked; render(); };
     const k = document.getElementById('afdgesl'); if (k) k.onchange = () => { A.geslaagdKol = k.checked; render(); };
   }
