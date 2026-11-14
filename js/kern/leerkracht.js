@@ -8,6 +8,7 @@
     dbProgs: [], prog: API.sessie.get('lk-prog'), P: null,
     data: null, detail: null, alle: null, nieuw: null, fout: '', melding: '',
     klas: API.sessie.get('lk-klas') || '', zoek: '', selectie: new Set(),
+    boomKlas: API.sessie.get('lk-boomklas') || null, boomVak: API.sessie.get('lk-boomvak') || null,
   };
   const KLAAR = () => S.P.delen.filter(d => d.klaar);
   const DELEN = () => S.P.delen;
@@ -80,10 +81,12 @@
     const progs = Leerpaden.lijst;
     return `${API.DEMO ? '<div class="demo-band">DEMO — gegevens blijven enkel in deze browser · leerkracht-wachtwoord: demo · <a href="index.html">naar de leerlingenpagina</a></div>' : ''}
       <header class="balk"><div class="streep"></div>
-        <div class="logo">${esc(CONFIG.TITEL || 'Leerpaden')}<small>Leerkracht${S.P && S.view !== 'alle' ? ' · ' + esc(S.P.titel) : ''}</small></div>
+        <div class="logo">${esc(CONFIG.TITEL || 'Leerpaden')}<small>Leerkracht${S.P && !['alle', 'boom'].includes(S.view) ? ' · ' + esc(S.P.titel) : ''}</small></div>
         ${S.token ? `<div class="rechts"><button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>
-      ${S.token && S.view !== 'login' ? `<nav class="progtabs">${progs.map(p => `<button class="ptab ${S.view !== 'alle' && S.prog === p.code ? 'actief' : ''}" data-a="prog" data-code="${esc(p.code)}">${esc(p.titel)}</button>`).join('')}
+      ${S.token && S.view !== 'login' ? `<nav class="progtabs">
+        <button class="ptab ${S.view === 'boom' ? 'actief' : ''}" data-a="boom" data-niveau="${S.boomVak ? 'vak' : S.boomKlas ? 'klas' : 'klassen'}" data-klas="${esc(S.boomKlas || '')}" data-vak="${esc(S.boomVak || '')}">🏫 Klassen en leerpaden</button>
+        ${S.P && !['boom', 'alle'].includes(S.view) ? `<button class="ptab actief" data-a="overzicht">${esc(S.P.titel)}</button>` : ''}
         <button class="ptab ${S.view === 'alle' ? 'actief' : ''}" data-a="alle">👥 Alle leerlingen</button></nav>` : ''}`;
   }
   function render() {
@@ -93,6 +96,7 @@
     if (S.view === 'leerling') h = vLeerling();
     if (S.view === 'toevoegen') h = vToevoegen();
     if (S.view === 'alle') h = vAlle();
+    if (S.view === 'boom') h = vBoom();
     app.innerHTML = kop() + `<main class="breed">${S.melding ? `<div class="melding ok">${S.melding}</div>` : ''}${h}</main>`;
     S.melding = '';
     W.renderIn(app);
@@ -123,7 +127,7 @@
     const alle = S.data.leerlingen, ll = filter(alle);
     const wachten = ll.filter(l => l.actief && KLAAR().some(d => info(l.status, d.nr).wacht));
     const db = S.dbProgs.find(p => p.code === S.prog);
-    return `<div class="werkbalk"><h1 class="vul" style="margin:0">${esc(S.P.titel)} <span class="klein">(${alle.length} leerlingen)</span></h1>
+    return `${kruimel()}<div class="werkbalk"><h1 class="vul" style="margin:0">${esc(S.P.titel)} <span class="klein">(${alle.length} leerlingen)</span></h1>
         <button data-a="toevoegen">+ Nieuwe leerlingen</button>
         <button class="licht" data-a="alle">Bestaande leerlingen koppelen</button>
         <button class="licht" data-a="vernieuw">Vernieuwen</button></div>
@@ -154,6 +158,97 @@
         <span class="voortgang"><span class="b"></span></span> open
         <span class="voortgang"><span class="w"></span></span> test niet geslaagd, wacht op heropenen
         <span class="voortgang"><span></span></span> vergrendeld</p>`}`;
+  }
+
+
+  // ---------- Klassen en leerpaden (klas → vak → hoofdstuk)
+  const CAT = () => Catalogus.C;
+  function vakTitel(vak) {
+    const V = CAT().vakken[vak], zelfde = Object.values(CAT().vakken).filter(x => x.naam === V.naam).length > 1;
+    return zelfde ? `${esc(V.naam)} <span class="klein">(${esc(V.map)})</span>` : esc(V.naam);
+  }
+  // Broodkruimel boven het overzicht van een leerpad.
+  function kruimel() {
+    const pl = Catalogus.plaatsenVan(S.prog);
+    const p = pl.find(x => x.vak === S.boomVak) || pl[0];
+    if (!p) return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> › <i>dit leerpad staat nog niet in de catalogus</i></p>`;
+    const kls = Catalogus.klassenMetVak(p.vak);
+    const kl = kls.includes(S.boomKlas) ? S.boomKlas : kls[0];
+    return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> ›
+      <button class="link" data-a="boom" data-niveau="klas" data-klas="${esc(kl)}">${esc(kl)}</button> ›
+      <button class="link" data-a="boom" data-niveau="vak" data-klas="${esc(kl)}" data-vak="${esc(p.vak)}">${vakTitel(p.vak)}</button> ›
+      Hoofdstuk ${p.h.nr}: ${esc(p.h.titel)}</p>`;
+  }
+  // Leerlingen (actieve accounts) van een klas, en hoeveel daarvan aan een leerpad gekoppeld zijn.
+  const leerlingenVanKlas = (k) => (S.alle || []).filter(l => l.actief && Catalogus.inKlas(l.klas, k));
+  const gekoppeld = (code, lijst) => lijst.filter(l => l.programmas.includes(code)).length;
+  const bestaat = (code) => !!Leerpaden.vind(code);
+
+  function vBoom() {
+    const C = CAT();
+    const klas = C.klassen.find(k => k.code === S.boomKlas);
+    const vak = klas && klas.vakken.includes(S.boomVak) ? S.boomVak : null;
+
+    // Niveau 1: klassen
+    if (!klas) {
+      const zonderKlas = (S.alle || []).filter(l => l.actief && !Catalogus.klasVan(l.klas));
+      return `<h1>Klassen</h1><p class="klein">Kies een klas, dan een vak. Leerlingen zien enkel de leerpaden waaraan je ze koppelt.</p>
+        <div class="tegels">${C.klassen.map(k => {
+          const lp = k.vakken.flatMap(v => C.vakken[v].hoofdstukken.flatMap(h => (h.leerpaden || []).filter(bestaat)));
+          const n = leerlingenVanKlas(k.code).length;
+          return `<button class="tegel" data-a="boom" data-niveau="klas" data-klas="${esc(k.code)}">
+            <div class="tegel-titel">${esc(k.code)}</div>
+            <div class="klein">${k.vakken.length} vak${k.vakken.length === 1 ? '' : 'ken'} · ${lp.length} leerpad${lp.length === 1 ? '' : 'en'}</div>
+            <div class="klein">${n} leerling${n === 1 ? '' : 'en'} met een account</div></button>`;
+        }).join('')}</div>
+        ${zonderKlas.length ? `<div class="melding let klein">${zonderKlas.length} account(s) hebben een klasnaam die bij geen enkele klas hoort
+          (${[...new Set(zonderKlas.map(l => l.klas || '— geen —'))].map(esc).join(', ')}). Pas de klas aan bij <button class="link" data-a="alle">Alle leerlingen</button> → leerling → <i>Naam of klas wijzigen</i>.</div>` : ''}`;
+    }
+
+    // Niveau 2: vakken van de klas
+    if (!vak) {
+      return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> › ${esc(klas.code)}</p>
+        <h1>${esc(klas.code)}</h1><p>Kies een vak.</p>
+        <div class="tegels">${klas.vakken.map(v => {
+          const V = C.vakken[v], hs = V.hoofdstukken, met = hs.filter(h => (h.leerpaden || []).some(bestaat) || (h.extern || []).length).length;
+          return `<button class="tegel" data-a="boom" data-niveau="vak" data-klas="${esc(klas.code)}" data-vak="${esc(v)}">
+            <div class="tegel-titel">${esc(V.naam)}</div><div class="klein">map ${esc(V.map)}</div>
+            <div class="klein">${hs.length} hoofdstukken · ${met} met leerpad</div></button>`;
+        }).join('')}</div>`;
+    }
+
+    // Niveau 3: hoofdstukken van het vak
+    const V = C.vakken[vak], ll = leerlingenVanKlas(klas.code);
+    const andere = Catalogus.klassenMetVak(vak).filter(k => k !== klas.code);
+    return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> ›
+        <button class="link" data-a="boom" data-niveau="klas" data-klas="${esc(klas.code)}">${esc(klas.code)}</button> › ${esc(V.naam)}</p>
+      <h1>${esc(V.naam)} · ${esc(klas.code)}</h1>
+      <p class="klein">Map <b>${esc(V.map)}</b>${andere.length ? ` · dit vak en zijn leerpaden gelden ook voor ${andere.map(esc).join(', ')}` : ''} · ${ll.length} leerling(en) van ${esc(klas.code)} met een account</p>
+      <div class="pad">${V.hoofdstukken.map(h => {
+        const regels = [
+          ...(h.leerpaden || []).map(code => {
+            const P = Leerpaden.vind(code);
+            if (!P) return `<div class="lp-regel"><span class="etiket grijs">Bestand ontbreekt</span> <span class="klein">${esc(code)}</span></div>`;
+            const g = gekoppeld(code, ll), tot = (S.alle || []).filter(l => l.programmas.includes(code)).length;
+            return `<div class="lp-regel">
+              <button class="link vet" data-a="openlp" data-code="${esc(code)}" data-klas="${esc(klas.code)}" data-vak="${esc(vak)}">${esc(P.titel)}</button>
+              <span class="etiket ${g ? 'groen' : 'grijs'}">${g ? `${g}/${ll.length} van ${esc(klas.code)} gekoppeld` : `niemand van ${esc(klas.code)} gekoppeld`}</span>
+              ${tot > g ? `<span class="klein">(${tot} in totaal)</span>` : ''}
+              <span class="vul"></span>
+              ${ll.length && g < ll.length ? `<button class="licht klein-knop" data-a="klaskoppel" data-code="${esc(code)}" data-klas="${esc(klas.code)}">Hele ${esc(klas.code)} koppelen</button>` : ''}
+              <button class="licht klein-knop" data-a="openlp" data-code="${esc(code)}" data-klas="${esc(klas.code)}" data-vak="${esc(vak)}">Opvolgen →</button></div>`;
+          }),
+          ...(h.extern || []).map(e => `<div class="lp-regel"><a href="${esc(e.url)}" target="_blank" rel="noopener" class="vet">${esc(e.titel)}</a>
+              <span class="etiket oranje">oud platform</span> <span class="klein">${esc(e.opm || '')}</span></div>`),
+        ];
+        const leeg = !regels.length;
+        return `<div class="stap hoofdstuk ${leeg ? 'dicht' : 'open'}"><div class="nr">${h.nr}</div>
+          <div class="vul"><div class="titel">${esc(h.titel)}</div>${h.sub ? `<div class="sub">${esc(h.sub)}</div>` : ''}
+            ${leeg ? '' : `<div class="lp-lijst">${regels.join('')}</div>`}</div>
+          ${leeg ? '<span class="etiket grijs">Nog te maken</span>' : ''}</div>`;
+      }).join('')}</div>
+      <p class="klein legende">Hoofdstukken met <span class="etiket grijs">Nog te maken</span> ziet enkel jij. Een leerpad ziet een leerling pas als je hem eraan koppelt:
+        in één keer met <i>Hele klas koppelen</i>, of per leerling bij <button class="link" data-a="alle">Alle leerlingen</button> (bv. enkel wie remediëring nodig heeft).</p>`;
   }
 
   function sindsLaatsteTest(det, nr) {
@@ -409,7 +504,7 @@
         try {
           const r = await API.call('lk_login', { p_wachtwoord: document.getElementById('pw').value });
           S.token = r.token; API.sessie.set('lk-token', r.token); S.fout = '';
-          await laadProgrammas(); await naarOverzicht();
+          await laadProgrammas(); await laadAlle(); S.view = 'boom';
         } catch (err) { S.fout = err.message; }
         render();
       };
@@ -443,6 +538,30 @@
       const a = el.dataset.a;
       try {
         if (a === 'afmelden') { API.call('lk_logout', { p_token: S.token }).catch(() => {}); API.sessie.del('lk-token'); S.token = null; S.view = 'login'; return render(); }
+        if (a === 'boom') {
+          const n = el.dataset.niveau;
+          S.boomKlas = n === 'klassen' ? null : (el.dataset.klas || S.boomKlas);
+          S.boomVak = n === 'vak' ? el.dataset.vak : null;
+          API.sessie.set('lk-boomklas', S.boomKlas || ''); API.sessie.set('lk-boomvak', S.boomVak || '');
+          await laadAlle(); S.view = 'boom'; S.detail = null; S.nieuw = null; render(); return window.scrollTo(0, 0);
+        }
+        if (a === 'openlp') {
+          S.boomKlas = el.dataset.klas; S.boomVak = el.dataset.vak;
+          API.sessie.set('lk-boomklas', S.boomKlas); API.sessie.set('lk-boomvak', S.boomVak);
+          S.prog = el.dataset.code; S.P = Leerpaden.vind(S.prog); API.sessie.set('lk-prog', S.prog);
+          await naarOverzicht(); render(); return window.scrollTo(0, 0);
+        }
+        if (a === 'klaskoppel') {
+          const code = el.dataset.code, k = el.dataset.klas;
+          const nieuw = leerlingenVanKlas(k).filter(l => !l.programmas.includes(code));
+          if (!nieuw.length) return;
+          const ok = await modaal('Hele klas koppelen?', `<p>${nieuw.length} leerling(en) van <b>${esc(k)}</b> worden gekoppeld aan <b>${esc(progTitel(code))}</b> en zien dit leerpad vanaf nu.</p>
+            <p class="klein">${nieuw.map(l => esc(l.voornaam + ' ' + l.naam) + ' (' + esc(l.klas) + ')').join(', ')}</p>
+            <p class="klein">Ontkoppelen kan later per leerling; resultaten blijven dan bewaard.</p>`, [['Annuleren', 0, 'licht'], ['Koppelen', 1]]);
+          if (!ok) return;
+          await roep('lk_inschrijven', { p_ids: nieuw.map(l => l.id), p_programma: code, p_aan: true });
+          await laadAlle(); S.melding = `${nieuw.length} leerling(en) van ${esc(k)} gekoppeld aan ${esc(progTitel(code))}.`; return render();
+        }
         if (a === 'prog') { S.prog = el.dataset.code; S.P = Leerpaden.vind(S.prog); API.sessie.set('lk-prog', S.prog); await naarOverzicht(); return render(); }
         if (a === 'overzicht') { await naarOverzicht(); return render(); }
         if (a === 'alle') { await laadAlle(); S.view = 'alle'; S.nieuw = null; return render(); }
@@ -546,7 +665,7 @@
   }
 
   (async () => {
-    if (S.token) { try { await laadProgrammas(); await naarOverzicht(); } catch (e) { S.token = null; S.view = 'login'; } }
+    if (S.token) { try { await laadProgrammas(); await laadAlle(); S.view = 'boom'; } catch (e) { S.token = null; S.view = 'login'; } }
     render();
   })();
 })();

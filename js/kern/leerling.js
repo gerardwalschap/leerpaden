@@ -7,7 +7,7 @@
   const S = {
     token: API.sessie.get('ll-token'),
     leerling: null, progs: [], prog: null, P: null,
-    status: null, view: 'login', deel: null, tab: 'theorie',
+    status: null, view: 'login', vak: null, deel: null, tab: 'theorie',
     oef: {}, test: null, fout: '', bezig: false,
   };
   const DELEN = () => S.P.delen;
@@ -38,7 +38,7 @@
   function afmelden(verlopen) {
     if (!verlopen && S.token) API.call('ll_logout', { p_token: S.token }).catch(() => {});
     API.sessie.del('ll-token'); API.sessie.del('ll-prog');
-    Object.assign(S, { token: null, leerling: null, progs: [], prog: null, P: null, status: null, view: 'login', test: null, oef: {}, fout: verlopen ? 'Je sessie is verlopen. Meld je opnieuw aan.' : '' });
+    Object.assign(S, { token: null, leerling: null, progs: [], prog: null, P: null, vak: null, status: null, view: 'login', test: null, oef: {}, fout: verlopen ? 'Je sessie is verlopen. Meld je opnieuw aan.' : '' });
     render();
   }
 
@@ -113,15 +113,40 @@
       </form></div>`;
   }
 
+  // Leerpaden van de leerling, gegroepeerd per vak (volgens de catalogus).
+  function perVak() {
+    const kl = S.leerling ? S.leerling.klas : '';
+    const groepen = new Map();
+    for (const p of beschikbaar()) {
+      const pl = window.Catalogus ? Catalogus.plaatsVoor(p.code, kl) : null;
+      const sleutel = pl ? pl.vak : '_overig';
+      if (!groepen.has(sleutel)) groepen.set(sleutel, { vak: sleutel, naam: pl ? pl.V.naam : 'Andere leerpaden', items: [] });
+      groepen.get(sleutel).items.push({ p, P: Leerpaden.vind(p.code), h: pl ? pl.h : null });
+    }
+    const lijst = [...groepen.values()];
+    // Twee vakken met dezelfde naam (bv. "Wiskunde"): toon de map erbij.
+    lijst.forEach(g => { const dubbel = lijst.filter(x => x.naam === g.naam).length > 1; g.titel = dubbel && g.vak !== '_overig' ? `${g.naam} ${Catalogus.klassenMetVak(g.vak).join(' · ')}` : g.naam; });
+    lijst.forEach(g => g.items.sort((a, b) => (a.h ? a.h.nr : 99) - (b.h ? b.h.nr : 99)));
+    return lijst;
+  }
+  function leerpadKnop({ p, P, h }) {
+    return `<button class="stap open" data-a="prog" data-code="${esc(p.code)}"><div class="nr">→</div>
+      <div><div class="titel">${esc(P.titel)}</div><div class="sub">${h ? `Hoofdstuk ${h.nr}: ${esc(h.titel)}` : esc(P.ondertitel || '')}</div></div><span></span></button>`;
+  }
   function vKies() {
-    const lijst = beschikbaar();
-    return `<h1>Dag ${esc(S.leerling.voornaam)}!</h1>
-      ${lijst.length ? `<p>Kies een leerpad.</p><div class="pad">${lijst.map(p => {
-        const P = Leerpaden.vind(p.code);
-        return `<button class="stap open" data-a="prog" data-code="${esc(p.code)}"><div class="nr">→</div>
-          <div><div class="titel">${esc(P.titel)}</div><div class="sub">${esc(P.ondertitel || '')}</div></div><span></span></button>`;
-      }).join('')}</div>`
-      : '<div class="kaart"><p>Je bent nog aan geen enkel leerpad gekoppeld. Vraag aan je leerkracht om je toe te voegen.</p></div>'}`;
+    const groepen = perVak();
+    const kl = window.Catalogus && S.leerling ? Catalogus.klasVan(S.leerling.klas) : null;
+    const klasTekst = S.leerling && S.leerling.klas ? ` <span class="klein">· klas ${esc(S.leerling.klas)}</span>` : '';
+    if (!groepen.length) return `<h1>Dag ${esc(S.leerling.voornaam)}!${klasTekst}</h1>
+      <div class="kaart"><p>Je bent nog aan geen enkel leerpad gekoppeld. Vraag aan je leerkracht om je toe te voegen.</p></div>`;
+    const g = groepen.length === 1 ? groepen[0] : groepen.find(x => x.vak === S.vak);
+    if (!g) return `<h1>Dag ${esc(S.leerling.voornaam)}!${klasTekst}</h1><p>Kies een vak.</p>
+      <div class="tegels">${groepen.map(x => `<button class="tegel" data-a="vak" data-vak="${esc(x.vak)}">
+        <div class="tegel-titel">${esc(x.titel)}</div><div class="klein">${x.items.length} leerpad${x.items.length === 1 ? '' : 'en'}</div></button>`).join('')}</div>`;
+    return `${groepen.length > 1 ? '<p class="klein"><button class="link" data-a="vak" data-vak="">← Alle vakken</button></p>' : ''}
+      <h1>${groepen.length > 1 ? esc(g.titel) : `Dag ${esc(S.leerling.voornaam)}!`}${klasTekst}</h1>
+      <p>Kies een leerpad${groepen.length > 1 ? '' : ` · ${esc(g.titel)}`}.</p>
+      <div class="pad">${g.items.map(leerpadKnop).join('')}</div>`;
   }
 
   function stapKnop(d) {
@@ -423,8 +448,9 @@
       const a = el.dataset.a;
       try {
         if (a === 'afmelden') return afmelden(false);
-        if (a === 'kies') { leesTestInvoer(); S.view = 'kies'; S.test = null; return render(); }
+        if (a === 'kies') { leesTestInvoer(); S.view = 'kies'; S.test = null; S.P = null; S.prog = null; API.sessie.del('ll-prog'); document.title = CONFIG.TITEL || 'Leerpaden'; return render(); }
         if (a === 'prog') { await openProgramma(el.dataset.code); return render(); }
+        if (a === 'vak') { S.vak = el.dataset.vak || null; return render(); }
         if (a === 'pad') { leesTestInvoer(); S.view = 'pad'; if (S.test && S.test.resultaat) S.test = null; render(); return window.scrollTo(0, 0); }
         if (a === 'deel') { leesTestInvoer(); S.view = 'deel'; S.deel = +el.dataset.nr; S.tab = 'theorie'; if (S.test && (S.test.resultaat || S.test.deel !== S.deel)) S.test = null; render(); return window.scrollTo(0, 0); }
         if (a === 'tab') {

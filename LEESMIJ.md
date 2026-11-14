@@ -164,5 +164,5 @@ Een leerpad hoort bij een hoofdstuk via `leerpaden: ['code-van-het-leerpad']`.
 * Een leerling hoort bij een klas als zijn klasnaam ermee begint (7VJHOa → 7VJHO).
 * **De databank verandert niet.** Alles werkt met de bestaande koppelingen.
 
-**Testversie:** https://gerardwalschap.github.io/leerpaden/test/ en …/test/leerkracht.html
-(zelfde databank, nieuwe weergave). Is alles goed, dan wordt de testversie de gewone versie.
+**Online sinds november 2026** op de gewone links (leerlingen: …/leerpaden/, leerkracht: …/leerpaden/leerkracht.html).
+De map `test/` mag blijven staan: daar kan je later een nieuwe versie eerst uitproberen.
