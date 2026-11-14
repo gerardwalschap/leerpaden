@@ -155,6 +155,17 @@ Bij een bijzondere hoek wordt de exacte waarde gevraagd (met √); een afgerond 
 Leerlingen typen voorschriften als `2(x - 1)^2 + 5`, `√(x - 3)` of `1/(x + 2)` (rekenkern `js/kern/functie.js`,
 antwoordsoort `functie`). Een voorschrift wordt vergeleken op functiewaarden; met `vorm: 'topvorm'` moet het in de vorm a(x − h)² + k staan.
 
+## 4f. Het leerpad Tweedegraadsongelijkheden (4BW, toegepaste wiskunde)
+
+6 delen volgens de PowerPoint *PWP_Tweedegraadsongelijkheden* (werkwijze grafisch en algebraïsch) en de werkbundel, slaagdrempel **70%**, zonder vraagstukken.
+
+* **A · Grafisch oplossen** (1–2): parabool met twee nulwaarden · geen of één nulwaarde.
+* **B · Algebraïsch oplossen** (3–5): V aflezen uit het tekenschema · D > 0 · D = 0 en D < 0 (antwoord: D, nulwaarden en V).
+* **C · Eindtest** (6).
+
+Leerlingen typen V als `]-∞, 2[ ∪ ]3, +∞[`, `[-1, 3]`, `ℝ`, `∅`, `ℝ \ {3}` of `{3}` (rekenkern `js/kern/verzameling.js`,
+antwoordsoort `verzameling`; komma of puntkomma tussen de grenzen, knoppen voor ∪, ∞, ℝ, ∅).
+
 ## Inlogbrieven
 
 Na het aanmaken van accounts (of nieuwe wachtwoorden) krijg je per leerling **één A4** met de inloggegevens én de handleiding.

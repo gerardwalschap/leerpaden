@@ -22,3 +22,4 @@ button.klein-knop { font-size: 13px; padding: 5px 10px; }
 button.licht.rood-knop { color: var(--rood); border-color: var(--rood-licht); }
 button.licht.rood-knop:hover { background: var(--rood-licht); border-color: var(--rood); }
 button.rood, button.oranje { color: #fff; }
+.tabel.tekenschema { margin: 8px auto; } .tabel.tekenschema td, .tabel.tekenschema th { text-align: center; min-width: 38px; }

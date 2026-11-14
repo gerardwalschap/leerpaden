@@ -30,7 +30,8 @@ window.CATALOGUS = {
       hoofdstukken: [
         { nr: 1, titel: 'Tweedegraadsvergelijkingen', sub: 'Merkwaardige producten · Ontbinden in factoren · Discriminant',
           leerpaden: ['merkwaardige-producten-ontbinden'] },
-        { nr: 2, titel: 'Tweedegraadsongelijkheden' },
+        { nr: 2, titel: 'Tweedegraadsongelijkheden', sub: 'Grafisch oplossen · Tekenschema · Algebraïsch oplossen',
+          leerpaden: ['tweedegraadsongelijkheden'] },
         { nr: 3, titel: 'Tweedegraadsfuncties: transformaties en kenmerken', sub: 'Verschuiven · Rek en spiegeling · Topvorm · Kwadraat afsplitsen · Functieoverzicht',
           leerpaden: ['tweedegraadsfuncties-transformaties'] },
         { nr: 4, titel: 'De functie c/x' },
