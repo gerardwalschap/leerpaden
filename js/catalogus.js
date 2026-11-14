@@ -87,7 +87,8 @@ window.CATALOGUS = {
       hoofdstukken: [
         { nr: 1, titel: 'Getallenleer', sub: 'Rekenen in ℕ, ℤ, ℚ en ℝ',
           leerpaden: ['getallenleer-n', 'getallenleer-z', 'getallenleer-q', 'reele-getallen'] },
-        { nr: 2, titel: 'Functieleer' },
+        { nr: 2, titel: 'Functieleer', sub: 'Functies · Domein en bereik · ax + b · Exponentiële functies',
+          leerpaden: ['functieleer'] },
         { nr: 3, titel: 'Kansrekenen en statistiek' },
       ],
     },

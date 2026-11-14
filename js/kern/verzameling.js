@@ -4,7 +4,7 @@
 const VZ = (() => {
   class Fout extends Error {}
   const norm = (s) => String(s ?? '')
-    .replace(/[−–—]/g, '-').replace(/∞|oneindig|inf\b|oo/gi, '∞').replace(/ℝ/g, 'R').replace(/[Øø∅]|\{\s*\}/g, '∅')
+    .replace(/[−–—]/g, '-').replace(/∞|oneindig|inf\b|oo/gi, '∞').replace(/ℝ/g, 'R').replace(/⁺|₊/g, '+').replace(/⁻|₋/g, '-').replace(/[Øø∅]|\{\s*\}/g, '∅')
     .replace(/\s+/g, ' ').replace(/^\s*V\s*=\s*/i, '').trim();
 
   function getal(t) {
@@ -31,6 +31,8 @@ const VZ = (() => {
     if (!s) throw new Fout('Er ontbreekt een deel van je antwoord.');
     if (/x/i.test(s)) throw new Fout('Schrijf de oplossingsverzameling met intervallen, bv. ]−∞, 2[ ∪ ]3, +∞[.');
     if (/^R$/i.test(s)) return [{ a: -Infinity, ai: false, b: Infinity, bi: false }];
+    if (/^R\s*\+$/i.test(s)) return [{ a: 0, ai: true, b: Infinity, bi: false }];
+    if (/^R\s*-$/i.test(s)) return [{ a: -Infinity, ai: false, b: 0, bi: true }];
     if (s === '∅') return [];
     let m = s.match(/^R\s*\\\s*\{(.+)\}$/i);
     if (m) {

@@ -112,7 +112,7 @@ const Antwoord = (() => {
     }
     const breed = a.soort !== 'getal' ? ' expr' : '';
     return `<div class="antwoordrij">${a.voor !== '' ? `<span class="is">${T(a.voor || (a.soort === 'formule' ? a.doel + ' =' : '='))}</span>` : ''}
-        <input type="text" class="veld${breed}" id="${id}" value="${esc(w.invoer)}" placeholder="${PLACEHOLDER[a.soort] || ''}" autocomplete="off" autocapitalize="none" spellcheck="false" ${dis}>
+        <input type="text" class="veld${breed}" id="${id}" value="${esc(w.invoer)}" placeholder="${a.placeholder || PLACEHOLDER[a.soort] || ''}" autocomplete="off" autocapitalize="none" spellcheck="false" ${dis}>
         ${a.na ? `<span class="na">${T(a.na)}</span>` : ''}</div>
       ${metVoorbeeld(a) && !uit ? `<div class="voorbeeld" id="${id}-vb">${voorbeeld(a, w.invoer)}</div>` : ''}`;
   }
