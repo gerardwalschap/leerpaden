@@ -352,13 +352,14 @@
         <button class="licht" data-a="allecsv">Lijst (Excel)</button>
       </div>
       <div class="kaart tabelwrap"><table class="lijst">
-        <tr><th><input type="checkbox" id="allesel" aria-label="alles selecteren" ${ll.length && ll.every(l => S.selectie.has(l.id)) ? 'checked' : ''}></th><th>Leerling</th><th>Klas</th><th>Gebruikersnaam</th>${progs.map(p => `<th class="midden">${esc(p.titel)}</th>`).join('')}<th>Laatst actief</th></tr>
+        <tr><th><input type="checkbox" id="allesel" aria-label="alles selecteren" ${ll.length && ll.every(l => S.selectie.has(l.id)) ? 'checked' : ''}></th><th>Leerling</th><th>Klas</th><th>Gebruikersnaam</th>${progs.map(p => `<th class="midden">${esc(p.titel)}</th>`).join('')}<th>Laatst actief</th><th></th></tr>
         ${ll.map(l => `<tr>
           <td><input type="checkbox" class="sel" data-id="${l.id}" ${S.selectie.has(l.id) ? 'checked' : ''} aria-label="selecteer"></td>
           <td><b>${esc(l.naam)} ${esc(l.voornaam)}</b>${l.actief ? '' : ' <span class="etiket grijs">gedeactiveerd</span>'}</td>
           <td>${esc(l.klas)}</td><td class="klein">${esc(l.gebruikersnaam)}</td>
           ${progs.map(p => `<td class="midden"><input type="checkbox" class="insch" data-id="${l.id}" data-code="${esc(p.code)}" ${l.programmas.includes(p.code) ? 'checked' : ''} aria-label="${esc(p.titel)}"></td>`).join('')}
-          <td class="klein">${datum(l.laatst_actief)}</td></tr>`).join('')}
+          <td class="klein">${datum(l.laatst_actief)}</td>
+          <td><button class="licht klein-knop rood-knop" data-a="verwijderrij" data-id="${l.id}" title="Leerling verwijderen uit de databank" aria-label="${esc(l.voornaam)} ${esc(l.naam)} verwijderen">🗑 Verwijderen</button></td></tr>`).join('')}
       </table></div>` : ''}`;
   }
 
@@ -617,6 +618,15 @@
           S.nieuw = { lijst: uit, code, terug: 'alle' }; S.view = 'toevoegen'; return render();
         }
 
+        if (a === 'verwijderrij') {
+          const x = S.alle.find(y => y.id === el.dataset.id);
+          if (!x) return;
+          const lp = x.programmas.map(progTitel);
+          if (!await modaal('Leerling verwijderen?', `<p>Het account van <b>${esc(x.voornaam)} ${esc(x.naam)}</b> (${esc(x.klas)} · ${esc(x.gebruikersnaam)}) en <b>alle</b> resultaten worden definitief gewist${lp.length ? `, in alle leerpaden: ${lp.map(esc).join(', ')}` : ''}.</p>
+            <p class="klein">Dit kan niet ongedaan gemaakt worden. Wil je de resultaten bewaren, download dan eerst het rapport in het leerpad.</p>`, [['Annuleren', 0, 'licht'], ['Definitief verwijderen', 1, 'rood']])) return;
+          await roep('lk_leerling_wijzigen', { p_id: x.id, p_actief: false, p_verwijderen: true });
+          S.selectie.delete(x.id); await laadAlle(); S.melding = `${esc(x.voornaam)} ${esc(x.naam)} is verwijderd.`; return render();
+        }
         const l = S.detail && S.detail.leerling;
         if (a === 'heropen') {
           const nr = +el.dataset.deel, sinds = sindsLaatsteTest(S.detail, nr);
