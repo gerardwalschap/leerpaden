@@ -10,6 +10,9 @@
 //   V            {waarde, dec?, speciaal?: 'leeg'|'R', metSpeciaal?}  oplossingenverzameling V = {…}, V = ∅ of V = ℝ
 //   veelterm     {expr, vorm?: 'uitgewerkt'|'ontbonden', voor?, tex?}  veeltermen (veeltermkern VT)
 //   Vmeer        {waarden:[…], tex?:[…], dec?, leeg?: true}    V = {x₁ ; x₂} (volgorde vrij) of V = ∅
+//   complex      {re, im, tex, dec?, exact?, vorm?: 'vrij'}       complex getal a + bi (rekenkern CX)
+//   Vcomplex     {waarden:[{re, im}], tex:[…], dec?, exact?}    V = {z₁ ; z₂} in ℂ (volgorde vrij, ± mag)
+//   hoek         {waarde, dec?, tex?}                          hoek in graden; elke gelijkwaardige hoek (± k·360°) is juist
 const Antwoord = (() => {
   const esc = W.esc, T = (s) => W.tex(s);
   let laatste = null; // id van het laatst gebruikte tekstveld
@@ -32,9 +35,11 @@ const Antwoord = (() => {
     if (a.soort === 'formule') { const r = Invoer.formule(s, a.doel); return r.ok ? { tex: `${a.doel} = ${r.tex}` } : { fout: r.fout }; }
     if (a.soort === 'interval') { const r = Invoer.interval(s); return r.ok ? { tex: Invoer.intervalTex(r) } : { fout: r.fout }; }
     if (a.soort === 'ongelijkheid') { const r = Invoer.ongelijkheid(s); return r.ok ? { tex: Invoer.ongelijkheidTex(r) } : { fout: r.fout }; }
+    if (a.soort === 'complex') { const r = CX.ontleed(s); return r.ok ? { tex: r.tex } : { fout: r.fout }; }
+    if (a.soort === 'Vcomplex') { const t = CX.texV(s); if (t) return { tex: t }; const f = CX.splitsV(s).map(CX.ontleed).find(x => !x.ok); return { fout: f ? f.fout : 'Dit kan ik niet lezen.' }; }
     return null;
   }
-  const metVoorbeeld = (a) => ['expr', 'veelterm', 'formule', 'interval', 'ongelijkheid'].includes(a.soort);
+  const metVoorbeeld = (a) => ['expr', 'veelterm', 'formule', 'interval', 'ongelijkheid', 'complex', 'Vcomplex'].includes(a.soort);
   function voorbeeld(a, invoer) {
     const l = lezing(a, invoer);
     if (!l || l.leeg) return '<span class="klein">Je antwoord verschijnt hier.</span>';
@@ -42,7 +47,7 @@ const Antwoord = (() => {
   }
 
   // ---------- HTML
-  const PLACEHOLDER = { getal: 'antwoord', expr: 'antwoord', veelterm: 'antwoord', formule: 'formule', interval: 'bv. [−2 ; 5[', ongelijkheid: 'bv. −2 ≤ x < 5' };
+  const PLACEHOLDER = { getal: 'antwoord', expr: 'antwoord', veelterm: 'antwoord', formule: 'formule', interval: 'bv. [−2 ; 5[', ongelijkheid: 'bv. −2 ≤ x < 5', complex: 'bv. 3 − 2i', Vcomplex: 'bv. 3 + 2i ; 3 − 2i', hoek: 'graden' };
   function html(id, a, w, uit) {
     const dis = uit ? 'disabled' : '';
     if (a.soort === 'keuze') {
@@ -88,6 +93,9 @@ const Antwoord = (() => {
     if (a.soort === 'formule') set.add('formule');
     if (a.soort === 'interval') set.add('interval');
     if (a.soort === 'ongelijkheid') set.add('ongelijkheid');
+    if (a.soort === 'complex') set.add('complex');
+    if (a.soort === 'Vcomplex') { set.add('complex'); set.add('Vcomplex'); }
+    if (a.soort === 'hoek') set.add('hoek');
     if (a.soort === 'delen') a.delen.forEach(d => toetsen(d.antw, set));
     if (a.toetsen) a.toetsen.forEach(t => set.add(t));
     return set;
@@ -105,6 +113,9 @@ const Antwoord = (() => {
       + k('²', 'x²', 'kwadraat') + k('π', 'π', 'pi') + k('ρ', 'ρ', 'rho (massadichtheid)');
     if (s.has('interval')) h += k('[', '[', 'haakje') + k(']', ']', 'haakje') + k(' ; ', ';', 'puntkomma') + k('-∞', '−∞', 'min oneindig') + k('+∞', '+∞', 'plus oneindig');
     if (s.has('ongelijkheid')) h += k('x', 'x', 'x') + k(' < ', '<', 'kleiner dan') + k(' ≤ ', '≤', 'kleiner dan of gelijk aan') + k(' > ', '>', 'groter dan') + k(' ≥ ', '≥', 'groter dan of gelijk aan');
+    if (s.has('complex')) h += k('i', '<i>i</i>', 'complexe eenheid i') + (s.has('wortel') ? '' : k('√()', '√', 'vierkantswortel') + k('/', '/', 'breukstreep') + k('()', '( )', 'haakjes') + k('·', '·', 'maal')) + k('²', 'x²', 'kwadraat');
+    if (s.has('Vcomplex')) h += k(' ; ', ';', 'puntkomma tussen de oplossingen') + k('±', '±', 'plus of min');
+    if (s.has('hoek')) h += k('°', '°', 'graden');
     if (!h) return '';
     return `<div class="toetsenbord" role="toolbar" aria-label="Wiskundige tekens">${h}${k('⌫', '⌫', 'wis laatste teken')}</div>`;
   }
@@ -258,6 +269,15 @@ const Antwoord = (() => {
         if (w.keuze === null || w.keuze === undefined) return { status: 'leeg', bericht: 'Kies een antwoord.' };
         return { status: String(w.keuze) === String(a.juist) ? 'juist' : 'fout' };
       case 'getal': return nakijkGetal(a, w.invoer);
+      case 'complex': return CX.controleer(w.invoer, a);
+      case 'Vcomplex': return CX.controleerV(w.invoer, a);
+      case 'hoek': {
+        const t = CX.zonderGraden(w.invoer), gg = Invoer.getal(t);
+        if (gg.leeg || !t) return { status: 'leeg', bericht: 'Vul eerst een antwoord in.' };
+        if (!gg.ok) return { status: 'ongeldig', bericht: 'Typ de hoek in graden, bv. 53,13 (zonder radialen).' };
+        const doel = a.waarde + 360 * Math.round((gg.waarde - a.waarde) / 360);
+        return nakijkGetal({ waarde: doel, dec: a.dec ?? 2 }, t);
+      }
       case 'expr': return E.controleer(w.invoer, a.expr, a.vormen || []);
       case 'formule': return Invoer.controleerFormule(w.invoer, a);
       case 'interval': case 'ongelijkheid': {
@@ -298,6 +318,9 @@ const Antwoord = (() => {
       case 'getal': return g(a.waarde, a.dec) + (a.na ? '\\ ' + a.na : '');
       case 'V': return a.speciaal === 'leeg' ? 'V = \\varnothing' : a.speciaal === 'R' ? 'V = \\mathbb{R}' : `V = \\{${g(a.waarde, a.dec ?? 2)}\\}`;
       case 'expr': return a.tex || E.texVan(a.expr);
+      case 'complex': return a.tex || CX.texAbi(a.re, a.im);
+      case 'Vcomplex': return `V = \\{${(a.tex || a.waarden.map(z => CX.texAbi(z.re, z.im))).join('\\,;\\,')}\\}`;
+      case 'hoek': return (a.tex || g(a.waarde, Number.isInteger(a.waarde) ? undefined : (a.dec ?? 2))) + '^\\circ';
       case 'veelterm': return a.tex || VT.texVan(a.expr);
       case 'Vmeer': {
         if (a.leeg || !a.waarden.length) return 'V = \\varnothing';

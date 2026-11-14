@@ -318,8 +318,9 @@
     if (S.nieuw) {
       return `<h1>Nieuwe accounts</h1>
         <div class="melding let">Bewaar of druk deze lijst nu af: wachtwoorden zijn later <b>niet meer te zien</b> (je kan ze wel opnieuw instellen).</div>
-        <div class="werkbalk"><button data-a="kaartjes">Inlogkaartjes (PDF)</button><button class="licht" data-a="nieuwcsv">Lijst (Excel)</button>
+        <div class="werkbalk"><button data-a="kaartjes">Inlogbrieven (PDF)</button><button class="licht" data-a="kaartjes" data-rv="1" title="Na elke brief een lege bladzijde: zo heeft elke leerling een eigen blad als je recto-verso afdrukt">Inlogbrieven voor recto-verso (PDF)</button><button class="licht" data-a="nieuwcsv">Lijst (Excel)</button>
           <span class="vul"></span><button class="licht" data-a="${S.nieuw.terug || 'overzicht'}">Klaar</button></div>
+        <p class="klein">Elke leerling krijgt een eigen blad met zijn login én de handleiding. Druk je recto-verso af, kies dan <b>Inlogbrieven voor recto-verso</b>: de achterkant van elk blad blijft dan leeg.</p>
         <div class="kaart tabelwrap"><table class="lijst logins"><tr><th>Naam</th><th>Klas</th><th>Gebruikersnaam</th><th>Wachtwoord</th></tr>
           ${S.nieuw.lijst.map(n => `<tr><td>${esc(n.voornaam)} ${esc(n.naam)}</td><td>${esc(n.klas)}</td><td>${esc(n.gebruikersnaam)}</td><td>${esc(n.wachtwoord)}</td></tr>`).join('')}</table></div>`;
     }
@@ -348,7 +349,7 @@
         <select id="bulkprog">${progs.map(p => `<option value="${esc(p.code)}" ${p.code === S.prog ? 'selected' : ''}>${esc(p.titel)}</option>`).join('')}</select>
         <button class="licht" data-a="bulk" data-aan="1" ${sel.length ? '' : 'disabled'}>Koppelen</button>
         <button class="licht" data-a="bulk" data-aan="0" ${sel.length ? '' : 'disabled'}>Ontkoppelen</button>
-        <button class="licht" data-a="bulkreset" ${sel.length ? '' : 'disabled'}>Nieuwe wachtwoorden + kaartjes</button>
+        <button class="licht" data-a="bulkreset" ${sel.length ? '' : 'disabled'}>Nieuwe wachtwoorden + inlogbrieven</button>
         <button class="licht" data-a="allecsv">Lijst (Excel)</button>
       </div>
       <div class="kaart tabelwrap"><table class="lijst">
@@ -473,21 +474,51 @@
     knop.disabled = false; knop.textContent = `Rapporten van deze ${ll.length} (PDF)`;
   }
 
-  function kaartjesHTML(lijst, code) {
+  // Inlogbrieven: per leerling één A4 met de login én de handleiding.
+  // rectoVerso = true: na elke brief een lege bladzijde, zodat bij recto-verso afdrukken elke leerling een eigen blad heeft.
+  function kaartjesHTML(lijst, code, rectoVerso = false) {
     const P = code ? Leerpaden.vind(code) : null;
-    const link = leerlingLink(code);
-    return `<div style="font-family:Verdana,sans-serif;color:#1f2733;background:#fff;width:680px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      ${lijst.map(n => `<div class="kaartje" style="border:1px dashed #888;border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.6">
-        <div style="color:#1c4e8a;font-weight:bold;border-bottom:2px solid #e8772e;margin-bottom:4px">${esc(P ? P.titel + (P.ondertitel ? ' · ' + P.ondertitel : '') : (CONFIG.TITEL || 'Leerpaden'))}</div>
-        <div><b>${esc(n.voornaam)} ${esc(n.naam)}</b> (${esc(n.klas)})</div>
-        <div>Website: ${esc(link)}</div>
-        <div>Gebruikersnaam: <b style="font-family:'Courier New',monospace;font-size:14px">${esc(n.gebruikersnaam)}</b></div>
-        <div>Wachtwoord: <b style="font-family:'Courier New',monospace;font-size:14px">${esc(n.wachtwoord)}</b></div></div>`).join('')}</div>`;
+    const db = code ? S.dbProgs.find(x => x.code === code) : null;
+    const drempel = db ? db.drempel : null;
+    const link = leerlingLink(null);
+    const blauw = '#1c4e8a', oranje = '#e8772e';
+    const stap = (nr, titel, tekst) => `<div style="display:flex;gap:10px;margin:7px 0"><div style="flex:0 0 24px;height:24px;border-radius:50%;background:${oranje};color:#fff;font-weight:bold;text-align:center;line-height:24px;font-size:13px">${nr}</div>
+      <div><b style="color:${blauw}">${titel}</b><br>${tekst}</div></div>`;
+    const brief = (n, k) => `<div class="${k ? 'nieuwe-pagina' : ''}" style="font-family:Verdana,sans-serif;color:#1f2733;background:#fff;width:680px;font-size:12.5px;line-height:1.55">
+      <div style="border-bottom:3px solid ${oranje};padding-bottom:6px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end">
+        <div><div style="font-size:20px;font-weight:bold;color:${blauw}">${esc(CONFIG.TITEL || 'Leerpaden')}</div><div style="color:#6b7280">${esc(CONFIG.ONDERTITEL || '')}</div></div>
+        <div style="text-align:right;color:#6b7280;font-size:11px">${CONFIG.SCHOOL && !String(CONFIG.ONDERTITEL || '').includes(CONFIG.SCHOOL) ? esc(CONFIG.SCHOOL) : ''}</div></div>
+      <div style="font-size:16px;margin-bottom:10px">Inloggegevens voor <b>${esc(n.voornaam)} ${esc(n.naam)}</b>${n.klas ? ` <span style="color:#6b7280">(${esc(n.klas)})</span>` : ''}</div>
+      <div style="border:2px solid ${blauw};border-radius:10px;padding:14px 18px;background:#e8f0fa;margin-bottom:8px">
+        <table style="border-collapse:collapse;font-size:14px">
+          <tr><td style="padding:4px 16px 4px 0;color:#6b7280">Website</td><td style="padding:4px 0"><b>${esc(link)}</b></td></tr>
+          <tr><td style="padding:4px 16px 4px 0;color:#6b7280">Gebruikersnaam</td><td style="padding:4px 0"><b style="font-family:'Courier New',monospace;font-size:18px">${esc(n.gebruikersnaam)}</b></td></tr>
+          <tr><td style="padding:4px 16px 4px 0;color:#6b7280">Wachtwoord</td><td style="padding:4px 0"><b style="font-family:'Courier New',monospace;font-size:18px">${esc(n.wachtwoord)}</b></td></tr>
+          ${P ? `<tr><td style="padding:4px 16px 4px 0;color:#6b7280">Leerpad</td><td style="padding:4px 0">${esc(P.titel)}${P.ondertitel ? ' · ' + esc(P.ondertitel) : ''}</td></tr>` : ''}
+        </table></div>
+      <div style="font-size:11px;color:#b83a2e;margin-bottom:16px">Bewaar dit blad goed. Je wachtwoord is persoonlijk: geef het aan niemand door.</div>
+      <div style="font-size:16px;font-weight:bold;color:${blauw};margin-bottom:4px">Handleiding</div>
+      ${stap(1, 'Aanmelden', `Surf naar <b>${esc(link)}</b> (op je computer, laptop of gsm). Typ je gebruikersnaam en je wachtwoord precies zoals hierboven, en klik op <i>Aanmelden</i>. Tip: bewaar de website als bladwijzer.`)}
+      ${stap(2, 'Kies je leerpad', 'Je ziet enkel de leerpaden die je leerkracht voor jou heeft opengezet. Heb je er meer dan één, kies dan eerst het vak en daarna het leerpad. Heb je er maar één, dan kom je er meteen in.')}
+      ${stap(3, 'Werk deel per deel', 'Een leerpad bestaat uit delen. Elk deel heeft vier stappen: <b>Theorie</b> (lees aandachtig), <b>Voorbeelden</b> (probeer eerst zelf, klik dan stap voor stap door de oplossing), <b>Oefenen</b> en <b>Test</b>.')}
+      ${stap(4, 'Oefenen', 'Je mag zoveel oefenen als je wil. Na elke oefening zie je meteen of je antwoord juist is, met de volledige uitwerking. Oefen tot het vlot gaat, pas dan maak je de test.')}
+      ${stap(5, 'De test', `Een test heeft 10 vragen en je krijgt <b>één poging</b>. Die telt vanaf het moment dat je hem start: de pagina herladen of sluiten helpt niet. Haal je ${drempel ? `<b>${drempel}%</b>` : 'de slaagdrempel'}, dan gaat het volgende deel open. Niet geslaagd? Oefen verder; je leerkracht kan de test opnieuw openzetten.`)}
+      ${stap(6, 'Antwoorden typen', 'Een kommagetal typ je met een komma (<b>2,5</b>), een breuk met een schuine streep (<b>3/4</b>), een macht met <b>^</b>. De knoppen onder het vakje helpen je (√, x², …). Onder het vakje zie je hoe je antwoord gelezen wordt: kijk dat na vóór je op <i>Controleer</i> klikt.')}
+      ${stap(7, 'Afmelden en hulp', 'Klik op <i>Afmelden</i> als je klaar bent, zeker op een gedeelde computer. Je voortgang wordt automatisch bewaard. Wachtwoord vergeten of een probleem? Vraag het aan je leerkracht.')}
+      </div>`;
+    const leeg = `<div class="nieuwe-pagina" style="font-family:Verdana,sans-serif;background:#fff;width:680px;height:40px;color:#bbb;font-size:9px;text-align:center">(achterkant: bewust leeg gelaten)</div>`;
+    return `<div>${lijst.map((n, k) => brief(n, k) + (rectoVerso ? leeg : '')).join('')}</div>`;
   }
+
 
   // ---------- laden
   async function laadProgrammas() {
     S.dbProgs = await roep('lk_programmas', { p_lijst: Leerpaden.lijst.map(p => ({ code: p.code, titel: p.titel })) });
+    // Standaard-slaagdrempel van een nieuw leerpad (bv. drempel: 70 in het programmabestand), zolang er nog geen leerlingen gekoppeld zijn.
+    for (const P of Leerpaden.lijst.filter(p => p.drempel)) {
+      const db = S.dbProgs.find(x => x.code === P.code);
+      if (db && db.drempel !== P.drempel && !db.leerlingen) { await roep('lk_drempel', { p_programma: P.code, p_drempel: P.drempel }); db.drempel = P.drempel; }
+    }
     if (!Leerpaden.vind(S.prog)) S.prog = Leerpaden.lijst[0] && Leerpaden.lijst[0].code;
     S.P = Leerpaden.vind(S.prog);
   }
@@ -602,7 +633,7 @@
           S.nieuw = { lijst: r, code: koppelNu ? S.prog : null, terug: S.terugNa === 'alle' ? 'alle' : 'overzicht' };
           return render();
         }
-        if (a === 'kaartjes') { el.disabled = true; try { await maakPDF(kaartjesHTML(S.nieuw.lijst, S.nieuw.code), `Inlogkaartjes_${vandaag()}.pdf`); } finally { el.disabled = false; } return; }
+        if (a === 'kaartjes') { const rv = el.dataset.rv === '1', t = el.textContent; el.disabled = true; el.textContent = 'Bezig…'; try { await maakPDF(kaartjesHTML(S.nieuw.lijst, S.nieuw.code, rv), `Inlogbrieven_${rv ? 'recto-verso_' : ''}${vandaag()}.pdf`); } finally { el.disabled = false; el.textContent = t; } return; }
         if (a === 'nieuwcsv') return download(`Logins_${vandaag()}.csv`, csv([['Klas', 'Naam', 'Voornaam', 'Gebruikersnaam', 'Wachtwoord'], ...S.nieuw.lijst.map(n => [n.klas, n.naam, n.voornaam, n.gebruikersnaam, n.wachtwoord])]), 'text/csv;charset=utf-8');
         if (a === 'bulk') {
           const ids = [...S.selectie].filter(id => S.alle.some(l => l.id === id)), code = document.getElementById('bulkprog').value, aan = el.dataset.aan === '1';
@@ -611,7 +642,7 @@
         }
         if (a === 'bulkreset') {
           const ll = S.alle.filter(l => S.selectie.has(l.id));
-          if (!await modaal('Nieuwe wachtwoorden?', `<p>${ll.length} leerling(en) krijgen een nieuw wachtwoord. Hun oude wachtwoord werkt daarna niet meer. Je krijgt meteen nieuwe inlogkaartjes.</p>`, [['Annuleren', 0, 'licht'], ['Nieuwe wachtwoorden', 1, 'oranje']])) return;
+          if (!await modaal('Nieuwe wachtwoorden?', `<p>${ll.length} leerling(en) krijgen een nieuw wachtwoord. Hun oude wachtwoord werkt daarna niet meer. Je krijgt meteen nieuwe inlogbrieven.</p>`, [['Annuleren', 0, 'licht'], ['Nieuwe wachtwoorden', 1, 'oranje']])) return;
           const uit = [];
           for (const l of ll) { const r = await roep('lk_wachtwoord_reset', { p_id: l.id }); uit.push({ ...l, wachtwoord: r.wachtwoord }); }
           const code = document.getElementById('bulkprog') ? document.getElementById('bulkprog').value : S.prog;
@@ -655,7 +686,9 @@
         if (a === 'reset') {
           if (!await modaal('Nieuw wachtwoord?', `<p>Het oude wachtwoord van ${esc(l.voornaam)} werkt daarna niet meer.</p>`, [['Annuleren', 0, 'licht'], ['Nieuw wachtwoord', 1]])) return;
           const r = await roep('lk_wachtwoord_reset', { p_id: l.id });
-          return modaal('Nieuw wachtwoord', `<p>${esc(l.voornaam)} ${esc(l.naam)}<br>Gebruikersnaam: <b>${esc(l.gebruikersnaam)}</b><br>Wachtwoord: <b style="font-family:monospace;font-size:18px">${esc(r.wachtwoord)}</b></p>`, [['OK', 1]]);
+          const keuze = await modaal('Nieuw wachtwoord', `<p>${esc(l.voornaam)} ${esc(l.naam)}<br>Gebruikersnaam: <b>${esc(l.gebruikersnaam)}</b><br>Wachtwoord: <b style="font-family:monospace;font-size:18px">${esc(r.wachtwoord)}</b></p>`, [['Inlogbrief (PDF)', 'pdf', 'licht'], ['OK', 1]]);
+          if (keuze === 'pdf') await maakPDF(kaartjesHTML([{ ...l, wachtwoord: r.wachtwoord }], S.prog), `Inlogbrief_${bestandsnaam(l.voornaam + '_' + l.naam)}.pdf`);
+          return;
         }
         if (a === 'ontkoppel') {
           if (!await modaal('Uit dit leerpad halen?', `<p>${esc(l.voornaam)} ziet <b>${esc(S.P.titel)}</b> niet meer. Resultaten blijven bewaard: koppel je later opnieuw, dan staat alles er nog. Het account zelf blijft bestaan.</p>`, [['Annuleren', 0, 'licht'], ['Uit leerpad halen', 1, 'oranje']])) return;

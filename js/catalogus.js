@@ -59,7 +59,8 @@ window.CATALOGUS = {
       naam: 'Toegepaste wiskunde', map: 'TWISKUNDE 5BCW',
       hoofdstukken: [
         { nr: 1, titel: 'Tweedegraadsfuncties' },
-        { nr: 2, titel: 'Complexe getallen' },
+        { nr: 2, titel: 'Complexe getallen', sub: 'Complexe vlak · Cartesische en goniometrische vorm · De Moivre · Vergelijkingen',
+          leerpaden: ['complexe-getallen'] },
         { nr: 3, titel: 'Matrices en stelsels' },
         { nr: 4, titel: 'Sinus- en cosinusregel' },
         { nr: 5, titel: 'Afgeleiden' },

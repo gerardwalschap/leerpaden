@@ -129,6 +129,28 @@ en kijkt het na; staat het juiste antwoord niet in de gevraagde vorm, dan krijge
 *Je kan nog verder ontbinden*). Oplossingen noteren ze als `V = {2 ; -1/3}` (volgorde vrij, breuk of
 kommagetal afgerond op 2 decimalen) of met de knop V = ∅.
 
+## 4d. Het leerpad Complexe getallen (5BCW, toegepaste wiskunde)
+
+12 delen volgens de cursus en de werkbundel *TWiskunde 5BCW – 2. Complexe getallen*, slaagdrempel **70%**
+(staat in het programmabestand: `drempel: 70`; wordt automatisch ingesteld zolang er nog niemand gekoppeld is).
+
+* **A · Het complexe vlak** (1–3): i en a + bi, Re en Im · punten aflezen en kwadranten · modulus.
+* **B · Bewerkingen in cartesische vorm** (4–6): optellen/aftrekken · vermenigvuldigen en toegevoegde · delen.
+* **C · Goniometrische vorm** (7–8): cartesisch → goniometrisch (r en θ, kwadrant!) · goniometrisch → cartesisch.
+* **D · Bewerkingen in goniometrische vorm** (9–10): vermenigvuldigen en delen · De Moivre.
+* **E · Tweedegraadsvergelijkingen in ℂ** (11) en **F · Eindtest** (12).
+
+Hoeken altijd in **graden** (geen radialen). Elke gelijkwaardige hoek is juist (−45° = 315°).
+Leerlingen typen complexe getallen als `3 - 2i`, `-1/2 + i`, `2√2 + 2√2 i`; oplossingen als `3 + 2i ; 3 - 2i` of `3 ± 2i`.
+Bij een bijzondere hoek wordt de exacte waarde gevraagd (met √); een afgerond antwoord geeft dan een tip.
+
+## Inlogbrieven
+
+Na het aanmaken van accounts (of nieuwe wachtwoorden) krijg je per leerling **één A4** met de inloggegevens én de handleiding.
+* **Inlogbrieven (PDF)**: om enkelzijdig af te drukken.
+* **Inlogbrieven voor recto-verso (PDF)**: na elke brief een lege bladzijde, zodat elke leerling een eigen blad heeft.
+Bij één leerling (knop *Nieuw wachtwoord*) kan je meteen zijn inlogbrief downloaden.
+
 ## 5. Later: een nieuw leerpad toevoegen
 
 Een leerpad is één bestand in `programmas/` (bv. `programmas/machten-wortels.js`) plus één regel
