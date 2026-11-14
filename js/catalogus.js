@@ -49,7 +49,7 @@ window.CATALOGUS = {
       hoofdstukken: [
         { nr: 1, titel: 'Logica' },
         { nr: 2, titel: 'Stelsels van vergelijkingen', sub: 'Grafisch · Gelijkstelling · Substitutie · Combinatie · Vraagstukken',
-          leerpaden: ['remediering-vergelijkingen'] },
+          leerpaden: ['stelsels', 'remediering-vergelijkingen'] },
         { nr: 3, titel: 'Tweedegraadsfuncties' },
         { nr: 4, titel: 'Vectoren' },
         { nr: 5, titel: 'Telproblemen' },

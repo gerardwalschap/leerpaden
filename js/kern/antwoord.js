@@ -32,6 +32,76 @@ const Antwoord = (() => {
     return { fout: 'Typ een breuk, bv. 3/4 of -5/2.' };
   }
   const breukTex = (t, n) => n === 1 ? W.texGetal(t) : `${t < 0 ? '-' : ''}\\frac{${Math.abs(t)}}{${n}}`;
+  // ---------- formule-editor (MathLive): echte breuken in het invoerveld; tekst blijft de bron van waarheid
+  const ML_URL = 'https://cdn.jsdelivr.net/npm/mathlive@0.111.4/mathlive.min.js';
+  let mlStatus = null;
+  function laadMathLive() {
+    if (mlStatus || typeof document === 'undefined') return;
+    if (window.customElements && customElements.get('math-field')) { mlStatus = 'ok'; return; }
+    mlStatus = 'laden';
+    const sc = document.createElement('script'); sc.src = ML_URL; sc.async = true;
+    sc.onload = () => { mlStatus = 'ok'; }; sc.onerror = () => { mlStatus = 'fout'; };
+    document.head.appendChild(sc);
+  }
+  function latexNaarTekst(l) {
+    let s = String(l || '');
+    s = s.replace(/\\left|\\right/g, '').replace(/\\placeholder(\[[^\]]*\])?\{[^}]*\}/g, '').replace(/\\[,;:! ]/g, ' ').replace(/\{,\}/g, ',');
+    s = s.replace(/\\cdot|\\times/g, '·').replace(/\\infty/g, '∞').replace(/\\leq?(?![a-z])/g, '≤').replace(/\\geq?(?![a-z])/g, '≥').replace(/\\pi(?![a-z])/g, 'π');
+    s = s.replace(/\\[dt]?frac(\d)(\d)/g, '\\frac{$1}{$2}');
+    const enk = (x) => /^-?[\w.,]+$/.test(x.trim());
+    for (let i = 0; i < 30; i++) {
+      const t = s.replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, (m, a, b, off, str) => {
+        const voor = off > 0 && /[\w)]/.test(str[off - 1]) ? '·' : '';
+        return `${voor}${enk(a) ? a.trim() : '(' + a + ')'}/${enk(b) ? b.trim() : '(' + b + ')'}`;
+      }).replace(/\\sqrt\{([^{}]*)\}/g, '√($1)').replace(/\^\{([^{}]*)\}/g, (m, a) => a.length === 1 ? '^' + a : '^(' + a + ')');
+      if (t === s) break; s = t;
+    }
+    return s.replace(/\\mathrm|\\text|\\operatorname/g, '').replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+  }
+  const tekstNaarLatex = (t) => String(t || '').replace(/(-?\d+)\s*\/\s*(\d+)/g, '\\frac{$1}{$2}').replace(/·/g, '\\cdot ');
+  const waarde = (el) => el && el.tagName === 'MATH-FIELD' ? latexNaarTekst(el.value) : (el ? el.value : '');
+
+  // ---------- tekenrooster: rechten tekenen door punten aan te klikken
+  const TK_KLEUR = ['#1c4e8a', '#e8772e', '#2e7d4f'];
+  function tekenSVG(a, w, uit) {
+    const [X0, X1] = a.x || [-8, 8], [Y0, Y1] = a.y || [-8, 8], sc = 22, m = 16, B = (X1 - X0) * sc, H = (Y1 - Y0) * sc;
+    const X = (x) => m + (x - X0) * sc, Y = (y) => m + (Y1 - y) * sc;
+    let g = '';
+    for (let k = X0; k <= X1; k++) g += `<line x1="${X(k)}" y1="${Y(Y0)}" x2="${X(k)}" y2="${Y(Y1)}" stroke="#e3e7ee"/>`;
+    for (let k = Y0; k <= Y1; k++) g += `<line x1="${X(X0)}" y1="${Y(k)}" x2="${X(X1)}" y2="${Y(k)}" stroke="#e3e7ee"/>`;
+    g += `<line x1="${X(X0)}" y1="${Y(0)}" x2="${X(X1)}" y2="${Y(0)}" stroke="#1f2733" stroke-width="1.3"/><line x1="${X(0)}" y1="${Y(Y0)}" x2="${X(0)}" y2="${Y(Y1)}" stroke="#1f2733" stroke-width="1.3"/>`;
+    for (let k = X0 + 1; k < X1; k++) if (k) g += `<text x="${X(k)}" y="${Y(0) + 12}" font-size="9" text-anchor="middle" fill="#555">${k < 0 ? '−' + (-k) : k}</text>`;
+    for (let k = Y0 + 1; k < Y1; k++) if (k) g += `<text x="${X(0) - 4}" y="${Y(k) + 3}" font-size="9" text-anchor="end" fill="#555">${k < 0 ? '−' + (-k) : k}</text>`;
+    g += `<text x="${X(X1) - 4}" y="${Y(0) - 5}" font-size="12" font-style="italic" text-anchor="end">x</text><text x="${X(0) + 5}" y="${Y(Y1) + 11}" font-size="12" font-style="italic">y</text>`;
+    const lijn = (p, q, kl, extra = '') => {
+      const dx = q[0] - p[0], dy = q[1] - p[1]; if (!dx && !dy) return '';
+      const t = 100, P = [p[0] - dx * t, p[1] - dy * t], Q = [p[0] + dx * t, p[1] + dy * t];
+      return `<line x1="${X(P[0])}" y1="${Y(P[1])}" x2="${X(Q[0])}" y2="${Y(Q[1])}" stroke="${kl}" stroke-width="2.4" ${extra}/>`;
+    };
+    if (uit) a.rechten.forEach((r) => { g += lijn([0, r.b], [1, r.a + r.b], '#9aa3b2', 'stroke-dasharray="6 5" stroke-width="1.6"'); });
+    w.punten.forEach((ps, i) => { if (ps.length === 2) g += lijn(ps[0], ps[1], TK_KLEUR[i]); });
+    w.punten.forEach((ps, i) => ps.forEach(p => { g += `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="5" fill="${TK_KLEUR[i]}" stroke="#fff" stroke-width="1.5"/>`; }));
+    return `<svg viewBox="0 0 ${B + 2 * m} ${H + 2 * m}" width="${B + 2 * m}" height="${H + 2 * m}" style="max-width:100%;height:auto;touch-action:manipulation;${uit ? '' : 'cursor:crosshair'};font-family:Verdana,sans-serif" data-x0="${X0}" data-y1="${Y1}" data-sc="${sc}" data-m="${m}" data-b="${B + 2 * m}">
+      <defs><clipPath id="tkclip"><rect x="${m}" y="${m}" width="${B}" height="${H}"/></clipPath></defs><g clip-path="url(#tkclip)">${g}</g></svg>`;
+  }
+  const opRechte = (r, p) => Math.abs(r.a * p[0] + r.b - p[1]) < 1e-9;
+  function nakijkTeken(a, w) {
+    if (w.punten.some(ps => ps.length < 2)) return { status: 'leeg', bericht: 'Teken elke rechte met twee punten.' };
+    const ok = (perm) => perm.every((ri, i) => w.punten[i].every(p => opRechte(a.rechten[ri], p)) && (w.punten[i][0][0] !== w.punten[i][1][0] || w.punten[i][0][1] !== w.punten[i][1][1]));
+    const perms = a.rechten.length === 2 ? [[0, 1], [1, 0]] : [[0]];
+    if (perms.some(ok)) return { status: 'juist' };
+    const fout = w.punten.map((ps, i) => a.rechten.some(r => ps.every(p => opRechte(r, p))) ? null : i + 1).filter(Boolean);
+    return { status: 'fout', bericht: fout.length ? `Rechte ${fout.join(' en ')} ligt niet juist: controleer je functiewaardentabel.` : '' };
+  }
+
+  // ---------- combinatie: met welke getallen vermenigvuldig je beide vergelijkingen zodat een onbekende wegvalt?
+  function nakijkCombi(a, w) {
+    const p = Invoer.getal(w.p || ''), q = Invoer.getal(w.q || '');
+    if (p.leeg || q.leeg) return { status: 'leeg', bericht: 'Vul beide getallen in.' };
+    if (!p.ok || !q.ok) return { status: 'ongeldig', bericht: (p.ok ? q : p).fout };
+    if (!p.waarde || !q.waarde) return { status: 'fout', bericht: 'Vermenigvuldigen met 0 mag niet: dan verlies je een vergelijking.' };
+    return Math.abs(p.waarde * a.c1 + q.waarde * a.c2) < 1e-9 ? { status: 'juist' } : { status: 'fout', bericht: `Met deze getallen vallen de ${a.letter}-termen niet weg bij het optellen.` };
+  }
   function nakijkBreuk(a, invoer) {
     const r = leesBreuk(invoer);
     if (r.leeg) return { status: 'leeg', bericht: 'Vul eerst een antwoord in.' };
@@ -51,6 +121,8 @@ const Antwoord = (() => {
     if (a.soort === 'vakjes') return { vakjes: a.velden.map(() => '') };
     if (a.soort === 'delen') return { delen: a.delen.map(d => leeg(d.antw)) };
     if (a.soort === 'V' || a.soort === 'Vmeer') return { invoer: '', speciaal: null };
+    if (a.soort === 'teken') return { punten: a.rechten.map(() => []), actief: 0 };
+    if (a.soort === 'combi') return { p: '', q: '' };
     return { invoer: '' };
   }
 
@@ -110,11 +182,21 @@ const Antwoord = (() => {
           <span class="is">${T('\\}')}</span>
           ${a.metSpeciaal ? `<span class="of">of</span><button type="button" class="keuze vsp ${sp === 'leeg' ? 'aan' : ''}" data-vid="${id}" data-s="leeg" ${dis}>${T('V = \\varnothing')}</button><button type="button" class="keuze vsp ${sp === 'R' ? 'aan' : ''}" data-vid="${id}" data-s="R" ${dis}>${T('V = \\mathbb{R}')}</button>` : ''}</div>`;
     }
+    if (a.soort === 'teken') {
+      return `<div class="tekenrooster" id="${id}">${uit ? '' : `<div class="tk-legende">${a.rechten.map((r, i) => `<button type="button" class="keuze tk-r ${(w.actief || 0) === i ? 'aan' : ''}" data-tid="${id}" data-r="${i}" style="border-color:${TK_KLEUR[i]}"><span style="color:${TK_KLEUR[i]}">●</span> ${T(r.tex)}</button>`).join('')}</div>
+        <p class="klein">Kies een rechte en klik twee punten aan. Klik op een punt om het weg te halen.</p>`}
+        <div class="tk-svg" id="${id}-svg">${tekenSVG(a, w, uit)}</div></div>`;
+    }
+    if (a.soort === 'combi') {
+      const v = (k, lab) => `<span class="is">${T(lab)}</span><input type="text" class="veld" id="${id}-${k}" value="${esc(w[k] || '')}" autocomplete="off" spellcheck="false" ${dis} style="width:80px">`;
+      return `<div class="antwoordrij">${v('p', a.label1 || '\\text{vgl. 1} \\;\\cdot')}&nbsp;&nbsp;${v('q', a.label2 || '\\text{vgl. 2} \\;\\cdot')}</div>`;
+    }
+    if (a.editor) laadMathLive();
     const breed = a.soort !== 'getal' ? ' expr' : '';
     return `<div class="antwoordrij">${a.voor !== '' ? `<span class="is">${T(a.voor || (a.soort === 'formule' ? a.doel + ' =' : '='))}</span>` : ''}
-        <input type="text" class="veld${breed}" id="${id}" value="${esc(w.invoer)}" placeholder="${a.placeholder || PLACEHOLDER[a.soort] || ''}" autocomplete="off" autocapitalize="none" spellcheck="false" ${dis}>
+        <input type="text" class="veld${breed}" id="${id}" value="${esc(w.invoer)}" placeholder="${a.placeholder || PLACEHOLDER[a.soort] || ''}" autocomplete="off" autocapitalize="none" spellcheck="false" ${a.editor ? 'data-editor="1"' : ''} ${dis}>
         ${a.na ? `<span class="na">${T(a.na)}</span>` : ''}</div>
-      ${metVoorbeeld(a) && !uit ? `<div class="voorbeeld" id="${id}-vb">${voorbeeld(a, w.invoer)}</div>` : ''}`;
+      ${metVoorbeeld(a) && !uit && !a.editor ? `<div class="voorbeeld" id="${id}-vb">${voorbeeld(a, w.invoer)}</div>` : ''}`;
   }
 
   // ---------- toetsenbord
@@ -131,6 +213,7 @@ const Antwoord = (() => {
     if (a.soort === 'verzameling') set.add('verzameling');
     if (a.soort === 'breuk') set.add('breuk');
     if (a.soort === 'delen') a.delen.forEach(d => toetsen(d.antw, set));
+    if (a.editor) set.add('editor');
     if (a.toetsen) a.toetsen.forEach(t => set.add(t));
     return set;
   }
@@ -154,10 +237,16 @@ const Antwoord = (() => {
     if (s.has('verzameling')) h += k('[', '[', 'haakje [') + k(']', ']', 'haakje ]') + k(', ', ',', 'komma tussen de grenzen') + k(' ∪ ', '∪', 'unie') + k('-∞', '−∞', 'min oneindig') + k('+∞', '+∞', 'plus oneindig')
       + k('ℝ', 'ℝ', 'alle reële getallen') + k('∅', '∅', 'lege verzameling') + k(' \\ ', '\\', 'zonder') + k('{}', '{ }', 'accolades');
     if (s.has('functie')) h += k('x', '<i>x</i>', 'x') + k('²', 'x²', 'kwadraat') + k('³', 'x³', 'derde macht') + k('√()', '√', 'vierkantswortel') + k('()', '( )', 'haakjes') + k('/', '/', 'breukstreep');
+    if (s.has('editor')) { const kb = k('/', '<span class="tk-breuk"><span>a</span><span>b</span></span>', 'breuk'); h = h.includes('data-ins="/"') ? h.replace(/<button[^>]*data-ins="\/"[^>]*>[^<]*<\/button>/, kb) : kb + h; }
     if (!h) return '';
     return `<div class="toetsenbord" role="toolbar" aria-label="Wiskundige tekens">${h}${k('⌫', '⌫', 'wis laatste teken')}</div>`;
   }
   function voegIn(el, txt) {
+    if (el.tagName === 'MATH-FIELD') {
+      const L = { '/': '\\frac{#@}{#?}', '()': '\\left(#0\\right)', '²': '^2', '³': '^3', '^()': '^{#0}', '·': '\\cdot ', '√()': '\\sqrt{#0}' };
+      if (txt === '⌫') el.executeCommand('deleteBackward'); else el.executeCommand(['insert', L[txt] ?? txt]);
+      el.focus(); return;
+    }
     const begin = el.selectionStart ?? el.value.length, eind = el.selectionEnd ?? el.value.length;
     if (txt === '⌫') {
       const b = begin === eind ? Math.max(0, begin - 1) : begin;
@@ -178,7 +267,7 @@ const Antwoord = (() => {
         b.onmousedown = (e) => e.preventDefault();
         b.onclick = () => {
           const el = laatste && document.getElementById(laatste);
-          const doel = el && !el.disabled && root.contains(el) ? el : root.querySelector('input.veld:not([disabled]), input.vak:not([disabled])');
+          const doel = el && !el.disabled && root.contains(el) ? el : root.querySelector('math-field.veld:not([read-only]), input.veld:not([disabled]), input.vak:not([disabled])');
           if (!doel) return;
           let txt = b.dataset.ins;
           if (txt === 'N') txt = String(tb.querySelector('.tk-n').value).split('').map(c => SUPC[+c]).join('') + '√()';
@@ -204,6 +293,25 @@ const Antwoord = (() => {
         return;
       }
       if (a.soort === 'delen') { a.delen.forEach((d, i) => rec(`${id}-d${i}`, d.antw, w.delen[i])); return; }
+      if (a.soort === 'teken') {
+        const box = document.getElementById(`${id}-svg`); if (!box) return;
+        const teken = () => { box.innerHTML = tekenSVG(a, w, false); };
+        document.querySelectorAll(`button.tk-r[data-tid="${id}"]`).forEach(b => { b.onclick = () => { w.actief = +b.dataset.r; document.querySelectorAll(`button.tk-r[data-tid="${id}"]`).forEach(x => x.classList.toggle('aan', x === b)); }; });
+        box.onclick = (e) => {
+          const svg = box.querySelector('svg'); if (!svg) return;
+          const r = svg.getBoundingClientRect(), f = +svg.dataset.b / r.width, sc = +svg.dataset.sc, m = +svg.dataset.m;
+          const x = Math.round((e.clientX - r.left) * f / sc - m / sc + +svg.dataset.x0), y = Math.round(+svg.dataset.y1 - ((e.clientY - r.top) * f - m) / sc);
+          let weg = false;
+          w.punten.forEach(ps => { const j = ps.findIndex(p => p[0] === x && p[1] === y); if (j >= 0) { ps.splice(j, 1); weg = true; } });
+          if (!weg) {
+            const ps = w.punten[w.actief || 0]; ps.push([x, y]); if (ps.length > 2) ps.shift();
+            if (ps.length === 2) { const v = w.punten.findIndex(q => q.length < 2); if (v >= 0) { w.actief = v; document.querySelectorAll(`button.tk-r[data-tid="${id}"]`).forEach(xb => xb.classList.toggle('aan', +xb.dataset.r === v)); } }
+          }
+          teken(); opts.bijWijziging && opts.bijWijziging();
+        };
+        return;
+      }
+      if (a.soort === 'combi') { ['p', 'q'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) velden.push({ el, zet: (v) => { w[k] = v; }, a }); }); return; }
       if (a.soort === 'vakjes') { a.velden.forEach((_, i) => { const el = document.getElementById(`${id}-${i}`); if (el) velden.push({ el, zet: (v) => { w.vakjes[i] = v; }, a }); }); return; }
       if (a.soort === 'V' || a.soort === 'Vmeer') {
         const el = document.getElementById(id);
@@ -216,19 +324,40 @@ const Antwoord = (() => {
       const el = document.getElementById(id);
       if (el) velden.push({ el, zet: (v) => { w.invoer = v; }, a, vb: document.getElementById(`${id}-vb`) });
     })(id, a, w);
-    velden.forEach((v, n) => {
+    const bind = (v, n) => {
       v.el.addEventListener('focus', () => { laatste = v.el.id; });
       v.el.addEventListener('input', () => {
-        v.zet(v.el.value);
-        if (v.vb) v.vb.innerHTML = voorbeeld(v.a, v.el.value);
+        v.zet(waarde(v.el));
+        if (v.vb) v.vb.innerHTML = voorbeeld(v.a, waarde(v.el));
         opts.bijWijziging && opts.bijWijziging();
       });
       v.el.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter') return;
         e.preventDefault();
         const volgende = velden[n + 1] && velden[n + 1].el;
-        if (volgende && !volgende.disabled) volgende.focus(); else opts.bijEnter && opts.bijEnter();
+        if (volgende && !volgende.disabled && !volgende.readOnly) volgende.focus(); else opts.bijEnter && opts.bijEnter();
       });
+    };
+    // invoerveld vervangen door een formule-editor (echte breuken), zodra MathLive geladen is
+    const upgrade = (v, n) => {
+      const inp = v.el; if (!inp.isConnected || inp.tagName === 'MATH-FIELD') return;
+      const mf = document.createElement('math-field');
+      mf.id = inp.id; mf.className = inp.className + ' mf'; mf.setAttribute('math-virtual-keyboard-policy', 'manual');
+      if (inp.placeholder) mf.setAttribute('placeholder', '\\text{' + inp.placeholder.replace(/[\\{}]/g, '') + '}');
+      const focus = document.activeElement === inp;
+      inp.replaceWith(mf);
+      try { mf.menuItems = []; mf.smartFence = false; mf.inlineShortcuts = {}; mf.mathModeSpace = '\\,'; } catch (e) { /* oudere versie */ }
+      mf.value = tekstNaarLatex(inp.value);
+      if (inp.disabled) mf.readOnly = true;
+      v.el = mf; bind(v, n);
+      if (focus) mf.focus();
+    };
+    velden.forEach((v, n) => {
+      bind(v, n);
+      if (v.a && v.a.editor && typeof customElements !== 'undefined') {
+        if (customElements.get('math-field')) upgrade(v, n);
+        else { laadMathLive(); customElements.whenDefined('math-field').then(() => upgrade(v, n)); }
+      }
     });
     return velden.map(v => v.el);
   }
@@ -237,7 +366,9 @@ const Antwoord = (() => {
     if (a.soort === 'keuze') return;
     if (a.soort === 'delen') return a.delen.forEach((d, i) => lees(`${id}-d${i}`, d.antw, w.delen[i]));
     if (a.soort === 'vakjes') return a.velden.forEach((_, i) => { const el = document.getElementById(`${id}-${i}`); if (el) w.vakjes[i] = el.value; });
-    const el = document.getElementById(id); if (el) w.invoer = el.value;
+    if (a.soort === 'teken') return;
+    if (a.soort === 'combi') { ['p', 'q'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) w[k] = el.value; }); return; }
+    const el = document.getElementById(id); if (el) w.invoer = waarde(el);
   }
 
   function isIngevuld(a, w) {
@@ -245,6 +376,8 @@ const Antwoord = (() => {
     if (a.soort === 'vakjes') return w.vakjes.every(x => String(x).trim());
     if (a.soort === 'delen') return a.delen.every((d, i) => isIngevuld(d.antw, w.delen[i]));
     if (a.soort === 'V' || a.soort === 'Vmeer') return !!w.speciaal || !!String(w.invoer || '').trim();
+    if (a.soort === 'teken') return w.punten.every(ps => ps.length === 2);
+    if (a.soort === 'combi') return !!String(w.p || '').trim() && !!String(w.q || '').trim();
     return !!String(w.invoer || '').trim();
   }
 
@@ -311,6 +444,8 @@ const Antwoord = (() => {
       case 'functie': return FX.controleer(w.invoer, a);
       case 'verzameling': return VZ.controleer(w.invoer, a);
       case 'breuk': return nakijkBreuk(a, w.invoer);
+      case 'teken': return nakijkTeken(a, w);
+      case 'combi': return nakijkCombi(a, w);
       case 'Vcomplex': return CX.controleerV(w.invoer, a);
       case 'hoek': {
         const t = CX.zonderGraden(w.invoer), gg = Invoer.getal(t);
@@ -361,6 +496,8 @@ const Antwoord = (() => {
       case 'expr': return a.tex || E.texVan(a.expr);
       case 'complex': return a.tex || CX.texAbi(a.re, a.im);
       case 'breuk': return (a.voor ? a.voor + ' ' : '') + breukTex(a.t, a.n);
+      case 'teken': return a.rechten.map(r => r.tex).join(' \\quad \\text{en} \\quad ');
+      case 'combi': { const g0 = ggdB(a.c1, a.c2) || 1; let p = a.c2 / g0, q = -a.c1 / g0; if (p < 0) { p = -p; q = -q; } return `\\text{bv. vgl. 1} \\cdot ${W.texGetal(p)} \\text{ en vgl. 2} \\cdot ${q < 0 ? '(' + W.texGetal(q) + ')' : W.texGetal(q)}`; }
       case 'verzameling': return (a.voor ? a.voor + ' ' : '') + VZ.texVan(a.stukken);
       case 'functie': return (a.voor ? a.voor + ' ' : '') + (a.tex || FX.texVan(a.expr));
       case 'Vcomplex': return `V = \\{${(a.tex || a.waarden.map(z => CX.texAbi(z.re, z.im))).join('\\,;\\,')}\\}`;
@@ -411,6 +548,8 @@ const Antwoord = (() => {
         return { tekst: w.vakjes.map(x => String(x).trim() || '…').join(' | '), tex };
       }
     }
+    if (a.soort === 'teken') return { tekst: w.punten.map((ps, i) => `rechte ${i + 1}: ${ps.map(p => `(${p[0]}, ${p[1]})`).join(' ') || '—'}`).join(' · '), tex: null };
+    if (a.soort === 'combi') return { tekst: `vgl. 1 · ${w.p || '…'} en vgl. 2 · ${w.q || '…'}`, tex: null };
     if (a.soort === 'Vmeer') {
       if (w.speciaal) return { tekst: 'V = ∅', tex: 'V = \\varnothing' };
       const t = zonderV(w.invoer).trim(); if (!t) return { tekst: '—', tex: null };
@@ -438,5 +577,5 @@ const Antwoord = (() => {
     return `<b>${esc(g.tekst)}</b>`;
   }
 
-  return { juistTex, leeg, html, toetsen, heeftToetsenbord, toetsenbord, koppelToetsenbord, koppel, lees, isIngevuld, nakijk, juistHTML, juistTekst, gegeven, gegevenHTML };
+  return { latexNaarTekst, juistTex, leeg, html, toetsen, heeftToetsenbord, toetsenbord, koppelToetsenbord, koppel, lees, isIngevuld, nakijk, juistHTML, juistTekst, gegeven, gegevenHTML };
 })();
