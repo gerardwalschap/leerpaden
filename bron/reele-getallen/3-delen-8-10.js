@@ -355,7 +355,7 @@ const DEEL10 = {
 // ===================================================================
 Leerpaden.registreer({
   code: 'reele-getallen',
-  titel: 'De reële getallen',
+  titel: 'Rekenen in ℝ',
   ondertitel: 'Zelfstudie · 7VJHO',
   klas: '7VJHO',
   soort: 'zelfstudie',
