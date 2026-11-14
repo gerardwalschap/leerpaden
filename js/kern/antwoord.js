@@ -78,14 +78,37 @@ const Antwoord = (() => {
       const t = 100, P = [p[0] - dx * t, p[1] - dy * t], Q = [p[0] + dx * t, p[1] + dy * t];
       return `<line x1="${X(P[0])}" y1="${Y(P[1])}" x2="${X(Q[0])}" y2="${Y(Q[1])}" stroke="${kl}" stroke-width="2.4" ${extra}/>`;
     };
+    const kromme = (pts, kl, extra = '') => { // vloeiende kromme (Catmull-Rom) door de punten, gesorteerd op x
+      const p = pts.slice().sort((u, v) => u[0] - v[0]); if (p.length < 2) return '';
+      let d = `M${X(p[0][0])},${Y(p[0][1])}`;
+      for (let i = 0; i < p.length - 1; i++) {
+        const p0 = p[i - 1] || p[i], p1 = p[i], p2 = p[i + 1], p3 = p[i + 2] || p2;
+        const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+        d += ` C${X(c1[0])},${Y(c1[1])} ${X(c2[0])},${Y(c2[1])} ${X(p2[0])},${Y(p2[1])}`;
+      }
+      return `<path d="${d}" fill="none" stroke="${kl}" stroke-width="2.4" ${extra}/>`;
+    };
+    if (a.parabool) {
+      if (uit) { const pts = []; for (let i = 0; i <= 120; i++) { const x = X0 + (X1 - X0) * i / 120; pts.push([x, a.parabool.a * x * x]); } g += `<path d="${pts.map((q, i) => `${i ? 'L' : 'M'}${X(q[0]).toFixed(1)},${Y(Math.max(Y0 - 2, Math.min(Y1 + 2, q[1]))).toFixed(1)}`).join(' ')}" fill="none" stroke="#9aa3b2" stroke-width="1.6" stroke-dasharray="6 5"/>`; }
+      if (w.punten[0].length >= 3) g += kromme(w.punten[0], TK_KLEUR[0]);
+    } else {
     if (uit) a.rechten.forEach((r) => { g += lijn([0, r.b], [1, r.a + r.b], '#9aa3b2', 'stroke-dasharray="6 5" stroke-width="1.6"'); });
     w.punten.forEach((ps, i) => { if (ps.length === 2) g += lijn(ps[0], ps[1], TK_KLEUR[i]); });
+    }
     w.punten.forEach((ps, i) => ps.forEach(p => { g += `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="5" fill="${TK_KLEUR[i]}" stroke="#fff" stroke-width="1.5"/>`; }));
     return `<svg viewBox="0 0 ${B + 2 * m} ${H + 2 * m}" width="${B + 2 * m}" height="${H + 2 * m}" style="max-width:100%;height:auto;touch-action:manipulation;${uit ? '' : 'cursor:crosshair'};font-family:Verdana,sans-serif" data-x0="${X0}" data-y1="${Y1}" data-sc="${sc}" data-m="${m}" data-b="${B + 2 * m}">
       <defs><clipPath id="tkclip"><rect x="${m}" y="${m}" width="${B}" height="${H}"/></clipPath></defs><g clip-path="url(#tkclip)">${g}</g></svg>`;
   }
   const opRechte = (r, p) => Math.abs(r.a * p[0] + r.b - p[1]) < 1e-9;
   function nakijkTeken(a, w) {
+    if (a.parabool) {
+      const ps = w.punten[0], n = a.parabool.n || 5;
+      if (ps.length < n) return { status: 'leeg', bericht: `Klik ${n} punten van de parabool aan.` };
+      const fout = ps.filter(p => Math.abs(a.parabool.a * p[0] * p[0] - p[1]) > 1e-9);
+      if (fout.length) return { status: 'fout', bericht: `Het punt (${fout[0][0]}, ${fout[0][1]}) ligt niet op de parabool: controleer je tabel van waarden.` };
+      if (new Set(ps.map(p => p[0])).size < n) return { status: 'fout', bericht: 'Kies punten met verschillende x-waarden.' };
+      return { status: 'juist' };
+    }
     if (w.punten.some(ps => ps.length < 2)) return { status: 'leeg', bericht: 'Teken elke rechte met twee punten.' };
     const ok = (perm) => perm.every((ri, i) => w.punten[i].every(p => opRechte(a.rechten[ri], p)) && (w.punten[i][0][0] !== w.punten[i][1][0] || w.punten[i][0][1] !== w.punten[i][1][1]));
     const perms = a.rechten.length === 2 ? [[0, 1], [1, 0]] : [[0]];
@@ -308,7 +331,7 @@ const Antwoord = (() => {
           let weg = false;
           w.punten.forEach(ps => { const j = ps.findIndex(p => p[0] === x && p[1] === y); if (j >= 0) { ps.splice(j, 1); weg = true; } });
           if (!weg) {
-            const ps = w.punten[w.actief || 0]; ps.push([x, y]); if (ps.length > 2) ps.shift();
+            const ps = w.punten[w.actief || 0]; ps.push([x, y]); if (ps.length > (a.parabool ? a.parabool.n || 5 : 2)) ps.shift();
             if (ps.length === 2) { const v = w.punten.findIndex(q => q.length < 2); if (v >= 0) { w.actief = v; document.querySelectorAll(`button.tk-r[data-tid="${id}"]`).forEach(xb => xb.classList.toggle('aan', +xb.dataset.r === v)); } }
           }
           teken(); opts.bijWijziging && opts.bijWijziging();
@@ -382,7 +405,7 @@ const Antwoord = (() => {
     if (a.soort === 'vakjes') return w.vakjes.every(x => String(x).trim());
     if (a.soort === 'delen') return a.delen.every((d, i) => isIngevuld(d.antw, w.delen[i]));
     if (a.soort === 'V' || a.soort === 'Vmeer') return !!w.speciaal || !!String(w.invoer || '').trim();
-    if (a.soort === 'teken') return w.punten.every(ps => ps.length === 2);
+    if (a.soort === 'teken') return a.parabool ? w.punten[0].length >= (a.parabool.n || 5) : w.punten.every(ps => ps.length === 2);
     if (a.soort === 'wt') return LG.wtIngevuld(a, w);
     if (a.soort === 'schakeling') return LG.bouwIngevuld(a, w);
     if (a.soort === 'combi') return !!String(w.p || '').trim() && !!String(w.q || '').trim();
@@ -563,7 +586,7 @@ const Antwoord = (() => {
     }
     if (a.soort === 'wt') return { tekst: w.cel.map(c => c.map(x => x || '·').join('')).join(' | '), tex: LG.wtTex(a, true, w) };
     if (a.soort === 'schakeling') return { tekst: `${a.uitgang} = ${LG.functieVan(a, w)}`, tex: null };
-    if (a.soort === 'teken') return { tekst: w.punten.map((ps, i) => `rechte ${i + 1}: ${ps.map(p => `(${p[0]}, ${p[1]})`).join(' ') || '—'}`).join(' · '), tex: null };
+    if (a.soort === 'teken') return { tekst: w.punten.map((ps, i) => `${a.parabool ? 'punten' : 'rechte ' + (i + 1)}: ${ps.map(p => `(${p[0]}, ${p[1]})`).join(' ') || '—'}`).join(' · '), tex: null };
     if (a.soort === 'combi') return { tekst: `vgl. 1 · ${w.p || '…'} en vgl. 2 · ${w.q || '…'}`, tex: null };
     if (a.soort === 'Vmeer') {
       if (w.speciaal) return { tekst: 'V = ∅', tex: 'V = \\varnothing' };
