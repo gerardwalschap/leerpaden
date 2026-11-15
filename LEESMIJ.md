@@ -166,6 +166,17 @@ antwoordsoort `functie`). Een voorschrift wordt vergeleken op functiewaarden; me
 Leerlingen typen V als `]-∞, 2[ ∪ ]3, +∞[`, `[-1, 3]`, `ℝ`, `∅`, `ℝ \ {3}` of `{3}` (rekenkern `js/kern/verzameling.js`,
 antwoordsoort `verzameling`; komma of puntkomma tussen de grenzen, knoppen voor ∪, ∞, ℝ, ∅).
 
+## 4g. Het leerpad Vectoren (4BW-MWW, basisvorming)
+
+11 delen volgens de cursus en de PWP *Wiskunde 4BW_MWW – 4. Vectoren*, slaagdrempel **70%**. Leerlingen **tekenen zelf vectoren** in een rooster
+(nieuwe antwoordsoort `vector`, rekenkern `js/kern/vector.js`): startpunt aanklikken, dan eindpunt. De website kijkt na op grootte, richting en zin
+(aantal vakjes) en op het startpunt (vast punt, kop van een andere pijl of zelfde startpunt), met gerichte tips (*verkeerde zin*, *juiste richting maar niet de juiste grootte*, *teken b vanuit de kop van a*).
+
+* **A · Wat is een vector?** (1–3): vakjes tellen, punt of vector, richting en zin · gelijke vectoren, nulvector, tegengestelde vector · natekenen.
+* **B · Bewerkingen** (4–8): kop-staartmethode · parallellogrammethode en a + (−a) = 0 · k·a · verschil a − b · combinaties en het midden van een lijnstuk.
+* **C · Verschuivingen en context** (9–10): beeld van een driehoek/vierhoek (het beeld verschijnt zodra alle pijlen staan) · verplaatsing, krachten, snelheid.
+* **D · Eindtest** (11).
+
 ## Inlogbrieven
 
 Na het aanmaken van accounts (of nieuwe wachtwoorden) krijg je per leerling **één A4** met de inloggegevens én de handleiding.
