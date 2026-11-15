@@ -23,7 +23,7 @@ const FORMULES = [
 ];
 const tabelKolommen = (f) => deelformules(f).map(d => ({ kop: pTex(d), uit: pKolom(d) }));
 const D1 = {
-  nr: 1, titel: 'Herhaling: proposities en waarheidstabellen', kort: 'Negatie, conjunctie, disjunctie, implicatie en equivalentie.', rekenmachine: false,
+  nr: 1, titel: 'Herhaling: proposities, waarheidstabellen en redeneren', kort: 'Operatoren, vertalen naar symbolen, nodig/voldoende, ∀ en ∃, tegenvoorbeeld.', rekenmachine: false,
   theorie: `<div class="kader def"><div class="kader-titel">Proposities</div>
       <p>Een <b>propositie</b> is een uitspraak die waar (1) of vals (0) is. We gebruiken een letter als symbool: $p$: "Het regent." Een <b>waarheidstabel</b> geeft alle mogelijkheden weer.</p>
       <p>Samengestelde uitspraken maak je met verbindingswoorden: de <b>logische operatoren</b>.</p></div>
@@ -31,11 +31,26 @@ const D1 = {
       <table class="tabel"><tr><th>operator</th><th>symbool</th><th>verbindingswoord</th></tr>
       ${['NOT', 'AND', 'OR', 'XOR', 'IMP', 'EQ'].map(o => `<tr><td><b>${OPS[o].naam}</b></td><td>$${o === 'NOT' ? '\\neg p' : `p ${OPS[o].tex} q`}$</td><td>${OPS[o].woord}</td></tr>`).join('')}</table></div>
     <div class="kader eig"><div class="kader-titel">De waarheidstabellen</div>
-      <p class="midden">$\\begin{array}{cc|cccccc} p & q & \\neg p & p \\wedge q & p \\vee q & p \\oplus q & p \\rightarrow q & p \\leftrightarrow q \\\\ \\hline ${PQ.map(([p, q]) => [p, q, 1 - p, p & q, p | q, p ^ q, (p && !q) ? 0 : 1, p === q ? 1 : 0].join(' & ')).join(' \\\\ ')} \\end{array}$</p>
+      <p class="midden">$\\begin{array}{cc|cccccc} p & q & \\neg p & p \\wedge q & p \\vee q & p \\oplus q & p \\Rightarrow q & p \\Leftrightarrow q \\\\ \\hline ${PQ.map(([p, q]) => [p, q, 1 - p, p & q, p | q, p ^ q, (p && !q) ? 0 : 1, p === q ? 1 : 0].join(' & ')).join(' \\\\ ')} \\end{array}$</p>
       <ul><li>Conjunctie: enkel waar als <b>beide</b> waar zijn.</li><li>Inclusieve disjunctie: waar zodra <b>minstens één</b> waar is.</li>
       <li>Exclusieve disjunctie: waar als <b>juist één</b> waar is.</li><li>Implicatie: enkel vals als $p$ waar is en $q$ vals.</li><li>Equivalentie: waar als $p$ en $q$ <b>dezelfde</b> waarheidswaarde hebben.</li></ul></div>
-    <div class="kader"><div class="kader-titel">Een samengestelde formule</div><p>Werk van binnen naar buiten: maak een kolom voor elk deel. Bv. $(p \\vee q) \\rightarrow p$: eerst de kolom $p \\vee q$, dan de hele formule.</p></div>`,
+    <div class="kader eig"><div class="kader-titel">Let op: ‘of’ en ‘als … dan …’ in de omgangstaal</div>
+      <p>‘Wil je koffie of thee?’: in de omgangstaal betekent ‘of’ vaak ‘ofwel … ofwel’. In de logica is ‘of’ altijd <b>inclusief</b> (en/of), tenzij er ‘ofwel … ofwel’ staat.</p>
+      <p>‘Als je je kamer opruimt, dan mag je gamen.’ In de omgangstaal begrijp je ‘als en slechts als’. In de logica zegt een implicatie <b>niets</b> over het geval waarin de voorwaarde vals is: dan is $p \\Rightarrow q$ altijd waar.</p></div>
+    <div class="kader def"><div class="kader-titel">Vertalen naar symbolen</div>
+      <p>Kies een letter voor elke enkelvoudige uitspraak (zonder ‘niet’), vervang de verbindingswoorden door symbolen en zet haakjes waar nodig. Met $p$: Het regent. en $q$: Ik ga met de fiets.</p>
+      <ul><li>Het regent niet en ik ga met de fiets: $\\neg p \\wedge q$</li><li>Als het regent, dan ga ik niet met de fiets: $p \\Rightarrow \\neg q$</li><li>Het is niet waar dat het regent en dat ik met de fiets ga: $\\neg(p \\wedge q)$</li></ul></div>
+    <div class="kader def"><div class="kader-titel">Nodige en voldoende voorwaarde</div>
+      <p>Is $p \\Rightarrow q$ altijd waar, dan is $p$ een <b>voldoende</b> voorwaarde voor $q$ en is $q$ een <b>nodige</b> voorwaarde voor $p$. Is $p \\Leftrightarrow q$ altijd waar, dan is het een <b>nodige en voldoende</b> voorwaarde.</p>
+      <p class="klein">Deelbaar door 4 ⇒ even: deelbaar door 4 is voldoende om even te zijn; even zijn is nodig om deelbaar door 4 te zijn.</p></div>
+    <div class="kader def"><div class="kader-titel">∀, ∃ en een tegenvoorbeeld</div>
+      <p>$\\forall$ = ‘voor alle’, $\\exists$ = ‘er bestaat (minstens één)’. Bv. $\\forall x \\in \\mathbb{R}: x^2 \\geq 0$ is waar; $\\exists x \\in \\mathbb{N}: x + 3 = 1$ is vals.</p>
+      <p>Een uitspraak ‘voor alle …’ weerleg je met <b>één tegenvoorbeeld</b>. ‘Alle priemgetallen zijn oneven’ is vals: 2 is een even priemgetal. Eén voorbeeld dat wél klopt, bewijst niets.</p></div>
+    <div class="kader"><div class="kader-titel">Een samengestelde formule</div><p>Werk van binnen naar buiten: maak een kolom voor elk deel. Bv. $(p \\vee q) \\Rightarrow p$: eerst de kolom $p \\vee q$, dan de hele formule.</p></div>`,
   voorbeelden: [
+    { html: `Vertaal met $p$: Ik heb honger. en $q$: Ik eet een boterham. <br>‘Als ik geen honger heb, dan eet ik geen boterham.’`, stappen: ['\\text{‘geen honger’: } \\neg p', '\\text{‘geen boterham’: } \\neg q', '\\text{‘als … dan …’: } \\neg p \\Rightarrow \\neg q'] },
+    { html: `Een vader zegt: ‘Als je je huiswerk maakt, dan mag je tv kijken.’ Je maakt je huiswerk niet en je mag toch tv kijken. Heeft hij gelogen?`, stappen: ['p = 0 \\text{ (geen huiswerk)}, \\; q = 1 \\text{ (tv)}', 'p \\Rightarrow q = 0 \\Rightarrow 1 = 1', '\\text{De implicatie is waar: hij heeft niet gelogen.}'] },
+    { html: `‘Voor alle reële getallen $a$ geldt $a^2 \\geq a$.’ Waar of vals?`, stappen: ['\\text{Zoek een tegenvoorbeeld: probeer een getal tussen 0 en 1.}', 'a = 0{,}5: \\; a^2 = 0{,}25 < 0{,}5', '\\text{Eén tegenvoorbeeld volstaat: de uitspraak is vals.}'] },
     { tex: `\\begin{array}{cc|cc} p & q & \\neg p & \\neg p \\wedge q \\\\ \\hline 1 & 1 & 0 & 0 \\\\ 1 & 0 & 0 & 0 \\\\ 0 & 1 & 1 & 1 \\\\ 0 & 0 & 1 & 0 \\end{array}`, stappen: ['\\text{eerst de kolom } \\neg p', '\\text{dan de conjunctie met } q: \\text{ enkel 1 als beide 1 zijn}'] },
   ],
   soorten: {
@@ -49,13 +64,81 @@ const D1 = {
       const stappen = deelformules(f).map(d => `${pTex(d)} = ${pEval(d, { p, q })}`);
       return { soort: 'waarde', opdracht: `Wat is de waarheidswaarde als p = ${p} en q = ${q}?`, tex: pTex(f), antw: neKeuze(v), uitleg: [`p = ${p}, \\; q = ${q}`, ...stappen] };
     } },
+    vertaal: { naam: 'Vertalen naar symbolen', gen() {
+      // hoofdzin p / q, bijzin (na 'als', 'dat') p / niet p / q, inversie na 'dan' q / niet q
+      const Z = kies([
+        { p: 'het regent', q: 'ik ga met de fiets', bp: 'het regent', bnp: 'het niet regent', bq: 'ik met de fiets ga', iq: 'ga ik met de fiets', inq: 'ga ik niet met de fiets', np: 'het regent niet' },
+        { p: 'ik heb honger', q: 'ik eet een boterham', bp: 'ik honger heb', bnp: 'ik geen honger heb', bq: 'ik een boterham eet', iq: 'eet ik een boterham', inq: 'eet ik geen boterham', np: 'ik heb geen honger' },
+        { p: 'het is weekend', q: 'ik slaap lang', bp: 'het weekend is', bnp: 'het geen weekend is', bq: 'ik lang slaap', iq: 'slaap ik lang', inq: 'slaap ik niet lang', np: 'het is geen weekend' },
+        { p: 'de schakelaar staat aan', q: 'de lamp brandt', bp: 'de schakelaar aan staat', bnp: 'de schakelaar niet aan staat', bq: 'de lamp brandt', iq: 'brandt de lamp', inq: 'brandt de lamp niet', np: 'de schakelaar staat niet aan' }]);
+      const H = (z) => z.charAt(0).toUpperCase() + z.slice(1);
+      const bank = [
+        [`${H(Z.np)} en ${Z.q}.`, '\\neg p \\wedge q', ['p \\wedge \\neg q', '\\neg(p \\wedge q)', '\\neg p \\vee q']],
+        [`Als ${Z.bp}, dan ${Z.inq}.`, 'p \\Rightarrow \\neg q', ['\\neg p \\Rightarrow q', 'p \\Leftrightarrow \\neg q', '\\neg(p \\Rightarrow q)']],
+        [`Als ${Z.bnp}, dan ${Z.inq}.`, '\\neg p \\Rightarrow \\neg q', ['p \\Rightarrow q', '\\neg(p \\Rightarrow q)', 'q \\Rightarrow p']],
+        [`Als ${Z.bp}, dan ${Z.iq}.`, 'p \\Rightarrow q', ['q \\Rightarrow p', 'p \\Leftrightarrow q', 'p \\wedge q']],
+        [`${H(Z.q)} als en slechts als ${Z.bp}.`, 'q \\Leftrightarrow p', ['q \\Rightarrow p', 'p \\Rightarrow q', 'p \\wedge q']],
+        [`Het is niet waar dat ${Z.bp} en dat ${Z.bq}.`, '\\neg(p \\wedge q)', ['\\neg p \\wedge q', '\\neg p \\wedge \\neg q', '\\neg(p \\vee q)']],
+        [`${H(Z.p)} of ${Z.q} (of allebei).`, 'p \\vee q', ['p \\oplus q', 'p \\wedge q', 'p \\Rightarrow q']],
+        [`${H(Z.p)} of ${Z.q}, maar niet allebei.`, 'p \\oplus q', ['p \\vee q', 'p \\Leftrightarrow q', 'p \\wedge q']],
+      ];
+      const [zin, j, f] = kies(bank), s = schud([j, ...f]);
+      return { soort: 'vertaal', opdracht: 'Welke uitspraak in symbolen hoort bij de zin?', html: opgave(`$p$: ${H(Z.p)}. &nbsp; $q$: ${H(Z.q)}.<br><b>${zin}</b>`), sleutel: zin, rapport: zin,
+        antw: keuze(kTex(s), s.indexOf(j)), uitleg: [j] };
+    } },
+    omgang: { naam: '‘Of’ en ‘als … dan’ in de omgangstaal', gen() {
+      const bank = [
+        ['‘Kinderen jonger dan 12 jaar of ouder dan 65 jaar betalen minder.’ Welke disjunctie is dit?', ['inclusieve disjunctie', 'exclusieve disjunctie', 'conjunctie', 'implicatie']],
+        ['‘Je komt ofwel met de bus, ofwel met de fiets.’ Welke disjunctie is dit?', ['exclusieve disjunctie', 'inclusieve disjunctie', 'equivalentie', 'negatie']],
+        ['Een vader zegt: ‘Als je je huiswerk maakt, dan mag je tv kijken.’ Je maakt je huiswerk niet en mag toch tv kijken. Heeft de vader gelogen?', ['nee, de implicatie is waar', 'ja, de implicatie is vals', 'dat kan je niet weten', 'ja, want het is een equivalentie']],
+        ['Wanneer is ‘Als het regent, dan is de straat nat’ vals?', ['als het regent en de straat niet nat is', 'als het niet regent en de straat nat is', 'als het niet regent en de straat droog is', 'nooit']],
+        ['In de logica betekent ‘of’ (zonder ‘ofwel … ofwel’) …', ['en/of: minstens één van beide', 'juist één van beide', 'beide tegelijk', 'geen van beide']],
+        ['Een leraar zegt: ‘Als je 10 op 10 haalt, dan krijg je een sticker.’ Je haalt 8 op 10 en krijgt toch een sticker. Is de uitspraak van de leraar vals?', ['nee, de voorwaarde is vals, dus de implicatie is waar', 'ja, want je had geen 10 op 10', 'ja, want het gevolg is waar', 'dat hangt af van de leraar']],
+      ];
+      const [v, opts] = kies(bank), s = schud(opts.map((o, i) => ({ o, i })));
+      return { soort: 'omgang', opdracht: 'Kies het juiste antwoord.', html: opgave(v), sleutel: v, rapport: v, antw: keuze(kT(s.map(x => x.o)), s.findIndex(x => x.i === 0)),
+        uitleg: ['\\text{‘of’ = en/of (inclusief); } p \\Rightarrow q \\text{ is enkel vals als } p = 1 \\text{ en } q = 0.'] };
+    } },
+    voorwaarde: { naam: 'Nodige en voldoende voorwaarde', gen() {
+      const bank = [
+        ['‘Deelbaar zijn door 4’ is voor ‘even zijn’ een …', 0], ['‘Even zijn’ is voor ‘deelbaar zijn door 4’ een …', 1],
+        ['‘Deelbaar zijn door 10’ is voor ‘op 0 eindigen’ een …', 2], ['‘$x = 3$’ is voor ‘$x^2 = 9$’ een …', 0], ['‘$x^2 = 9$’ is voor ‘$x = 3$’ een …', 1],
+        ['‘Vier gelijke zijden hebben’ is voor ‘een vierkant zijn’ een …', 1], ['‘Drie hoeken van 60° hebben’ is voor ‘een gelijkzijdige driehoek zijn’ een …', 2],
+        ['‘Een vierkant zijn’ is voor ‘vier gelijke zijden hebben’ een …', 0],
+      ];
+      const [v, j] = kies(bank), namen = ['voldoende voorwaarde (niet nodig)', 'nodige voorwaarde (niet voldoende)', 'nodige en voldoende voorwaarde'];
+      return { soort: 'voorwaarde', opdracht: 'Vul aan.', html: opgave(v), sleutel: v, rapport: v.replace(/\$/g, ''), antw: keuze(kT(namen), j),
+        uitleg: ['p \\Rightarrow q: \\; p \\text{ is voldoende, } q \\text{ is nodig}', 'p \\Leftrightarrow q: \\text{ nodig en voldoende}'] };
+    } },
+    kwantor: { naam: '∀ en ∃: waar of vals?', gen() {
+      const bank = [
+        ['\\forall x \\in \\mathbb{R}: x^2 \\geq 0', 1, '\\text{een kwadraat is nooit negatief}'], ['\\forall x \\in \\mathbb{R}: x^2 > 0', 0, 'x = 0: \\; 0^2 = 0'],
+        ['\\exists x \\in \\mathbb{N}: x + 3 = 1', 0, '\\text{de oplossing } -2 \\text{ is geen natuurlijk getal}'], ['\\exists x \\in \\mathbb{Z}: x + 3 = 1', 1, 'x = -2'],
+        ['\\forall n \\in \\mathbb{N}: n^2 > n', 0, 'n = 1: \\; 1^2 = 1'], ['\\exists x \\in \\mathbb{R}: x^2 = -4', 0, '\\text{een kwadraat is nooit negatief}'],
+        ['\\forall n \\in \\mathbb{N}: 2n \\text{ is even}', 1, '\\text{het dubbel van een natuurlijk getal is even}'], ['\\exists x \\in \\mathbb{N}: x < 1', 1, 'x = 0'],
+      ];
+      const [f, w, u] = kies(bank);
+      return { soort: 'kwantor', opdracht: 'Is de uitspraak waar of vals?', tex: f, antw: keuze(kT(['waar', 'vals']), w ? 0 : 1), uitleg: [u] };
+    } },
+    tegen: { naam: 'Een tegenvoorbeeld kiezen', gen() {
+      const bank = [
+        ['Alle priemgetallen zijn oneven.', ['2', '3', '9', '15']], ['Alle veelvouden van 3 zijn oneven.', ['6', '9', '15', '21']],
+        ['Als een getal deelbaar is door 2, dan is het deelbaar door 4.', ['6', '8', '12', '16']], ['Voor alle reële getallen $a$ geldt $a^2 \\geq a$.', ['$a = 0{,}5$', '$a = 2$', '$a = -1$', '$a = 1$']],
+        ['Voor alle $x$ geldt $(x + 1)^2 = x^2 + 1$.', ['$x = 1$', '$x = 0$', 'geen: de uitspraak is waar', '$x = -0$']],
+        ['Elk getal dat eindigt op 4 is deelbaar door 4.', ['14', '24', '44', '64']],
+      ];
+      const [v, opts] = kies(bank), s = schud(opts.map((o, i) => ({ o, i })));
+      return { soort: 'tegen', opdracht: 'Welk getal is een tegenvoorbeeld voor deze uitspraak?', html: opgave(v), sleutel: v, rapport: v.replace(/\$/g, ''),
+        antw: keuze(s.map((x, i) => ({ k: String(i), l: /\$/.test(x.o) ? x.o.replace(/\$/g, '') : `\\text{${x.o}}` })), s.findIndex(x => x.i === 0)),
+        uitleg: ['\\text{Eén geval waarin de uitspraak niet klopt, weerlegt ze.}'] };
+    } },
     tabel: { naam: 'Waarheidstabel invullen', gen() {
       const f = kies(FORMULES);
       return { soort: 'tabel', opdracht: 'Vul de waarheidstabel in.', tex: pTex(f), antw: { soort: 'wt', vars: ['p', 'q'], kolommen: tabelKolommen(f) }, uitleg: ['\\text{werk van binnen naar buiten}', LG.wtTex({ vars: ['p', 'q'], kolommen: tabelKolommen(f) })] };
     } },
   },
-  oefenMix: [['operator', 1], ['waarde', 1], ['tabel', 2]],
-  test: [['operator', 3], ['waarde', 3], ['tabel', 4]], testSchudden: true,
+  oefenMix: [['operator', 1], ['vertaal', 1], ['waarde', 1], ['tabel', 2], ['omgang', 1], ['voorwaarde', 1], ['kwantor', 1], ['tegen', 1]],
+  test: [['operator', 1], ['vertaal', 2], ['waarde', 1], ['tabel', 2], ['omgang', 1], ['voorwaarde', 1], ['kwantor', 1], ['tegen', 1]], testSchudden: true,
 };
 
 // ---- 2. en 3. logische poorten ------------------------------------------------------------
@@ -270,7 +353,7 @@ const D7 = {
 };
 
 Leerpaden.registreer({
-  code: 'logica', titel: 'Logica: logische poorten', ondertitel: 'Wiskunde · 4BW-MWW', klas: '4BW-MWW', drempel: 70,
+  code: 'logica', titel: 'Logica', ondertitel: 'Wiskunde · 4BW-MWW', klas: '4BW-MWW', drempel: 70,
   intro: `<p>Eerst herhaal je proposities en waarheidstabellen. Daarna leer je de logische poorten (NOT, AND, OR, XOR, NAND, NOR, XNOR) met hun IEC-symbolen, combineer je poorten tot schakelingen
     en <b>bouw je zelf schakelingen</b> voor domotica-toepassingen: poorten naar het werkblad slepen, verbinden en uitproberen.
     Lees de theorie, oefen zoveel je wil en maak dan de test. Haal je <b>7 op 10</b>, dan gaat het volgende deel open.</p>`,

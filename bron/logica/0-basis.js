@@ -18,8 +18,8 @@ const OPS = {
   AND: { tex: '\\wedge', f: (a, b) => a & b, naam: 'conjunctie', woord: 'en' },
   OR: { tex: '\\vee', f: (a, b) => a | b, naam: 'inclusieve disjunctie', woord: 'of (en/of)' },
   XOR: { tex: '\\oplus', f: (a, b) => a ^ b, naam: 'exclusieve disjunctie', woord: 'ofwel … ofwel' },
-  IMP: { tex: '\\rightarrow', f: (a, b) => (a && !b) ? 0 : 1, naam: 'implicatie', woord: 'als … dan' },
-  EQ: { tex: '\\leftrightarrow', f: (a, b) => a === b ? 1 : 0, naam: 'equivalentie', woord: 'als en slechts als' },
+  IMP: { tex: '\\Rightarrow', f: (a, b) => (a && !b) ? 0 : 1, naam: 'implicatie', woord: 'als … dan' },
+  EQ: { tex: '\\Leftrightarrow', f: (a, b) => a === b ? 1 : 0, naam: 'equivalentie', woord: 'als en slechts als' },
 };
 const pEval = (b, w) => typeof b === 'string' ? w[b] : OPS[b.o].f(...b.a.map(k => pEval(k, w)));
 function pTex(b, top = true) {

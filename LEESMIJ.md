@@ -177,6 +177,12 @@ antwoordsoort `verzameling`; komma of puntkomma tussen de grenzen, knoppen voor 
 * **C · Verschuivingen en context** (9–10): beeld van een driehoek/vierhoek (het beeld verschijnt zodra alle pijlen staan) · verplaatsing, krachten, snelheid.
 * **D · Eindtest** (11).
 
+## 4h. Het leerpad Logica (4BW-MWW) — update november 2026
+
+Deel 1 (herhaling 3e jaar) volgt nu de nieuwe cursus *1. Logica* (deel A): naast operatoren, waarde en waarheidstabellen ook
+**vertalen naar symbolen**, **‘of’ en ‘als … dan …’ in de omgangstaal**, **nodige en voldoende voorwaarde**, **∀ en ∃** en **tegenvoorbeelden**.
+Implicatie en equivalentie worden nu genoteerd als ⇒ en ⇔. De nummering van de delen is niet veranderd, dus bestaande resultaten blijven geldig.
+
 ## Inlogbrieven
 
 Na het aanmaken van accounts (of nieuwe wachtwoorden) krijg je per leerling **één A4** met de inloggegevens én de handleiding.
