@@ -95,6 +95,12 @@ const Demo = (() => {
       Object.assign(t, { antwoorden: p_antwoorden, score: sc, max_score: mx, geslaagd: sc * 100 >= d * mx, status: 'ingediend', ingediend: nu() });
       return { score: sc, max: mx, geslaagd: t.geslaagd, status: status(db, l.id, t.prog) };
     },
+    ll_test_bekijken(db, { p_token, p_test }) {
+      const l = leerling(db, p_token);
+      const t = db.testen.find(t => t.id === p_test && t.ll === l.id);
+      if (!t) fout('ONBEKENDE_TEST'); if (t.status !== 'ingediend') fout('NOG_NIET_INGEDIEND');
+      return { id: t.id, programma: t.prog, deel: t.deel, vragen: t.vragen, antwoorden: t.antwoorden, score: t.score, max: t.max_score, geslaagd: t.geslaagd, ingediend: t.ingediend };
+    },
     lk_login(db, { p_wachtwoord }) {
       if (p_wachtwoord !== db.lk) fout('FOUTE_LOGIN');
       const token = uid(); db.sessies.push({ token, lk: true }); return { token };

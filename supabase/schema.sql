@@ -269,6 +269,19 @@ begin
   return jsonb_build_object('score', sc, 'max', mx, 'geslaagd', ok, 'status', _status(v, t.programma));
 end $$;
 
+-- Leerling bekijkt een eigen, ingediende test opnieuw (verbetering + PDF).
+create or replace function ll_test_bekijken(p_token uuid, p_test bigint) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare v uuid := _leerling(p_token); t testen;
+begin
+  select * into t from testen where id = p_test and leerling_id = v;
+  if t.id is null then raise exception 'ONBEKENDE_TEST'; end if;
+  if t.status <> 'ingediend' then raise exception 'NOG_NIET_INGEDIEND'; end if;
+  perform _ingeschreven(v, t.programma);
+  return jsonb_build_object('id', t.id, 'programma', t.programma, 'deel', t.deel, 'vragen', t.vragen,
+    'antwoorden', t.antwoorden, 'score', t.score, 'max', t.max_score, 'geslaagd', t.geslaagd, 'ingediend', t.ingediend);
+end $$;
+
 -- ---------- Functies voor de leerkracht --------------------------------
 
 -- Enkel uit te voeren in de SQL Editor (niet via de website).

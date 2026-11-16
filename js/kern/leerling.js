@@ -27,6 +27,8 @@
     return { d, geslaagd, open, testen, bezig, ingediend, over, oef, beste, laatste: ingediend[ingediend.length - 1] };
   }
   const nodig = (max) => Math.ceil(S.status.drempel * max / 100);
+  const datum = (iso) => iso ? new Date(iso).toLocaleString('nl-BE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+  const bestandsnaam = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
 
   async function roep(fn, params) {
     try { return await API.call(fn, { p_token: S.token, ...params }); }
@@ -271,6 +273,16 @@
   }
 
   // ---------- test
+  // Lijst van de ingediende pogingen, met verbetering en PDF.
+  function lijstIngediend(i) {
+    if (!i.ingediend.length) return '';
+    return `<h2>Mijn ingediende testen</h2>
+      <div class="kaart">${i.ingediend.map((t, k) => `<div class="testvraag ${t.geslaagd ? 'j' : 'f'}" style="grid-template-columns:34px 1fr auto">
+          <div class="vnr">${t.geslaagd ? '✓' : '✗'}</div>
+          <div><b>Poging ${k + 1}</b> · ${t.score}/${t.max} <span class="klein">· ingediend op ${esc(datum(t.ingediend))}</span></div>
+          <div><button class="licht" data-a="bekijk" data-id="${t.id}">Bekijk verbetering</button></div></div>`).join('')}</div>`;
+  }
+
   function vTest(d) {
     const i = info(d.nr);
     const t = S.test && S.test.deel === d.nr ? S.test : null;
@@ -280,7 +292,8 @@
       const volgende = deelVan(d.nr + 1);
       return `<div class="kaart midden"><div class="score-groot j">${i.beste.score}/${i.beste.max}</div>
         <p>Je bent geslaagd voor de test van dit deel. Goed gedaan!</p>
-        ${volgende && volgende.klaar ? `<button data-a="deel" data-nr="${volgende.nr}">Naar deel ${volgende.nr} →</button>` : volgende ? '<p class="klein">Het volgende deel komt binnenkort online.</p>' : '<p><b>Je hebt het hele leerpad afgewerkt!</b></p>'}</div>`;
+        ${volgende && volgende.klaar ? `<button data-a="deel" data-nr="${volgende.nr}">Naar deel ${volgende.nr} →</button>` : volgende ? '<p class="klein">Het volgende deel komt binnenkort online.</p>' : '<p><b>Je hebt het hele leerpad afgewerkt!</b></p>'}</div>
+        ${lijstIngediend(i)}`;
     }
     if (i.bezig) {
       return `<div class="kaart"><h2>Je test is nog bezig</h2><p>Je bent deze test al gestart. Ga verder waar je gebleven was.</p>
@@ -291,7 +304,8 @@
       return `<div class="kaart"><h2>Test gemaakt</h2>
         <p>Je behaalde <b>${l.score}/${l.max}</b>. Je hebt minstens <b>${nodig(l.max)}/${l.max}</b> nodig.</p>
         <div class="melding let">Oefen verder op dit deel. Als je klaar bent, vraag je aan je leerkracht om de test opnieuw open te zetten.</div>
-        <div class="knoppen"><button data-a="tab" data-tab="oefenen">Verder oefenen</button></div></div>`;
+        <div class="knoppen"><button data-a="tab" data-tab="oefenen">Verder oefenen</button></div></div>
+        ${lijstIngediend(i)}`;
     }
     const aantal = d.test.reduce((s, x) => s + x[1], 0);
     return `<div class="kaart"><h2>Test deel ${d.nr}</h2>
@@ -305,7 +319,8 @@
       </ul>
       ${i.ingediend.length ? `<p class="klein">Je leerkracht heeft de test opnieuw opengezet. Vorige score: ${i.laatste.score}/${i.laatste.max}.</p>` : ''}
       <div class="melding info">Twijfel je nog? <button class="link" data-a="tab" data-tab="oefenen">Oefen eerst nog wat</button>.</div>
-      <div class="knoppen"><button class="oranje" data-a="teststart">Start de test</button></div></div>`;
+      <div class="knoppen"><button class="oranje" data-a="teststart">Start de test</button></div></div>
+      ${lijstIngediend(i)}`;
   }
 
   function vTestBezig(d, t) {
@@ -324,26 +339,113 @@
       <div class="knoppen"><button class="oranje" data-a="indienen">Test indienen</button></div></div>`;
   }
 
+  function verbeteringHTML(d, t) {
+    const r = t.resultaat;
+    return `<div class="kaart">${t.vragen.map((v, k) => {
+        const a = (r.details || [])[k] || {};
+        const jouw = a.g ? Antwoord.gegevenHTML(a.g) : (a.gegeven ? `<b>${esc(a.gegeven)}</b>` : '—');
+        return `<div class="testvraag blok ${a.juist ? 'j' : 'f'}"><div class="vnr">${a.juist ? '✓' : '✗'}</div>
+          <div class="inhoud-blok"><div class="klein">${k + 1}. ${esc(opdracht(d, v))}</div><div class="opg">${opgave(v)}</div>
+          <div>Juiste antwoord: ${Antwoord.juistHTML(v.antw)}</div>
+          <div class="klein">Jouw antwoord: ${jouw}${a.bericht ? ` · <i>${esc(a.bericht)}</i>` : ''}</div>
+          ${a.juist ? '' : `<div class="klein">${uitlegHTML(v)}</div>`}</div></div>`;
+      }).join('')}</div>`;
+  }
+
   function vResultaat(d, t) {
     const r = t.resultaat;
     const volgende = deelVan(d.nr + 1);
+    const pdfKnop = `<button class="licht" data-a="pdf">⬇ Download als PDF</button>`;
+    if (r.oud) {
+      return `<div class="kaart midden">
+          <p class="klein">Poging ${r.poging} · ingediend op ${esc(datum(r.ingediend))}</p>
+          <div class="score-groot ${r.geslaagd ? 'j' : 'f'}">${r.score}/${r.max}</div>
+          <div class="knoppen" style="justify-content:center"><button class="licht" data-a="terugtest">← Terug</button>${pdfKnop}</div>
+        </div>
+        <h2>Verbetering</h2>${verbeteringHTML(d, t)}`;
+    }
     return `<div class="kaart midden">
         <div class="score-groot ${r.geslaagd ? 'j' : 'f'}">${r.score}/${r.max}</div>
         ${r.geslaagd
           ? `<p><b>Proficiat, je bent geslaagd!</b> ${volgende ? `Deel ${volgende.nr} is nu open.` : 'Je hebt het hele leerpad afgewerkt!'}</p>
-             ${volgende && volgende.klaar ? `<button data-a="deel" data-nr="${volgende.nr}">Naar deel ${volgende.nr} →</button>` : ''}`
+             <div class="knoppen" style="justify-content:center">${volgende && volgende.klaar ? `<button data-a="deel" data-nr="${volgende.nr}">Naar deel ${volgende.nr} →</button>` : ''}${pdfKnop}</div>`
           : `<p>Je had minstens ${nodig(r.max)}/${r.max} nodig. Bekijk hieronder je fouten en oefen verder. Je leerkracht kan de test daarna opnieuw openzetten.</p>
-             <button data-a="tab" data-tab="oefenen">Verder oefenen</button>`}
+             <div class="knoppen" style="justify-content:center"><button data-a="tab" data-tab="oefenen">Verder oefenen</button>${pdfKnop}</div>`}
+        <p class="klein">Je kan deze verbetering later altijd terugvinden onder het tabblad Test.</p>
       </div>
-      <h2>Verbetering</h2>
-      <div class="kaart">${t.vragen.map((v, k) => {
-        const a = r.details[k];
-        return `<div class="testvraag blok ${a.juist ? 'j' : 'f'}"><div class="vnr">${a.juist ? '✓' : '✗'}</div>
-          <div class="inhoud-blok"><div class="klein">${esc(opdracht(d, v))}</div><div class="opg">${opgave(v)}</div>
-          <div>Juiste antwoord: ${Antwoord.juistHTML(v.antw)}</div>
-          <div class="klein">Jouw antwoord: ${Antwoord.gegevenHTML(a.g)}${a.bericht ? ` · <i>${esc(a.bericht)}</i>` : ''}</div>
-          ${a.juist ? '' : `<div class="klein">${uitlegHTML(v)}</div>`}</div></div>`;
-      }).join('')}</div>`;
+      <h2>Verbetering</h2>${verbeteringHTML(d, t)}`;
+  }
+
+  // Een eerder ingediende test opnieuw bekijken
+  async function bekijk(id) {
+    const r = await roep('ll_test_bekijken', { p_test: id });
+    const d = deelVan(r.deel);
+    if (!d) return;
+    const poging = info(r.deel).ingediend.findIndex(t => t.id === r.id) + 1;
+    S.view = 'deel'; S.deel = r.deel; S.tab = 'test';
+    S.test = { id: r.id, deel: r.deel, vragen: r.vragen,
+      resultaat: { oud: true, poging: poging || 1, score: r.score, max: r.max, geslaagd: r.geslaagd, ingediend: r.ingediend, details: r.antwoorden || [] } };
+    render(); window.scrollTo(0, 0);
+  }
+
+  // De PDF-maker tekent de SVG's van KaTeX (wortels, breukstrepen, pijlen) niet goed:
+  // zet ze om naar afbeeldingen met een vaste maat.
+  function svgNaarAfbeelding(el) {
+    el.querySelectorAll('.katex svg').forEach(svg => {
+      const ouder = svg.parentElement, r = svg.getBoundingClientRect();
+      const b = Math.min(r.width || 0, ouder.getBoundingClientRect().width || r.width), h = r.height;
+      if (!b || !h) return;
+      const kopie = svg.cloneNode(true);
+      kopie.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      kopie.setAttribute('width', b); kopie.setAttribute('height', h);
+      kopie.setAttribute('fill', getComputedStyle(svg).color || '#000');
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(kopie.outerHTML.replace(/currentColor/g, getComputedStyle(svg).color || '#000'));
+      img.style.cssText = `display:block;width:${b}px;height:${h}px;position:${getComputedStyle(svg).position};left:0;top:0`;
+      svg.replaceWith(img);
+    });
+  }
+
+  // De verbetering als PDF downloaden (zelfde opmaak als op het scherm)
+  async function downloadPDF(knop) {
+    const t = S.test; if (!t || !t.resultaat) return;
+    const d = deelVan(t.deel), r = t.resultaat, l = S.leerling || {};
+    const wanneer = r.ingediend || new Date().toISOString();
+    const logo = new URL((location.pathname.includes('/test/') ? '../' : '') + 'img/logo-deresonant.png', location.href).href;
+    const houder = document.createElement('div');
+    houder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff';
+    houder.innerHTML = `<div class="pdf-verbetering" style="width:680px;background:#fff;padding:4px;color:#1f2733">
+        <style>.pdf-verbetering .kaart { box-shadow: none; border: 1px solid #ccd3dd; padding: 6px 12px; margin: 0; }
+          .pdf-verbetering .testvraag.j { background: #eef7f1; border-left: 4px solid #2e7d4f; }
+          .pdf-verbetering .testvraag.f { background: #fbefed; border-left: 4px solid #b83a2e; }
+          .pdf-verbetering .testvraag { padding: 8px 6px; }</style>
+        <div style="display:flex;align-items:center;gap:14px;border-bottom:3px solid #1c4e8a;padding-bottom:6px;margin-bottom:10px">
+          <img src="${logo}" alt="De Resonant" style="height:34px">
+          <div style="flex:1"><div style="font-size:20px;font-weight:bold;color:#1c4e8a">Verbetering test deel ${d.nr}: ${esc(d.titel)}</div>
+            <div class="klein">${esc(S.P.titel)} · ${esc(l.voornaam || '')} ${esc(l.naam || '')}${l.klas ? ' · ' + esc(l.klas) : ''}</div></div>
+          <div style="text-align:right"><div style="font-size:24px;font-weight:bold;color:${r.geslaagd ? '#2e7d4f' : '#b83a2e'}">${r.score}/${r.max}</div>
+            <div class="klein">${esc(datum(wanneer))}</div></div>
+        </div>
+        ${verbeteringHTML(d, t)}</div>`;
+    document.body.appendChild(houder); W.renderIn(houder);
+    svgNaarAfbeelding(houder);
+    const tekst = knop ? knop.textContent : '';
+    if (knop) { knop.disabled = true; knop.textContent = 'PDF maken…'; }
+    const sx = window.scrollX, sy = window.scrollY; window.scrollTo(0, 0);
+    try {
+      if (!window.html2pdf) throw new Error('De PDF-maker is niet geladen. Controleer je internetverbinding en herlaad de pagina.');
+      await html2pdf().set({
+        margin: [12, 12, 12, 12],
+        filename: `Verbetering_${bestandsnaam(S.P.titel)}_deel${d.nr}_${bestandsnaam((l.naam || '') + '_' + (l.voornaam || ''))}_${new Date(wanneer).toLocaleDateString('sv-SE')}.pdf`,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['.testvraag'] },
+      }).from(houder.firstElementChild).save();
+    } finally {
+      houder.remove(); window.scrollTo(sx, sy);
+      if (knop) { knop.disabled = false; knop.textContent = tekst; }
+    }
   }
 
   const testSleutel = (id) => `test-${S.prog}-${id}`;
@@ -465,6 +567,9 @@
         if (a === 'volgende') { const d = deelVan(S.deel); nieuweVraag(d, S.oef[d.nr]); render(); const k = document.querySelector('.kaart'); if (k && k.getBoundingClientRect().top < 0) k.scrollIntoView(); return; }
         if (a === 'teststart') return testStart();
         if (a === 'indienen') return indienen();
+        if (a === 'bekijk') return await bekijk(+el.dataset.id);
+        if (a === 'terugtest') { S.test = null; render(); return window.scrollTo(0, 0); }
+        if (a === 'pdf') return await downloadPDF(el);
       } catch (e) { if (e.code !== 'SESSIE_VERLOPEN') modaal('Dat lukte niet', `<p>${esc(e.message)}</p>`, [['OK', true]]); }
     });
   }
