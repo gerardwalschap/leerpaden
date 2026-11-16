@@ -199,14 +199,16 @@ const Antwoord = (() => {
       return `<div class="antwoordrij vrij"><span class="is">${T('V = \\{')}</span>
           <input type="text" class="veld${sp ? ' uitgeschakeld' : ''}" id="${id}" value="${esc(sp ? '' : w.invoer)}" placeholder="${sp ? '' : 'bv. 2 ; -3'}" autocomplete="off" autocapitalize="none" spellcheck="false" inputmode="text" ${dis}>
           <span class="is">${T('\\}')}</span>
-          <span class="of">of</span><button type="button" class="keuze vsp ${sp === 'leeg' ? 'aan' : ''}" data-vid="${id}" data-s="leeg" ${dis}>${T('V = \\varnothing')}</button></div>`;
+          <span class="of">of</span><button type="button" class="keuze vsp ${sp === 'leeg' ? 'aan' : ''}" data-vid="${id}" data-s="leeg" ${dis}>${T('V = \\varnothing')}</button>
+          ${a.dec > 0 && !uit ? `<span class="afrond" title="Een breuk mag ook (bv. -1/3).">geen mooi getal? rond af op ${a.dec} ${a.dec === 1 ? 'decimaal' : 'decimalen'}</span>` : ''}</div>`;
     }
     if (a.soort === 'V') {
       const sp = w.speciaal;
       return `<div class="antwoordrij vrij"><span class="is">${T('V = \\{')}</span>
           <input type="text" class="veld${sp ? ' uitgeschakeld' : ''}" id="${id}" value="${esc(sp ? '' : w.invoer)}" placeholder="${sp ? '' : 'oplossing'}" autocomplete="off" autocapitalize="none" spellcheck="false" inputmode="text" ${dis}>
           <span class="is">${T('\\}')}</span>
-          ${a.metSpeciaal ? `<span class="of">of</span><button type="button" class="keuze vsp ${sp === 'leeg' ? 'aan' : ''}" data-vid="${id}" data-s="leeg" ${dis}>${T('V = \\varnothing')}</button><button type="button" class="keuze vsp ${sp === 'R' ? 'aan' : ''}" data-vid="${id}" data-s="R" ${dis}>${T('V = \\mathbb{R}')}</button>` : ''}</div>`;
+          ${a.metSpeciaal ? `<span class="of">of</span><button type="button" class="keuze vsp ${sp === 'leeg' ? 'aan' : ''}" data-vid="${id}" data-s="leeg" ${dis}>${T('V = \\varnothing')}</button><button type="button" class="keuze vsp ${sp === 'R' ? 'aan' : ''}" data-vid="${id}" data-s="R" ${dis}>${T('V = \\mathbb{R}')}</button>` : ''}
+          ${a.dec > 0 && !uit ? `<span class="afrond" title="Een breuk mag ook (bv. -1/3).">geen mooi getal? rond af op ${a.dec} ${a.dec === 1 ? 'decimaal' : 'decimalen'}</span>` : ''}</div>`;
     }
     if (a.soort === 'teken') {
       return `<div class="tekenrooster" id="${id}">${uit ? '' : `<div class="tk-legende">${a.rechten.map((r, i) => `<button type="button" class="keuze tk-r ${(w.actief || 0) === i ? 'aan' : ''}" data-tid="${id}" data-r="${i}" style="border-color:${TK_KLEUR[i]}"><span style="color:${TK_KLEUR[i]}">●</span> ${T(r.tex)}</button>`).join('')}</div>
@@ -225,7 +227,7 @@ const Antwoord = (() => {
     return `<div class="antwoordrij">${a.voor !== '' ? `<span class="is">${T(a.voor || (a.soort === 'formule' ? a.doel + ' =' : '='))}</span>` : ''}
         <input type="text" class="veld${breed}" id="${id}" value="${esc(w.invoer)}" placeholder="${a.placeholder || PLACEHOLDER[a.soort] || ''}" autocomplete="off" autocapitalize="none" spellcheck="false" ${a.editor ? 'data-editor="1"' : ''} ${dis}>
         ${a.na ? `<span class="na">${T(a.na)}</span>` : ''}
-        ${a.soort === 'getal' && a.dec != null && !uit ? `<span class="afrond" title="Komt de uitkomst exact uit (bv. 6 of 2,5)? Dan schrijf je ze gewoon zo.">rond af op ${a.dec} ${a.dec === 1 ? 'decimaal' : 'decimalen'}</span>` : ''}</div>
+        ${a.soort === 'getal' && a.dec != null && !uit ? `<span class="afrond" title="Komt de uitkomst exact uit (bv. 6 of 2,5)? Dan schrijf je ze gewoon zo.">rond af op ${a.dec === 0 ? 'een geheel getal' : a.dec === 1 ? '1 decimaal' : a.dec + ' decimalen'}</span>` : ''}</div>
       ${metVoorbeeld(a) && !uit && !a.editor ? `<div class="voorbeeld" id="${id}-vb">${voorbeeld(a, w.invoer)}</div>` : ''}`;
   }
 
@@ -531,7 +533,7 @@ const Antwoord = (() => {
     // afgerond antwoord: altijd met alle gevraagde decimalen (ook een 0 achteraan), exacte waarden zonder extra nullen
     const g = (x, d) => d !== undefined && d !== null ? W.texGetal(x, d, Math.abs(W.rond(x, d) - x) > 1e-9) : W.texGetal(x);
     switch (a.soort) {
-      case 'getal': return g(a.waarde, a.dec) + (a.na ? '\\ ' + a.na : '');
+      case 'getal': return (a.vast && a.dec != null ? W.texGetal(a.waarde, a.dec, true) : g(a.waarde, a.dec)) + (a.na ? '\\ ' + a.na : '');
       case 'V': return a.speciaal === 'leeg' ? 'V = \\varnothing' : a.speciaal === 'R' ? 'V = \\mathbb{R}' : `V = \\{${g(a.waarde, a.dec ?? 2)}\\}`;
       case 'expr': return a.tex || E.texVan(a.expr);
       case 'complex': return a.tex || CX.texAbi(a.re, a.im);

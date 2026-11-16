@@ -9,6 +9,8 @@ const tg = (x) => W.texGetal(x);
 const h = (x) => x < 0 ? `(${tg(x)})` : tg(x);
 const gr = (x) => `${tg(x)}^\\circ`;
 const rond2 = (x) => W.rond(x, 2);
+const t2 = (x) => W.texGetal(x, 2, Math.abs(rond2(x) - x) > 1e-9);      // afgerond op 2 decimalen, ook een 0 achteraan
+const gr2 = (x) => `${t2(x)}^\\circ`;
 
 // ---- complexe getallen met gehele (of rationale) delen
 const Z = (re, im) => ({ re, im });
@@ -84,9 +86,9 @@ function argUitleg(a, b) {
   const kw = kwadrant(a, b), basis = Math.atan(b / a) * 180 / Math.PI, t = argument(a, b);
   const bt = `\\text{boogtan}\\,\\dfrac{${tg(b)}}{${tg(a)}}`;
   const exact = Math.abs(basis - Math.round(basis)) < 1e-9;
-  const bs = exact ? `= ${gr(Math.round(basis))}` : `\\approx ${gr(rond2(basis))}`;
+  const bs = exact ? `= ${gr(Math.round(basis))}` : `\\approx ${gr2(basis)}`;
   if (a > 0) return [`\\text{kwadrant ${kw}: } \\theta = ${bt} ${bs}`];
-  return [`\\text{kwadrant ${kw} } (a < 0)\\text{: } ${bt} ${bs}`, `\\theta ${exact ? '=' : '\\approx'} ${gr(exact ? Math.round(basis) : rond2(basis))} + 180^\\circ ${exact ? '=' : '\\approx'} ${gr(exact ? Math.round(t) : rond2(t))}`];
+  return [`\\text{kwadrant ${kw} } (a < 0)\\text{: } ${bt} ${bs}`, `\\theta ${exact ? '=' : '\\approx'} ${exact ? gr(Math.round(basis)) : gr2(basis)} + 180^\\circ ${exact ? '=' : '\\approx'} ${exact ? gr(Math.round(t)) : gr2(t)}`];
 }
 
 // ---- het complexe vlak (SVG)
@@ -250,7 +252,7 @@ function modUitleg(a, b) {
   const m = modulus(a, b);
   const L = [`|z| = \\sqrt{a^2 + b^2} = \\sqrt{${h(a)}^2 + ${h(b)}^2} = \\sqrt{${m.k}}`];
   if (m.tex !== `\\sqrt{${m.k}}`) L.push(`= ${m.tex}`);
-  if (m.exact.s !== 1) L.push(`\\approx ${tg(rond2(m.v))}`);
+  if (m.exact.s !== 1) L.push(`\\approx ${t2(m.v)}`);
   return L;
 }
 const D3 = {
@@ -530,8 +532,8 @@ const D8 = {
       let t; do { t = rnd(5, 355); } while (t % 15 === 0);
       const r = kies(RS), a = r * Math.cos(t * Math.PI / 180), b = r * Math.sin(t * Math.PI / 180);
       const z = Z(rond2(a), rond2(b));
-      return { soort: 'afronden', opdracht: 'Zet om naar de cartesische vorm a + bi. Rond a en b af op 2 decimalen.', tex: goniTex(r, t), antw: cAntw(Z(a, b), { tex: zt(z) }),
-        uitleg: [`a = ${r} \\cos ${gr(t)} \\approx ${tg(z.re)}`, `b = ${r} \\sin ${gr(t)} \\approx ${tg(z.im)}`, `z \\approx ${zt(z)}`] };
+      return { soort: 'afronden', opdracht: 'Zet om naar de cartesische vorm a + bi. Rond a en b af op 2 decimalen.', tex: goniTex(r, t), antw: cAntw(Z(a, b), { tex: CX.texAbi(z.re, z.im, W.texGetal(a, 2, true), W.texGetal(Math.abs(b), 2, true)) }),
+        uitleg: [`a = ${r} \\cos ${gr(t)} \\approx ${W.texGetal(a, 2, true)}`, `b = ${r} \\sin ${gr(t)} \\approx ${W.texGetal(b, 2, true)}`, `z \\approx ${CX.texAbi(z.re, z.im, W.texGetal(a, 2, true), W.texGetal(Math.abs(b), 2, true))}`] };
     } },
   },
   oefenMix: [['as', 1], ['bijzonder', 4], ['afronden', 2]],

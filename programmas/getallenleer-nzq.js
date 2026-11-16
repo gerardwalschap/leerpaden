@@ -788,13 +788,13 @@ const Q2 = {
   soorten: {
     decimaal: { naam: 'Een decimaal getal afronden', gen() {
       const d = rnd(0, 3), x = (kies([1, -1]) * rnd(1, 999999)) / 10 ** rnd(d + 2, 6); if (W.grensgeval(x, d)) return this.gen();
-      return { soort: 'decimaal', opdracht: `Rond af op ${d === 0 ? 'een geheel getal' : d === 1 ? '1 decimaal' : d + ' decimalen'}.`, tex: `${tg(x)}`, antw: getal(x, { dec: d, voor: '\\approx' }), uitleg: [`\\approx ${tg(W.rond(x, d), d)}`] };
+      return { soort: 'decimaal', opdracht: `Rond af op ${d === 0 ? 'een geheel getal' : d === 1 ? '1 decimaal' : d + ' decimalen'}.`, tex: `${tg(x)}`, antw: getal(x, { dec: d, voor: '\\approx' }), uitleg: [`\\approx ${W.texGetal(x, d, true)}`] };
     } },
     repeterend: { naam: 'Een repeterend getal of breuk afronden', gen() {
       const n = kies([3, 6, 7, 9, 11, 12, 13, 15, 18, 22]), t = Rteller(n) + n * rnd(0, 3), d = rnd(1, 3), v = decimaleVorm(t, n);
       const alsBreuk = kies([true, false]), x = t / n;
       return { soort: 'repeterend', opdracht: `Rond af op ${d === 1 ? '1 decimaal' : d + ' decimalen'}.`, tex: alsBreuk ? fr(t, n) : v.tex, antw: getal(x, { dec: d, voor: '\\approx' }),
-        uitleg: [`= ${x.toFixed(d + 3).replace('.', '{,}')}\\ldots`, `\\approx ${tg(W.rond(x, d), d)}`] };
+        uitleg: [`= ${x.toFixed(d + 3).replace('.', '{,}')}\\ldots`, `\\approx ${W.texGetal(x, d, true)}`] };
     } },
   },
   oefenMix: [['decimaal', 1], ['repeterend', 1]],
@@ -1027,15 +1027,15 @@ const Q10 = {
 const euro = (x) => Math.round(x * 100) / 100;
 const QPV = [
   () => { const p = euro(rnd(1000, 30000) / 100), b = kies([6, 21]); const w = euro(p * (1 + b / 100));
-    return { tekst: `Een artikel kost € ${naarTekst(p)} zonder btw. Er komt ${b}% btw bij. Wat is de prijs met btw?`, w, dec: 2, na: '\\text{ euro}', L: [vtTex(['%', 'euro'], [['100', tg(p)], [String(100 + b), `${tg(p)} \\cdot ${tg((100 + b) / 100)}`]]), `= ${tg(w, 2)} \\text{ euro}`] }; },
+    return { tekst: `Een artikel kost € ${naarTekst(p)} zonder btw. Er komt ${b}% btw bij. Wat is de prijs met btw?`, w, dec: 2, na: '\\text{ euro}', L: [vtTex(['%', 'euro'], [['100', tg(p)], [String(100 + b), `${tg(p)} \\cdot ${tg((100 + b) / 100)}`]]), `= ${W.texGetal(w, 2, true)} \\text{ euro}`] }; },
   () => { const p = euro(rnd(2000, 20000) / 100), k = kies([15, 20, 30, 35, 40, 12]); const w = euro(p * (1 - k / 100));
-    return { tekst: `Een jas kost € ${naarTekst(p)}. In de solden krijg je ${k}% korting. Hoeveel betaal je?`, w, dec: 2, na: '\\text{ euro}', L: [`\\text{je betaalt } ${100 - k}\\%`, vtTex(['%', 'euro'], [['100', tg(p)], [String(100 - k), `${tg(p)} \\cdot ${tg((100 - k) / 100)}`]]), `= ${tg(w, 2)} \\text{ euro}`] }; },
+    return { tekst: `Een jas kost € ${naarTekst(p)}. In de solden krijg je ${k}% korting. Hoeveel betaal je?`, w, dec: 2, na: '\\text{ euro}', L: [`\\text{je betaalt } ${100 - k}\\%`, vtTex(['%', 'euro'], [['100', tg(p)], [String(100 - k), `${tg(p)} \\cdot ${tg((100 - k) / 100)}`]]), `= ${W.texGetal(w, 2, true)} \\text{ euro}`] }; },
   () => { const oud = rnd(40, 400), nieuw = oud + rnd(3, Math.round(oud / 2)), w = (nieuw - oud) / oud * 100;
-    return { tekst: `De prijs van een abonnement stijgt van € ${oud} naar € ${nieuw}. Met hoeveel procent is de prijs gestegen? Rond af op 1 decimaal.`, w, dec: 1, na: '\\%', L: [`\\text{stijging: } ${nieuw} - ${oud} = ${nieuw - oud} \\text{ euro}`, vtTex(['euro', '%'], [[oud, '100'], [nieuw - oud, `\\frac{${nieuw - oud}}{${oud}} \\cdot 100`]]), `\\approx ${tg(W.rond(w, 1), 1)}\\%`] }; },
+    return { tekst: `De prijs van een abonnement stijgt van € ${oud} naar € ${nieuw}. Met hoeveel procent is de prijs gestegen? Rond af op 1 decimaal.`, w, dec: 1, na: '\\%', L: [`\\text{stijging: } ${nieuw} - ${oud} = ${nieuw - oud} \\text{ euro}`, vtTex(['euro', '%'], [[oud, '100'], [nieuw - oud, `\\frac{${nieuw - oud}}{${oud}} \\cdot 100`]]), `\\approx ${W.texGetal(w, 1, true)}\\%`] }; },
   () => { const na = euro(rnd(2000, 30000) / 100), k = kies([10, 20, 25, 40, 50]), w = euro(na / (1 - k / 100));
-    return { tekst: `Na ${k}% korting betaal je € ${naarTekst(na)}. Wat was de oorspronkelijke prijs? Rond af op de cent.`, w, dec: 2, na: '\\text{ euro}', L: [`${tg(na)} \\text{ euro is } ${100 - k}\\%`, vtTex(['%', 'euro'], [[String(100 - k), tg(na)], ['1', `${tg(na)} : ${100 - k}`], ['100', `${tg(na)} : ${100 - k} \\cdot 100`]]), `\\approx ${tg(w, 2)} \\text{ euro}`] }; },
+    return { tekst: `Na ${k}% korting betaal je € ${naarTekst(na)}. Wat was de oorspronkelijke prijs? Rond af op de cent.`, w, dec: 2, na: '\\text{ euro}', L: [`${tg(na)} \\text{ euro is } ${100 - k}\\%`, vtTex(['%', 'euro'], [[String(100 - k), tg(na)], ['1', `${tg(na)} : ${100 - k}`], ['100', `${tg(na)} : ${100 - k} \\cdot 100`]]), `\\approx ${W.texGetal(w, 2, true)} \\text{ euro}`] }; },
   () => { const n = rnd(18, 32), d = rnd(2, n - 4), w = d / n * 100;
-    return { tekst: `In een klas van ${n} leerlingen dragen er ${d} een bril. Hoeveel procent is dat? Rond af op 1 decimaal.`, w, dec: 1, na: '\\%', L: [vtTex(['leerlingen', '%'], [[n, '100'], [d, `\\frac{${d}}{${n}} \\cdot 100`]]), `\\approx ${tg(W.rond(w, 1), 1)}\\%`] }; },
+    return { tekst: `In een klas van ${n} leerlingen dragen er ${d} een bril. Hoeveel procent is dat? Rond af op 1 decimaal.`, w, dec: 1, na: '\\%', L: [vtTex(['leerlingen', '%'], [[n, '100'], [d, `\\frac{${d}}{${n}} \\cdot 100`]]), `\\approx ${W.texGetal(w, 1, true)}\\%`] }; },
 ];
 const Q11 = {
   nr: 11, titel: 'Vraagstukken met procenten', kort: 'Verhoudingstabel en rekentoestel.', rekenmachine: true,
@@ -1048,7 +1048,7 @@ const Q11 = {
   ],
   soorten: {
     vraagstuk: { naam: 'Vraagstukken met procenten', gen() { const r = kies(QPV)(); if (W.grensgeval(r.w, r.dec)) return this.gen();
-      return { soort: 'vraagstuk', html: `<p class="opgave-tekst">${r.tekst}</p>`, sleutel: r.tekst, rapport: r.tekst, antw: getal(r.w, { dec: r.dec, na: r.na }), uitleg: r.L }; } },
+      return { soort: 'vraagstuk', html: `<p class="opgave-tekst">${r.tekst}</p>`, sleutel: r.tekst, rapport: r.tekst, antw: getal(r.w, { dec: r.dec, na: r.na, vast: r.na.includes('euro') }), uitleg: r.L }; } },
   },
   oefenMix: [['vraagstuk', 1]],
   test: [['vraagstuk', 10]], testSchudden: true,

@@ -6,6 +6,7 @@
 const { rnd, kies, schud } = W;
 const nz = (a, b) => { let x; do { x = rnd(a, b); } while (x === 0); return x; };
 const tg = (x, d = null) => W.texGetal(x, d);
+const tgA = (x, d) => W.texGetal(x, d, Math.abs(W.rond(x, d) - x) > 1e-9); // afgerond: alle gevraagde decimalen
 const h = (x) => x < 0 ? `(${tg(x)})` : tg(x);
 const ggd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
 const getal = (waarde, extra = {}) => ({ soort: 'getal', waarde, voor: '', ...extra });
@@ -687,22 +688,22 @@ const D8 = {
       const xs = schud([-5, -4, -3, -1, 0, 1, 2, 4, 5, 7, 8]).slice(0, 6).sort((a, b) => a - b), ys = xs.map(() => rnd(-10, 25));
       let i = rnd(0, 4), j = rnd(i + 1, 5);
       if (kies([true, false, false, false])) ys[j] = ys[i];
-      const dqv = (ys[j] - ys[i]) / (xs[j] - xs[i]), exact = Number.isInteger(dqv * 100);
+      const dqv = (ys[j] - ys[i]) / (xs[j] - xs[i]), exact = Math.abs(W.rond(dqv, 2) - dqv) < 1e-9;
       return { soort: 'dq', opdracht: `Bereken de differentiecoëfficiënt over [${tekst(xs[i])}, ${tekst(xs[j])}]${exact ? '' : ' (rond af op 2 decimalen)'} en zeg hoe de functie verandert.`, tex: tabelTex(xs, ys),
         antw: delen([`\\text{dq} =`, getal(dqv, exact ? {} : { dec: 2 })], ['\\text{de functie is}', keuze(kT(['stijgend', 'dalend', 'constant']), dqv > 0 ? 0 : dqv < 0 ? 1 : 2)]),
-        uitleg: [`\\text{dq} = \\frac{${tg(ys[j])} - ${h(ys[i])}}{${tg(xs[j])} - ${h(xs[i])}} = \\frac{${tg(ys[j] - ys[i])}}{${tg(xs[j] - xs[i])}} ${exact ? '=' : '\\approx'} ${tg(exact ? dqv : W.rond(dqv, 2))}`, `\\text{dq} ${dqv > 0 ? '> 0: \\text{ stijgend}' : dqv < 0 ? '< 0: \\text{ dalend}' : '= 0: \\text{ constant}'}`] };
+        uitleg: [`\\text{dq} = \\frac{${tg(ys[j])} - ${h(ys[i])}}{${tg(xs[j])} - ${h(xs[i])}} = \\frac{${tg(ys[j] - ys[i])}}{${tg(xs[j] - xs[i])}} ${exact ? '=' : '\\approx'} ${exact ? tg(dqv) : tgA(dqv, 2)}`, `\\text{dq} ${dqv > 0 ? '> 0: \\text{ stijgend}' : dqv < 0 ? '< 0: \\text{ dalend}' : '= 0: \\text{ constant}'}`] };
     } },
     hoek: { naam: 'Hellingshoek berekenen', gen() {
       const a = kies([Q(nz(-7, 7)), Q(nz(-7, 7)), Q(1, 3), Q(-8, 5), Q(3, 4), Q(-2, 3), Q(5, 2), Q(nz(-13, 13), 2)]), b = rnd(-9, 9), al = graden(Math.atan(a.v));
       if (W.grensgeval(al, 2)) return this.gen();
       return { soort: 'hoek', opdracht: 'Bereken de hellingshoek α (rond af op 2 decimalen).', tex: linTex(a, b), antw: { soort: 'hoek', waarde: al, dec: 2, voor: '\\alpha \\approx' },
-        uitleg: [`a = ${qTex(a)}`, `\\alpha = \\tan^{-1}\\left(${qTex(a)}\\right) ${Number.isInteger(al) ? '=' : '\\approx'} ${tg(W.rond(al, 2))}^\\circ`] };
+        uitleg: [`a = ${qTex(a)}`, `\\alpha = \\tan^{-1}\\left(${qTex(a)}\\right) ${Number.isInteger(al) ? '=' : '\\approx'} ${Number.isInteger(al) ? tg(al) : tgA(al, 2)}^\\circ`] };
     } },
     rico: { naam: 'Richtingscoëfficiënt berekenen', gen() {
       const al = kies([rnd(-85, 85), rnd(-8500, 8500) / 100]); if (!al) return this.gen();
       const a = Math.tan(al * Math.PI / 180); if (W.grensgeval(a, 2)) return this.gen();
       return { soort: 'rico', opdracht: 'Bereken de richtingscoëfficiënt a (rond af op 2 decimalen).', tex: `\\alpha = ${tg(al)}^\\circ`, antw: getal(a, { dec: 2, voor: 'a \\approx' }),
-        uitleg: [`a = \\tan(${tg(al)}^\\circ)`, `\\approx ${tg(W.rond(a, 2))}`, `\\alpha ${al > 0 ? '> 0 \\Rightarrow a > 0' : '< 0 \\Rightarrow a < 0'}`] };
+        uitleg: [`a = \\tan(${tg(al)}^\\circ)`, `\\approx ${tgA(a, 2)}`, `\\alpha ${al > 0 ? '> 0 \\Rightarrow a > 0' : '< 0 \\Rightarrow a < 0'}`] };
     } },
   },
   oefenMix: [['dq', 2], ['hoek', 1], ['rico', 1]],
@@ -764,8 +765,8 @@ const D9 = {
     bereken: { naam: 'Modellen gebruiken', gen() {
       const C = kies(CONTEXT)(), w = C.b * C.g ** C.t; if (W.grensgeval(w, C.dec)) return this.gen();
       const t = C.tekst.replace('{t}', C.t);
-      return { soort: 'bereken', opdracht: 'Stel het model op en bereken.', html: opgave(t), sleutel: t, rapport: t, antw: getal(w, { dec: C.dec, na: `\\text{ ${C.eenh}}` }),
-        uitleg: [`b = ${tg(C.b)}, \\; g = ${tg(C.g)}`, `N(t) = ${tg(C.b)} \\cdot ${tg(C.g)}^t`, `N(${C.t}) = ${tg(C.b)} \\cdot ${tg(C.g)}^{${C.t}} \\approx ${tg(W.rond(w, C.dec), C.dec)}`] };
+      return { soort: 'bereken', opdracht: 'Stel het model op en bereken.', html: opgave(t), sleutel: t, rapport: t, antw: getal(w, { dec: C.dec, vast: C.eenh === 'euro', na: `\\text{ ${C.eenh}}` }),
+        uitleg: [`b = ${tg(C.b)}, \\; g = ${tg(C.g)}`, `N(t) = ${tg(C.b)} \\cdot ${tg(C.g)}^t`, `N(${C.t}) = ${tg(C.b)} \\cdot ${tg(C.g)}^{${C.t}} ${Math.abs(W.rond(w, C.dec) - w) < 1e-9 ? '=' : '\\approx'} ${C.eenh === 'euro' ? W.texGetal(w, 2, true) : tgA(w, C.dec)}`] };
     } },
     tabelmodel: { naam: 'Model uit een tabel', gen() {
       const T = groeiTabel('exp');

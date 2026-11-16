@@ -84,7 +84,7 @@ function discrUitleg(a, b, c) {
   const w = Math.sqrt(D), mooi = isKw(D);
   const xs = [(-b + w) / (2 * a), (-b - w) / (2 * a)];
   ['+', '-'].forEach((op, i) => {
-    const t = mooi ? bt(op === '+' ? -b + w : -b - w, 2 * a) : W.texGetal(W.rond(xs[i], 2));
+    const t = mooi ? bt(op === '+' ? -b + w : -b - w, 2 * a) : W.texGetal(xs[i], 2, true);
     tex.push(t);
     L.push(`x_${i + 1} = \\dfrac{${tg(-b)} ${op} ${mooi ? tg(w) : `\\sqrt{${tg(D)}}`}}{${tg(2 * a)}} ${mooi ? '=' : '\\approx'} ${t}`);
   });
