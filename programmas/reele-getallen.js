@@ -2,7 +2,7 @@
 (() => {
 // ===== Reële getallen (7VJHO) — gedeelde hulpmiddelen =====
 const { rnd, kies, schud } = W;
-const tg = (x, d = null) => W.texGetal(x, d);           // getal in TeX met komma
+const tg = (x, d = null) => W.texGetal(x, d, d !== null && Math.abs(W.rond(x, d) - x) > 1e-9); // getal in TeX met komma; afgerond = alle gevraagde decimalen
 const kg = (x, d = null) => W.komma(x, d);              // getal als tekst met komma
 const ggd = W.ggd;
 const kgv = (a, b) => a / ggd(a, b) * b;
@@ -1306,6 +1306,13 @@ Leerpaden.registreer({
   ondertitel: 'Zelfstudie · 7VJHO',
   klas: '7VJHO',
   soort: 'zelfstudie',
+  afspraken: `<div class="kader eig"><div class="kader-titel">Afspraak: afronden</div>
+    <p>Bij elke vraag staat naast het invulvak op hoeveel decimalen je afrondt, bv. <span class="afrond-voorbeeld">rond af op 2 decimalen</span>.</p>
+    <ul>
+      <li>Komt de uitkomst <b>exact</b> uit (bv. $6$ of $2{,}5$)? Dan schrijf je ze gewoon zo, zonder extra nullen.</li>
+      <li>Rond pas <b>op het einde</b> af. Noteer tussenresultaten met minstens 2 decimalen meer dan gevraagd.</li>
+      <li>Staat er geen afronding bij? Dan is het antwoord exact (een geheel getal, een breuk of een wortelvorm).</li>
+    </ul></div>`,
   groepen: [
     { titel: 'A · Reële getallen en bewerkingen', delen: [1, 2, 3] },
     { titel: 'B · Intervallen', delen: [4] },

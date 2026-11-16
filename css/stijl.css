@@ -296,3 +296,7 @@ input.veld.uitgeschakeld { background: var(--achter); opacity: .45; }
 .antwoordrij .of { font-size: 13px; color: var(--grijs); margin: 0 2px 0 8px; }
 button.keuze.vsp { min-width: 0; padding: 6px 12px; font-size: 15px; }
 .inhoud-blok .antwoordrij.vrij { justify-content: flex-start; }
+
+/* Afrondingslabel naast een invulvak */
+.antwoordrij .afrond { font-size: 13px; font-weight: bold; padding: 3px 10px; border-radius: 99px; background: var(--oranje-licht); color: #9a4a14; white-space: nowrap; }
+.afrond-voorbeeld { font-size: 13px; font-weight: bold; padding: 2px 8px; border-radius: 99px; background: var(--oranje-licht); color: #9a4a14; white-space: nowrap; }

@@ -174,6 +174,7 @@
     return `<h1>Dag ${esc(S.leerling.voornaam)}!</h1>
       ${P.intro || `<p>Werk de delen één voor één af: lees de theorie, bekijk de voorbeelden, oefen zoveel je wil en maak dan de test.
       Haal je <b>${st.drempel}%</b>, dan gaat het volgende deel open.</p>`}
+      ${P.afspraken || ''}
       <p class="klein">Geslaagd: ${st.geslaagd.length} van ${DELEN().length} delen${totaal < DELEN().length ? ' · nog niet alle delen zijn beschikbaar' : ''}.</p>
       ${groepen.map(g => `${g.titel ? `<div class="groep-titel">${esc(g.titel)}</div>` : ''}
         <div class="pad">${g.delen.map(nr => deelVan(nr)).filter(Boolean).map(stapKnop).join('')}</div>`).join('')}`;

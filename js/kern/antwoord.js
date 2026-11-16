@@ -224,7 +224,8 @@ const Antwoord = (() => {
     const breed = a.soort !== 'getal' ? ' expr' : '';
     return `<div class="antwoordrij">${a.voor !== '' ? `<span class="is">${T(a.voor || (a.soort === 'formule' ? a.doel + ' =' : '='))}</span>` : ''}
         <input type="text" class="veld${breed}" id="${id}" value="${esc(w.invoer)}" placeholder="${a.placeholder || PLACEHOLDER[a.soort] || ''}" autocomplete="off" autocapitalize="none" spellcheck="false" ${a.editor ? 'data-editor="1"' : ''} ${dis}>
-        ${a.na ? `<span class="na">${T(a.na)}</span>` : ''}</div>
+        ${a.na ? `<span class="na">${T(a.na)}</span>` : ''}
+        ${a.soort === 'getal' && a.dec != null && !uit ? `<span class="afrond" title="Komt de uitkomst exact uit (bv. 6 of 2,5)? Dan schrijf je ze gewoon zo.">rond af op ${a.dec} ${a.dec === 1 ? 'decimaal' : 'decimalen'}</span>` : ''}</div>
       ${metVoorbeeld(a) && !uit && !a.editor ? `<div class="voorbeeld" id="${id}-vb">${voorbeeld(a, w.invoer)}</div>` : ''}`;
   }
 
@@ -527,7 +528,8 @@ const Antwoord = (() => {
 
   // ---------- juiste antwoord als TeX / HTML / tekst
   function juistTex(a) {
-    const g = (x, d) => W.texGetal(d !== undefined && d !== null ? W.rond(x, d) : x);
+    // afgerond antwoord: altijd met alle gevraagde decimalen (ook een 0 achteraan), exacte waarden zonder extra nullen
+    const g = (x, d) => d !== undefined && d !== null ? W.texGetal(x, d, Math.abs(W.rond(x, d) - x) > 1e-9) : W.texGetal(x);
     switch (a.soort) {
       case 'getal': return g(a.waarde, a.dec) + (a.na ? '\\ ' + a.na : '');
       case 'V': return a.speciaal === 'leeg' ? 'V = \\varnothing' : a.speciaal === 'R' ? 'V = \\mathbb{R}' : `V = \\{${g(a.waarde, a.dec ?? 2)}\\}`;
