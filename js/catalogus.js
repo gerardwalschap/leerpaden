@@ -52,7 +52,7 @@ window.CATALOGUS = {
         { nr: 2, titel: 'Stelsels van vergelijkingen', sub: 'Grafisch · Gelijkstelling · Substitutie · Combinatie · Vraagstukken',
           leerpaden: ['stelsels', 'remediering-vergelijkingen'] },
         { nr: 3, titel: 'Tweedegraadsfuncties', sub: 'f(x) = ax² · Invloed van a · Kenmerken · Toepassingen',
-          leerpaden: ['tweedegraadsfuncties-ax2'] },
+          leerpaden: ['tweedegraadsfuncties-ax2', 'tweedegraadsfuncties-contexten'] },
         { nr: 4, titel: 'Vectoren', sub: 'Gelijke en tegengestelde vectoren · Som · k·a · Verschil · Verschuivingen · Context',
           leerpaden: ['vectoren'] },
         { nr: 5, titel: 'Telproblemen' },

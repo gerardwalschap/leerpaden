@@ -198,6 +198,16 @@ Alle situaties (pijnstiller, daguitstap, flessenwarmer, werkplaats, wachttijd, z
 Open opdrachten uit de werkbundel (schetsen tekenen, verhalen schrijven) zijn omgezet naar meerkeuzevragen: de juiste grafiek, het juiste verslag of de juiste zin kiezen.
 Nieuw in de kern: een meerkeuzevraag met `lijst: true` toont de keuzes als zinnen onder elkaar (`js/kern/antwoord.js`, `css/stijl.css`).
 
+## 4j. Het leerpad Tweedegraadsfuncties in contexten (4BW-MWW, wiskunde)
+
+8 delen, slaagdrempel **70%**, telkens een test van **10 vragen**. Een mengeling van de werkbundels *3. Tweedegraadsfuncties – contexten in de basis* (± 75 % van de vragen)
+en *3. Tweedegraadsfuncties – contexten* (± 25 %). Enkel individueel werk; rekenmachine toegelaten.
+
+* **A · Dalparabolen in context** (1–3): halfpipe en hangbrug (aflezen, symmetrie, top, domein/bereik, steilheid) · terras $T(n) = n^2$ en vierkant $A(z) = z^2$, rechthoek $2b^2$ · remweg $0{,}01v^2$, droog/nat, fietser.
+* **B · Bergparabolen in context** (4–5): vrijevaltoren $-5t^2$ en vallende steen $4{,}9t^2$ · de boog van een poort (past het busje?).
+* **C · Vergelijken en redeneren** (6–7): situatie ↔ voorschrift ↔ grafiek (berg/dal, breed/smal) · wie heeft gelijk? (juist/fout, verbeter).
+* **D · Eindtest** (8).
+
 ## Inlogbrieven
 
 Na het aanmaken van accounts (of nieuwe wachtwoorden) krijg je per leerling **één A4** met de inloggegevens én de handleiding.
