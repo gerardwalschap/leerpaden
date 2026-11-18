@@ -183,6 +183,21 @@ Deel 1 (herhaling 3e jaar) volgt nu de nieuwe cursus *1. Logica* (deel A): naast
 **vertalen naar symbolen**, **‘of’ en ‘als … dan …’ in de omgangstaal**, **nodige en voldoende voorwaarde**, **∀ en ∃** en **tegenvoorbeelden**.
 Implicatie en equivalentie worden nu genoteerd als ⇒ en ⇔. De nummering van de delen is niet veranderd, dus bestaande resultaten blijven geldig.
 
+## 4i. Het leerpad Rationale functies in context (5WW / 5BCW, wiskunde)
+
+11 delen volgens de werkbundel *Rationale functies in context* (elk hoofdstuk 0–9 is een deel), slaagdrempel **70%**, telkens een test van **10 vragen**.
+Alles is individueel werk: de duo- en groepsopdrachten uit de werkbundel en hoofdstuk 10 (poster in groep) zitten niet in het leerpad. Leerlingen gebruiken GeoGebra; bij elke rekenvraag staat op hoeveel decimalen ze afronden.
+
+* **A · Kenmerken in context** (1–2): woordenlijst wiskundetaal ↔ contexttaal · aflezen en interpreteren (functiewaarde, snijden met y = c, asymptoot, maximum, nulwaarde, gemiddelde verandering).
+* **B · Domein en kritisch kijken** (3–4): wiskundig en praktisch domein, losse punten, bereik, rol van de verticale asymptoot · waar breekt het model, interpoleren/extrapoleren, twee modellen.
+* **C · Grafiek en situatie** (5–8): grafiek ↔ situatie koppelen · verhaal → grafiek, asymptoot, domein, voorschrift · kenmerken → schets (teken- en verloopschema, limieten, "kan dit?") · een grafiek vertellen.
+* **D · Fouten en modellen** (9–10): foutenanalyse (juist/fout, welke zin is fout, verbeter) · parameters met betekenis (k + a/(t + 10), p + v/n, a·w/(w + b), a·t/(t² + b)).
+* **E · Eindtest** (11): uit elk hoofdstuk één vraag.
+
+Alle situaties (pijnstiller, daguitstap, flessenwarmer, werkplaats, wachttijd, zomerkamp, ziekenwagen, warmtepomp …) krijgen telkens nieuwe getallen.
+Open opdrachten uit de werkbundel (schetsen tekenen, verhalen schrijven) zijn omgezet naar meerkeuzevragen: de juiste grafiek, het juiste verslag of de juiste zin kiezen.
+Nieuw in de kern: een meerkeuzevraag met `lijst: true` toont de keuzes als zinnen onder elkaar (`js/kern/antwoord.js`, `css/stijl.css`).
+
 ## Inlogbrieven
 
 Na het aanmaken van accounts (of nieuwe wachtwoorden) krijg je per leerling **één A4** met de inloggegevens én de handleiding.

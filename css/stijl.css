@@ -240,6 +240,8 @@ button.keuze:disabled:not(.aan) { opacity: .55; }
 .keuzes.groot { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
 .keuzes.groot button.keuze { padding: 6px; }
 .keuzes.groot svg { width: 100%; height: auto; display: block; }
+.keuzes.lijst { flex-direction: column; align-items: stretch; }
+.keuzes.lijst button.keuze { text-align: left; font-size: 15px; line-height: 1.4; }
 
 /* meerdelige antwoorden */
 .deelvragen { display: grid; gap: 10px; max-width: 640px; margin: 4px auto 0; }

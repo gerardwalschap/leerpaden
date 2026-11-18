@@ -1,5 +1,5 @@
 // Antwoordvelden. Elk antwoord (v.antw) heeft een soort:
-//   keuze        {opties:[{k, l, html?}], juist}               knoppen (ℚ / ℝ\ℚ, waar / niet waar, getallenassen …)
+//   keuze        {opties:[{k, l, html?}], juist, lijst?}       knoppen (ℚ / ℝ\ℚ, waar / niet waar, getallenassen …); lijst: zinnen onder elkaar
 //   getal        {waarde, dec?, voor?, na?}                    getal; met dec = afronden op dec decimalen
 //   expr         {expr, vormen?, voor?}                        wortelvormen, machten (rekenkern E)
 //   formule      {expr, doel, vars}                            formule omvormen (hoofdlettergevoelig)
@@ -180,7 +180,7 @@ const Antwoord = (() => {
   function html(id, a, w, uit) {
     const dis = uit ? 'disabled' : '';
     if (a.soort === 'keuze') {
-      return `<div class="keuzes ${a.opties.some(o => o.html && /<svg/.test(o.l)) ? 'groot' : ''}" id="${id}" role="group">${a.opties.map(o =>
+      return `<div class="keuzes ${a.opties.some(o => o.html && /<svg/.test(o.l)) ? 'groot' : ''}${a.lijst ? ' lijst' : ''}" id="${id}" role="group">${a.opties.map(o =>
         `<button type="button" class="keuze ${w.keuze === o.k ? 'aan' : ''}" data-kid="${id}" data-k="${esc(o.k)}" ${dis} aria-pressed="${w.keuze === o.k}">${o.html ? o.l : T(o.l)}</button>`).join('')}</div>`;
     }
     if (a.soort === 'vakjes') {
