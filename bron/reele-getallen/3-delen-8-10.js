@@ -171,7 +171,7 @@ const term = (c, x = 'x', eerste = false) => { // c·x als TeX met teken
 const cst = (c) => c === 0 ? '' : c < 0 ? ` - ${-c}` : ` + ${c}`;
 const nz = (a, b) => { let x; do { x = rnd(a, b); } while (x === 0); return x; };
 const DEEL9 = {
-  nr: 9, titel: 'Vergelijkingen', kort: 'Haakjes, noemers, evenredigheden, wortels en vraagstukken.',
+  nr: 9, titel: 'Vergelijkingen', kort: 'Haakjes, noemers, evenredigheden en wortels.',
   rekenmachine: null,
   opdracht: 'Los op en maak de proef.',
   theorie: `
@@ -205,10 +205,6 @@ const DEEL9 = {
       <p>Werk de wortel weg door <b>beide leden te kwadrateren</b>. Maak zeker de proef.</p>
       <p>$\\sqrt{x + 5} = 3 \\;\\Leftrightarrow\\; x + 5 = 9 \\;\\Leftrightarrow\\; x = 4$ &nbsp; <span class="klein">proef: $\\sqrt{4 + 5} = \\sqrt{9} = 3$ ✓</span></p>
     </div>
-    <div class="kader werk">
-      <div class="kader-titel">Vraagstukken</div>
-      <p><b>Onbekende</b> – <b>vergelijking</b> – <b>oplossing</b> – <b>antwoord</b> – <b>controle</b>.</p>
-    </div>
     <div class="kader"><div class="kader-titel">Zo typ je je antwoord</div>
       <p>Typ in het vakje tussen de accolades enkel de oplossing, bv. $V = \\{\\,\\boxed{-3}\\,\\}$: typ <code>-3</code>. Een breuk typ je als <code>5/2</code>.</p></div>`,
   voorbeelden: [
@@ -218,7 +214,6 @@ const DEEL9 = {
     { tex: '\\dfrac{x}{2} + \\dfrac{x}{4} = 6', stappen: ['\\text{beide leden maal 4: } 2x + x = 24', '3x = 24', 'x = 8', 'V = \\{8\\}'] },
     { tex: '\\dfrac{3}{x + 1} = \\dfrac{6}{x + 4}', stappen: ['3(x + 4) = 6(x + 1)', '3x + 12 = 6x + 6', '-3x = -6 \\;\\Leftrightarrow\\; x = 2', 'V = \\{2\\}'] },
     { tex: '\\sqrt{2x + 7} = 5', stappen: ['\\text{kwadrateren: } 2x + 7 = 25', '2x = 18 \\;\\Leftrightarrow\\; x = 9', '\\text{proef: } \\sqrt{2 \\cdot 9 + 7} = \\sqrt{25} = 5 \\;✓', 'V = \\{9\\}'] },
-    { html: 'Ines en Yusuf hebben samen € 60. Yusuf heeft € 12 meer dan Ines. Hoeveel heeft elk?', stappen: ['\\text{onbekende: Ines heeft } x \\text{ euro, Yusuf } x + 12', '\\text{vergelijking: } x + (x + 12) = 60', '2x = 48 \\;\\Leftrightarrow\\; x = 24', '\\text{antwoord: Ines heeft 24 euro, Yusuf 36 euro}', '\\text{controle: } 24 + 36 = 60 \\;✓'] },
   ],
   soorten: {
     lineair: { naam: 'Eenvoudige vergelijkingen', gen() {
@@ -268,23 +263,9 @@ const DEEL9 = {
           uitleg: [`\\text{kwadrateren: } ${binnen} = ${c * c}`, `${term(a, 'x', true)} = ${c * c - b}`, `x = ${x}`, `\\text{proef: } \\sqrt{${a === 1 ? '' : a === -1 ? '-' : a + ' \\cdot '}${h(x)}${cst(b)}} = \\sqrt{${c * c}} = ${c} \\;✓`, `V = \\{${x}\\}`] };
       }
     } },
-    vraagstuk: { naam: 'Vraagstukken', gen() {
-      if (Math.random() < 0.55) {
-        const [p, q] = kies(NAMEN), x = rnd(5, 60), d = rnd(2, 30), S = 2 * x + d;
-        const zin = `${p} en ${q} hebben samen € ${S}. ${q} heeft € ${d} meer dan ${p}. Hoeveel heeft elk?`;
-        return { soort: 'vraagstuk', opdracht: 'Los het vraagstuk op met een vergelijking.', html: `<div class="tekstopgave">${zin}</div>`, rapport: zin, sleutel: zin,
-          antw: { soort: 'delen', delen: [{ label: `\\text{${p}}`, antw: getal(x, null, { voor: '', na: '\\text{euro}' }) }, { label: `\\text{${q}}`, antw: getal(x + d, null, { voor: '', na: '\\text{euro}' }) }] },
-          uitleg: [`\\text{onbekende: ${p} heeft } x \\text{ euro, ${q} heeft } x + ${d}`, `x + (x + ${d}) = ${S}`, `2x = ${S - d} \\;\\Leftrightarrow\\; x = ${x}`, `\\text{antwoord: ${p} heeft ${x} euro, ${q} heeft ${x + d} euro}`, `\\text{controle: } ${x} + ${x + d} = ${S} \\;✓`] };
-      }
-      const n = rnd(5, 60), S = 3 * n + 3;
-      const zin = `De som van drie opeenvolgende natuurlijke getallen is ${S}. Welke getallen zijn het?`;
-      return { soort: 'vraagstuk', opdracht: 'Los het vraagstuk op met een vergelijking.', html: `<div class="tekstopgave">${zin}</div>`, rapport: zin, sleutel: zin,
-        antw: { soort: 'vakjes', sjabloon: [{ veld: 0 }, { tex: ',' }, { veld: 1 }, { tex: '\\text{ en }' }, { veld: 2 }], velden: [veldE(`${n}`), veldE(`${n + 1}`), veldE(`${n + 2}`)] },
-        uitleg: [`\\text{onbekende: de getallen zijn } x,\\ x + 1 \\text{ en } x + 2`, `x + (x + 1) + (x + 2) = ${S}`, `3x + 3 = ${S} \\;\\Leftrightarrow\\; 3x = ${S - 3} \\;\\Leftrightarrow\\; x = ${n}`, `\\text{antwoord: } ${n},\\ ${n + 1} \\text{ en } ${n + 2}`, `\\text{controle: } ${n} + ${n + 1} + ${n + 2} = ${S} \\;✓`] };
-    } },
   },
-  oefenMix: [['lineair', 2], ['haakjes', 2], ['noemer', 2], ['evenredigheid', 2], ['wortel', 2], ['vraagstuk', 1]],
-  test: [['lineair', 2], ['haakjes', 2], ['noemer', 2], ['evenredigheid', 1], ['wortel', 2], ['vraagstuk', 1]],
+  oefenMix: [['lineair', 3], ['haakjes', 2], ['noemer', 2], ['evenredigheid', 2], ['wortel', 2]],
+  test: [['lineair', 3], ['haakjes', 2], ['noemer', 2], ['evenredigheid', 1], ['wortel', 2]],
 };
 
 // ===================================================================
