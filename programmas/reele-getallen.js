@@ -92,7 +92,13 @@ function rooster(P, Q, namen = ['A', 'B'], bereik = 6) {
   s += `<line x1="${X(-n)}" y1="${o}" x2="${X(n) + 8}" y2="${o}" stroke="#444"/><line x1="${o}" y1="${Y(-n)}" x2="${o}" y2="${Y(n) - 8}" stroke="#444"/>`;
   for (let i = -n; i <= n; i += 1) if (i) s += `<text x="${X(i)}" y="${o + 13}" font-size="9" text-anchor="middle" fill="#666">${i < 0 ? '−' + (-i) : i}</text><text x="${o - 4}" y="${Y(i) + 3}" font-size="9" text-anchor="end" fill="#666">${i < 0 ? '−' + (-i) : i}</text>`;
   s += `<line x1="${X(P[0])}" y1="${Y(P[1])}" x2="${X(Q[0])}" y2="${Y(Q[1])}" stroke="${ASKLEUR}" stroke-width="2"/>`;
-  s += `<line x1="${X(P[0])}" y1="${Y(P[1])}" x2="${X(Q[0])}" y2="${Y(P[1])}" stroke="${ASKLEUR}" stroke-dasharray="4 3"/><line x1="${X(Q[0])}" y1="${Y(P[1])}" x2="${X(Q[0])}" y2="${Y(Q[1])}" stroke="${ASKLEUR}" stroke-dasharray="4 3"/>`;
+  // projecties op de assen met x₁, y₁, x₂, y₂ (geen driehoek: we gebruiken de afstandsformule)
+  const lbl = (x, y, t, anc) => `<text x="${x}" y="${y}" font-size="12" font-weight="bold" font-style="italic" text-anchor="${anc}" fill="${ASKLEUR}" stroke="#fff" stroke-width="3" paint-order="stroke">${t}</text>`;
+  [[P, '1'], [Q, '2']].forEach(([p, i]) => {
+    s += `<line x1="${X(p[0])}" y1="${Y(p[1])}" x2="${X(p[0])}" y2="${o}" stroke="${ASKLEUR}" stroke-dasharray="4 3"/><line x1="${X(p[0])}" y1="${Y(p[1])}" x2="${o}" y2="${Y(p[1])}" stroke="${ASKLEUR}" stroke-dasharray="4 3"/>`;
+    s += p[1] < 0 ? lbl(X(p[0]), o - 5, `x${i === '1' ? '₁' : '₂'}`, 'middle') : lbl(X(p[0]), o + 27, `x${i === '1' ? '₁' : '₂'}`, 'middle');
+    s += p[0] < 0 ? lbl(o + 5, Y(p[1]) + 4, `y${i === '1' ? '₁' : '₂'}`, 'start') : lbl(o - 22, Y(p[1]) + 4, `y${i === '1' ? '₁' : '₂'}`, 'end');
+  });
   [[P, namen[0]], [Q, namen[1]]].forEach(([p, nm]) => { s += `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="4" fill="${HAAKKLEUR}"/><text x="${X(p[0]) + 6}" y="${Y(p[1]) - 6}" font-size="12" font-weight="bold" fill="${HAAKKLEUR}">${nm}</text>`; });
   return s + '</svg>';
 }
@@ -1009,8 +1015,8 @@ const DEEL8 = {
       <p class="midden" style="font-size:19px">$AB = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$</p>
       <ul><li>$x_2 - x_1$ = de horizontale afstand</li><li>$y_2 - y_1$ = de verticale afstand</li><li>Je berekent dus de schuine zijde van een rechthoekige driehoek.</li></ul>
       <div class="twee"><div class="figuur">${rooster([-2, -1], [5, 3], ['A', 'B'], 6)}</div>
-        <div><p>$A(-2, -1)$ en $B(5, 3)$<br>horizontaal: $5 - (-2) = 7$, verticaal: $3 - (-1) = 4$</p>
-        <p>$AB = \\sqrt{(5+2)^2 + (3+1)^2} = \\sqrt{49 + 16} = \\sqrt{65} \\approx 8{,}06$</p></div></div>
+        <div><p>$A(-2, -1)$ en $B(5, 3)$<br>$x_1 = -2,\\ y_1 = -1,\\ x_2 = 5,\\ y_2 = 3$</p>
+        <p>$AB = \\sqrt{(5-(-2))^2 + (3-(-1))^2}$<br>$\\phantom{AB} = \\sqrt{7^2 + 4^2} = \\sqrt{49 + 16} = \\sqrt{65} \\approx 8{,}06$</p></div></div>
     </div>`,
   voorbeelden: [
     { html: `Gegeven: de rechthoekszijden $b = 12$ en $c = 5$. Bereken de schuine zijde $a$.<div class="figuur">${pyFiguur({ r1: 'c = 5', r2: 'b = 12', s: 'a' })}</div>`, stappen: ['\\text{schuine zijde gevraagd: optellen}', 'a = \\sqrt{12^2 + 5^2} = \\sqrt{144 + 25} = \\sqrt{169} = 13'] },

@@ -62,8 +62,8 @@ const DEEL8 = {
       <p class="midden" style="font-size:19px">$AB = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$</p>
       <ul><li>$x_2 - x_1$ = de horizontale afstand</li><li>$y_2 - y_1$ = de verticale afstand</li><li>Je berekent dus de schuine zijde van een rechthoekige driehoek.</li></ul>
       <div class="twee"><div class="figuur">${rooster([-2, -1], [5, 3], ['A', 'B'], 6)}</div>
-        <div><p>$A(-2, -1)$ en $B(5, 3)$<br>horizontaal: $5 - (-2) = 7$, verticaal: $3 - (-1) = 4$</p>
-        <p>$AB = \\sqrt{(5+2)^2 + (3+1)^2} = \\sqrt{49 + 16} = \\sqrt{65} \\approx 8{,}06$</p></div></div>
+        <div><p>$A(-2, -1)$ en $B(5, 3)$<br>$x_1 = -2,\\ y_1 = -1,\\ x_2 = 5,\\ y_2 = 3$</p>
+        <p>$AB = \\sqrt{(5-(-2))^2 + (3-(-1))^2}$<br>$\\phantom{AB} = \\sqrt{7^2 + 4^2} = \\sqrt{49 + 16} = \\sqrt{65} \\approx 8{,}06$</p></div></div>
     </div>`,
   voorbeelden: [
     { html: `Gegeven: de rechthoekszijden $b = 12$ en $c = 5$. Bereken de schuine zijde $a$.<div class="figuur">${pyFiguur({ r1: 'c = 5', r2: 'b = 12', s: 'a' })}</div>`, stappen: ['\\text{schuine zijde gevraagd: optellen}', 'a = \\sqrt{12^2 + 5^2} = \\sqrt{144 + 25} = \\sqrt{169} = 13'] },
