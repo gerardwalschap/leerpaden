@@ -4,36 +4,51 @@
 const DRIETALLEN = [[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25], [9, 40, 41], [20, 21, 29], [12, 35, 37]];
 function drietal() { const [a, b, c] = kies(DRIETALLEN), k = c <= 13 ? kies([1, 1, 2, 3]) : 1; return [a * k, b * k, c * k]; }
 const sq = (x) => `${h(x)}^2`;
+// rechthoekige driehoek met lengtes op de zijden; de gevraagde zijde krijgt een rode letter (a = schuine zijde, b en c = rechthoekszijden)
+// z = { r1, r2, s } (rechthoekszijden en schuine zijde, als tekst); spiegel = rechte hoek rechts
+function pyFiguur(z, spiegel = false) {
+  const W0 = 300, X = (x) => spiegel ? W0 - x : x, anc = (a) => !spiegel ? a : a === 'start' ? 'end' : a === 'end' ? 'start' : a;
+  const onb = (t) => /^[abcx]$/.test(t), kl = (t) => onb(t) ? '#b83a2e' : '#1c4e8a';
+  const lab = (x, y, t, a) => `<text x="${X(x)}" y="${y}" font-size="16" font-weight="bold" text-anchor="${anc(a)}" fill="${kl(t)}" font-style="${onb(t) ? 'italic' : 'normal'}">${t}</text>`;
+  return `<svg viewBox="0 0 ${W0} 140" width="${W0}" height="140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="rechthoekige driehoek">
+    <path d="M${X(95)},15 L${X(95)},112 L${X(250)},112 Z" fill="#fff" stroke="#222" stroke-width="2"/>
+    <path d="M${X(95)},100 L${X(107)},100 L${X(107)},112" fill="none" stroke="#222"/>
+    ${lab(87, 69, z.r1, 'end')}${lab(172, 132, z.r2, 'middle')}${lab(180, 58, z.s, 'start')}</svg>`;
+}
 const NAMEN = [['Tom', 'Lisa'], ['Ines', 'Yusuf'], ['Lotte', 'Amir'], ['Noor', 'Milan'], ['Sara', 'Ruben'], ['Elif', 'Jonas']];
 
 const DEEL8 = {
   nr: 8, titel: 'De stelling van Pythagoras', kort: 'Ontbrekende zijde, omgekeerde stelling, vraagstukken en afstand.',
   rekenmachine: true,
-  opdracht: 'Bereken de ontbrekende zijde. Rond af op 2 decimalen waar nodig.',
+  opdracht: 'Bereken de ontbrekende zijde. Afspraak: $a$ is de schuine zijde, $b$ en $c$ zijn de rechthoekszijden. Rond af op 2 decimalen waar nodig.',
   theorie: `
     <div class="kader def">
       <div class="kader-titel">De stelling van Pythagoras</div>
-      <div class="twee"><div class="figuur">${driehoekSVG()}</div>
+      <div class="twee"><div class="figuur">${driehoekSVG({ a: 'c', b: 'b', c: 'a' })}</div>
         <div><p>In elke <b>rechthoekige driehoek</b> is het kwadraat van de <b class="rood">schuine zijde</b> (hypotenusa) gelijk aan de som van de kwadraten van de twee <b>rechthoekszijden</b> (catheten).</p>
-        <p class="midden" style="font-size:20px">$a^2 + b^2 = c^2$</p>
-        <p class="klein">$c$ = schuine zijde, de langste zijde, tegenover de rechte hoek &nbsp;·&nbsp; $a$ en $b$ = rechthoekszijden</p></div></div>
+        <p class="midden" style="font-size:20px">$a^2 = b^2 + c^2$</p>
+        <p class="klein">$a$ = schuine zijde, de langste zijde, tegenover de rechte hoek &nbsp;·&nbsp; $b$ en $c$ = rechthoekszijden</p></div></div>
     </div>
     <div class="twee">
-      <div class="kader eig"><div class="kader-titel">Schuine zijde gevraagd</div><p class="midden">$c = \\sqrt{a^2 + b^2}$</p><p class="midden klein">kwadraten <b>optellen</b></p></div>
-      <div class="kader eig"><div class="kader-titel">Rechthoekszijde gevraagd</div><p class="midden">$b = \\sqrt{c^2 - a^2}$</p><p class="midden klein">kwadraten <b>aftrekken</b></p></div>
+      <div class="kader eig"><div class="kader-titel">Schuine zijde gevraagd</div><p class="midden">$a = \\sqrt{b^2 + c^2}$</p><p class="midden klein">kwadraten <b>optellen</b></p></div>
+      <div class="kader eig"><div class="kader-titel">Rechthoekszijde gevraagd</div><p class="midden">$b = \\sqrt{a^2 - c^2}$ &nbsp; of &nbsp; $c = \\sqrt{a^2 - b^2}$</p><p class="midden klein">kwadraten <b>aftrekken</b></p></div>
     </div>
-    <p class="klein">Rond pas op het einde af (2 decimalen). Controle: de schuine zijde is altijd de langste zijde.</p>
+    <div class="kader werk"><div class="kader-titel">Eerst kijken: welke zijde is gevraagd?</div>
+      <p>Afspraak: $a$ is altijd de <b>schuine zijde</b>, $b$ en $c$ zijn de <b>rechthoekszijden</b>. Zoek in een figuur eerst de <b>rechte hoek</b>: de zijde <b>tegenover</b> de rechte hoek is de schuine zijde $a$.</p>
+      <ul><li>Is de <b>schuine zijde</b> gevraagd? Dan ken je de twee rechthoekszijden: <b>optellen</b>.</li>
+        <li>Is een <b>rechthoekszijde</b> gevraagd? Dan ken je de schuine zijde en de andere rechthoekszijde: <b>aftrekken</b> (groot kwadraat min klein kwadraat).</li></ul>
+      <p class="klein">Rond pas op het einde af (2 decimalen). Controle: de schuine zijde is altijd de langste zijde.</p></div>
     <div class="kader">
       <table class="tabel"><tr><th>gegeven</th><th>berekening</th><th>antwoord</th></tr>
-        <tr><td>$a = 3,\\ b = 4$</td><td>$c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25}$</td><td>$c = 5$</td></tr>
-        <tr><td>$c = 10,\\ a = 6$</td><td>$b = \\sqrt{10^2 - 6^2} = \\sqrt{100 - 36} = \\sqrt{64}$</td><td>$b = 8$</td></tr>
-        <tr><td>$a = 7,\\ b = 7$</td><td>$c = \\sqrt{7^2 + 7^2} = \\sqrt{49 + 49} = \\sqrt{98}$</td><td>$c \\approx 9{,}90$</td></tr></table>
+        <tr><td>$b = 3,\\ c = 4$</td><td>$a = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25}$</td><td>$a = 5$</td></tr>
+        <tr><td>$a = 10,\\ c = 6$</td><td>$b = \\sqrt{10^2 - 6^2} = \\sqrt{100 - 36} = \\sqrt{64}$</td><td>$b = 8$</td></tr>
+        <tr><td>$b = 7,\\ c = 7$</td><td>$a = \\sqrt{7^2 + 7^2} = \\sqrt{49 + 49} = \\sqrt{98}$</td><td>$a \\approx 9{,}90$</td></tr></table>
     </div>
     <div class="kader werk">
       <div class="kader-titel">De omgekeerde stelling</div>
-      <p>Als $a^2 + b^2 = c^2$, dan is de driehoek <b>rechthoekig</b>. Zo controleer je of een driehoek rechthoekig is:</p>
-      <ol><li>neem voor $c$ de <b>langste</b> zijde</li><li>bereken $a^2 + b^2$ en $c^2$</li><li>gelijk → rechthoekig. Niet gelijk → niet rechthoekig.</li></ol>
-      <p>$3, 4, 5$: &nbsp; $3^2 + 4^2 = 9 + 16 = 25$ en $5^2 = 25$ → <span class="groen"><b>ja</b></span> &nbsp;·&nbsp; $5, 7, 9$: &nbsp; $5^2 + 7^2 = 74$ en $9^2 = 81$ → <span class="rood"><b>nee</b></span></p>
+      <p>Als $a^2 = b^2 + c^2$, dan is de driehoek <b>rechthoekig</b>. Zo controleer je of een driehoek rechthoekig is:</p>
+      <ol><li>neem voor $a$ de <b>langste</b> zijde</li><li>bereken $a^2$ en $b^2 + c^2$</li><li>gelijk → rechthoekig. Niet gelijk → niet rechthoekig.</li></ol>
+      <p>$3, 4, 5$: &nbsp; $5^2 = 25$ en $3^2 + 4^2 = 9 + 16 = 25$ → <span class="groen"><b>ja</b></span> &nbsp;·&nbsp; $5, 7, 9$: &nbsp; $9^2 = 81$ en $5^2 + 7^2 = 74$ → <span class="rood"><b>nee</b></span></p>
     </div>
     <div class="kader werk">
       <div class="kader-titel">Vraagstukken</div>
@@ -51,12 +66,12 @@ const DEEL8 = {
         <p>$AB = \\sqrt{(5+2)^2 + (3+1)^2} = \\sqrt{49 + 16} = \\sqrt{65} \\approx 8{,}06$</p></div></div>
     </div>`,
   voorbeelden: [
-    { tex: 'a = 5,\\ b = 12 \\qquad c = \\,?', stappen: ['c = \\sqrt{5^2 + 12^2} = \\sqrt{25 + 144}', '= \\sqrt{169} = 13'] },
-    { tex: 'c = 13,\\ b = 5 \\qquad a = \\,?', stappen: ['a = \\sqrt{13^2 - 5^2} = \\sqrt{169 - 25}', '= \\sqrt{144} = 12'] },
-    { tex: 'a = 1,\\ b = 1 \\qquad c = \\,?', stappen: ['c = \\sqrt{1^2 + 1^2} = \\sqrt{2}', '\\approx 1{,}41'] },
+    { html: `Gegeven: de rechthoekszijden $b = 12$ en $c = 5$. Bereken de schuine zijde $a$.<div class="figuur">${pyFiguur({ r1: 'c = 5', r2: 'b = 12', s: 'a' })}</div>`, stappen: ['\\text{schuine zijde gevraagd: optellen}', 'a = \\sqrt{12^2 + 5^2} = \\sqrt{144 + 25} = \\sqrt{169} = 13'] },
+    { html: `Gegeven: de schuine zijde $a = 13$ en de rechthoekszijde $b = 5$. Bereken de rechthoekszijde $c$.<div class="figuur">${pyFiguur({ r1: 'c', r2: 'b = 5', s: 'a = 13' }, true)}</div>`, stappen: ['\\text{rechthoekszijde gevraagd: aftrekken}', 'c = \\sqrt{13^2 - 5^2} = \\sqrt{169 - 25} = \\sqrt{144} = 12'] },
+    { html: `Gegeven: de rechthoekszijden $b = 1$ en $c = 1$. Bereken de schuine zijde $a$.<div class="figuur">${pyFiguur({ r1: 'c = 1', r2: 'b = 1', s: 'a' }, true)}</div>`, stappen: ['\\text{schuine zijde gevraagd: optellen}', 'a = \\sqrt{1^2 + 1^2} = \\sqrt{2} \\approx 1{,}41'] },
     { tex: '8,\\ 15,\\ 17 \\text{ rechthoekig?}', stappen: ['8^2 + 15^2 = 64 + 225 = 289', '17^2 = 289', '\\text{gelijk: ja, rechthoekig}'] },
     { html: 'Een gelijkbenige driehoek heeft een basis van 10 cm en een hoogte van 12 cm. Hoe lang zijn de gelijke zijden?', stappen: ['\\text{De hoogte verdeelt de basis in twee: } 10 : 2 = 5', 'z = \\sqrt{5^2 + 12^2} = \\sqrt{25 + 144} = \\sqrt{169} = 13', '\\text{Antwoord: de gelijke zijden zijn 13 cm lang.}'] },
-    { html: 'Een rechthoekige driehoek heeft een schuine zijde van 26 cm en één rechthoekszijde van 24 cm. Bereken de oppervlakte.', stappen: ['a = \\sqrt{26^2 - 24^2} = \\sqrt{676 - 576} = \\sqrt{100} = 10', 'A = \\frac{b \\cdot h}{2} = \\frac{24 \\cdot 10}{2} = 120', '\\text{Antwoord: de oppervlakte is } 120 \\text{ cm}^2.'] },
+    { html: 'Een rechthoekige driehoek heeft een schuine zijde van 26 cm en één rechthoekszijde van 24 cm. Bereken de oppervlakte.', stappen: ['a = 26 \\text{ (schuine zijde)}, \\ b = 24', 'c = \\sqrt{26^2 - 24^2} = \\sqrt{676 - 576} = \\sqrt{100} = 10', '\\text{opp} = \\frac{b \\cdot c}{2} = \\frac{24 \\cdot 10}{2} = 120', '\\text{Antwoord: de oppervlakte is } 120 \\text{ cm}^2.'] },
     { tex: 'A(5, -2) \\text{ en } B(-4, -6)', stappen: ['AB = \\sqrt{(-4-5)^2 + (-6+2)^2}', '= \\sqrt{81 + 16} = \\sqrt{97}', '\\approx 9{,}85'] },
   ],
   soorten: {
@@ -65,19 +80,28 @@ const DEEL8 = {
         let a, b, c;
         if (Math.random() < 0.45) [a, b, c] = drietal();
         else { a = Math.random() < 0.2 ? rnd(11, 99) / 10 : rnd(1, 20); b = rnd(1, 20); c = Math.sqrt(a * a + b * b); }
-        const schuin = Math.random() < 0.55;
-        if (schuin) {
-          if (!Number.isInteger(c) && !zekerRond(c, 2)) continue;
-          const ex = Number.isInteger(+c.toFixed(9));
-          return { soort: 'zijde', tex: `a = ${tg(a)},\\ b = ${tg(b)} \\qquad c = \\,?`, antw: getal(c, 2, { voor: ex ? 'c =' : 'c \\approx' }),
-            uitleg: [`c = \\sqrt{${sq(a)} + ${sq(b)}} = \\sqrt{${tg(+(a * a).toFixed(4))} + ${tg(b * b)}} = \\sqrt{${tg(+(a * a + b * b).toFixed(4))}} ${ex ? '=' : '\\approx'} ${tg(c, 2)}`] };
+        const spiegel = Math.random() < 0.5, kl = (x) => kg(x);
+        // afspraak: a = schuine zijde (S), b en c = rechthoekszijden (b onderaan, c verticaal in de figuur)
+        if (Math.random() < 0.55) {
+          // schuine zijde a gevraagd: b en c gegeven
+          if (!Number.isInteger(+c.toFixed(9)) && !zekerRond(c, 2)) continue;
+          const S = c, ex = Number.isInteger(+S.toFixed(9));
+          const [rb, rc] = Math.random() < 0.5 ? [a, b] : [b, a];
+          const zin = `Gegeven: b = ${kl(rb)} en c = ${kl(rc)}. Bereken de schuine zijde a.`;
+          return { soort: 'zijde', html: `<div>Gegeven: de rechthoekszijden $b = ${tg(rb)}$ en $c = ${tg(rc)}$. Bereken de <b>schuine zijde</b> $a$.</div><div class="figuur">${pyFiguur({ r1: `c = ${kl(rc)}`, r2: `b = ${kl(rb)}`, s: 'a' }, spiegel)}</div>`,
+            sleutel: `a|${rb}|${rc}`, rapport: zin, antw: getal(S, 2, { voor: ex ? 'a =' : 'a \\approx' }),
+            uitleg: ['\\text{schuine zijde gevraagd: kwadraten optellen}', `a = \\sqrt{${sq(rb)} + ${sq(rc)}} = \\sqrt{${tg(+(rb * rb).toFixed(4))} + ${tg(+(rc * rc).toFixed(4))}} = \\sqrt{${tg(+(rb * rb + rc * rc).toFixed(4))}} ${ex ? '=' : '\\approx'} ${tg(S, 2)}`] };
         }
-        // rechthoekszijde: c en a gegeven
-        let C, A; if (Number.isInteger(c)) { C = c; A = Math.random() < 0.5 ? a : b; } else { C = rnd(5, 25); A = rnd(1, C - 1); }
-        const B = Math.sqrt(C * C - A * A); if (!Number.isInteger(+B.toFixed(9)) && !zekerRond(B, 2)) continue;
-        const ex = Number.isInteger(+B.toFixed(9));
-        return { soort: 'zijde', tex: `c = ${tg(C)},\\ a = ${tg(A)} \\qquad b = \\,?`, antw: getal(B, 2, { voor: ex ? 'b =' : 'b \\approx' }),
-          uitleg: [`b = \\sqrt{${sq(C)} - ${sq(A)}} = \\sqrt{${C * C} - ${A * A}} = \\sqrt{${C * C - A * A}} ${ex ? '=' : '\\approx'} ${tg(B, 2)}`] };
+        // rechthoekszijde (b of c) gevraagd: a en de andere rechthoekszijde gegeven
+        let S, G; if (Number.isInteger(+c.toFixed(9))) { S = Math.round(c); G = Math.random() < 0.5 ? a : b; } else { S = rnd(5, 25); G = rnd(1, S - 1); }
+        const X = Math.sqrt(S * S - G * G); if (!Number.isInteger(+X.toFixed(9)) && !zekerRond(X, 2)) continue;
+        const ex = Number.isInteger(+X.toFixed(9));
+        const [gv, gl] = Math.random() < 0.5 ? ['b', 'c'] : ['c', 'b'];   // gv = gevraagde letter, gl = gegeven letter
+        const fig = gv === 'c' ? { r1: 'c', r2: `b = ${kl(G)}`, s: `a = ${kl(S)}` } : { r1: `c = ${kl(G)}`, r2: 'b', s: `a = ${kl(S)}` };
+        const zin = `Gegeven: a = ${kl(S)} en ${gl} = ${kl(G)}. Bereken de rechthoekszijde ${gv}.`;
+        return { soort: 'zijde', html: `<div>Gegeven: de schuine zijde $a = ${tg(S)}$ en de rechthoekszijde $${gl} = ${tg(G)}$. Bereken de <b>rechthoekszijde</b> $${gv}$.</div><div class="figuur">${pyFiguur(fig, spiegel)}</div>`,
+          sleutel: `${gv}|${S}|${G}`, rapport: zin, antw: getal(X, 2, { voor: ex ? `${gv} =` : `${gv} \\approx` }),
+          uitleg: ['\\text{rechthoekszijde gevraagd: kwadraten aftrekken}', `${gv} = \\sqrt{${sq(S)} - ${sq(G)}} = \\sqrt{${tg(S * S)} - ${tg(+(G * G).toFixed(4))}} = \\sqrt{${tg(+(S * S - G * G).toFixed(4))}} ${ex ? '=' : '\\approx'} ${tg(X, 2)}`] };
       }
     } },
     rechthoekig: { naam: 'Is de driehoek rechthoekig?', gen() {
@@ -94,9 +118,9 @@ const DEEL8 = {
         let zin, w, na, uit;
         if (t === 'ladder') { const L = rnd(8, 16) / 2, v = rnd(2, 6) / 2; if (v >= L - 1) continue; w = Math.sqrt(L * L - v * v); na = '\\text{m}';
           zin = `Een ladder van ${kg(L)} m staat tegen een muur. De voet staat ${kg(v)} m van de muur. Hoe hoog reikt de ladder?`;
-          uit = [`\\text{schuine zijde = ladder} = ${tg(L)}`, `h = \\sqrt{${sq(L)} - ${sq(v)}} = \\sqrt{${tg(L * L)} - ${tg(v * v)}} \\approx ${tg(w, 2)}`]; }
+          uit = [`\\text{schuine zijde = ladder} = ${tg(L)}`, `h = \\sqrt{${sq(L)} - ${sq(v)}} = \\sqrt{${tg(L * L)} - ${tg(v * v)}} ${Number.isInteger(+w.toFixed(9)) ? '=' : '\\approx'} ${tg(w, 2)}`]; }
         if (t === 'vlieger') { const L = rnd(4, 12) * 5, d = rnd(2, L / 5 - 1) * 5; w = Math.sqrt(L * L - d * d); na = '\\text{m}';
-          zin = `Een vlieger hangt aan een strak touw van ${L} m. De vlieger hangt recht boven een punt dat ${d} m van jou verwijderd is. Hoe hoog hangt de vlieger?`;
+          zin = `Een vlieger hangt aan een strak touw van ${L} m. De vlieger hangt recht boven een punt dat ${d} m van jou verwijderd is. Hoe hoog hangt de vlieger? (Je mag de hoogte van je hand verwaarlozen.)`;
           uit = [`\\text{schuine zijde = touw} = ${L}`, `h = \\sqrt{${L}^2 - ${d}^2} = \\sqrt{${L * L} - ${d * d}} ${Number.isInteger(w) ? '=' : '\\approx'} ${tg(w, 2)}`]; }
         if (t === 'gelijkbenig') { const B = rnd(3, 12) * 2, hh = rnd(3, 15); w = Math.sqrt((B / 2) ** 2 + hh * hh); na = '\\text{cm}';
           zin = `Een gelijkbenige driehoek heeft een basis van ${B} cm en een hoogte van ${hh} cm. Hoe lang zijn de gelijke zijden?`;
@@ -106,7 +130,7 @@ const DEEL8 = {
           uit = ['\\text{de diagonaal is de schuine zijde}', `d = \\sqrt{${p}^2 + ${q}^2} = \\sqrt{${p * p} + ${q * q}} ${Number.isInteger(w) ? '=' : '\\approx'} ${tg(w, 2)}`]; }
         if (t === 'opp') { const [a, b, c] = drietal(); w = a * b / 2; na = '\\text{cm}^2';
           zin = `Een rechthoekige driehoek heeft een schuine zijde van ${c} cm en één rechthoekszijde van ${b} cm. Bereken de oppervlakte van de driehoek.`;
-          uit = [`a = \\sqrt{${c}^2 - ${b}^2} = \\sqrt{${c * c} - ${b * b}} = ${a}`, `A = \\frac{b \\cdot h}{2} = \\frac{${b} \\cdot ${a}}{2} = ${tg(w)}`]; }
+          uit = [`a = ${c} \\text{ (schuine zijde)}, \\ b = ${b}`, `c = \\sqrt{${c}^2 - ${b}^2} = \\sqrt{${c * c} - ${b * b}} = ${a}`, `\\text{opp} = \\frac{b \\cdot c}{2} = \\frac{${b} \\cdot ${a}}{2} = ${tg(w)}`]; }
         if (t === 'tv') { const br = rnd(50, 140), ho = Math.round(br * kies([0.5625, 0.6, 0.75]) ); w = Math.sqrt(br * br + ho * ho); na = '\\text{cm}';
           zin = `Een rechthoekig scherm is ${br} cm breed en ${ho} cm hoog. Hoe lang is de diagonaal van het scherm?`;
           uit = ['\\text{de diagonaal is de schuine zijde}', `d = \\sqrt{${br}^2 + ${ho}^2} = \\sqrt{${br * br} + ${ho * ho}} \\approx ${tg(w, 2)}`]; }
@@ -359,6 +383,13 @@ Leerpaden.registreer({
   ondertitel: 'Zelfstudie · 7VJHO',
   klas: '7VJHO',
   soort: 'zelfstudie',
+  afspraken: `<div class="kader eig"><div class="kader-titel">Afspraak: afronden</div>
+    <p>Bij elke vraag staat naast het invulvak op hoeveel decimalen je afrondt, bv. <span class="afrond-voorbeeld">rond af op 2 decimalen</span>.</p>
+    <ul>
+      <li>Komt de uitkomst <b>exact</b> uit (bv. $6$ of $2{,}5$)? Dan schrijf je ze gewoon zo, zonder extra nullen.</li>
+      <li>Rond pas <b>op het einde</b> af. Noteer tussenresultaten met minstens 2 decimalen meer dan gevraagd.</li>
+      <li>Staat er geen afronding bij? Dan is het antwoord exact (een geheel getal, een breuk of een wortelvorm).</li>
+    </ul></div>`,
   groepen: [
     { titel: 'A · Reële getallen en bewerkingen', delen: [1, 2, 3] },
     { titel: 'B · Intervallen', delen: [4] },

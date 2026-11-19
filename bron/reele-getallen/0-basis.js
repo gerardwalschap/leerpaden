@@ -1,6 +1,6 @@
 // ===== Reële getallen (7VJHO) — gedeelde hulpmiddelen =====
 const { rnd, kies, schud } = W;
-const tg = (x, d = null) => W.texGetal(x, d);           // getal in TeX met komma
+const tg = (x, d = null) => W.texGetal(x, d, d !== null && Math.abs(W.rond(x, d) - x) > 1e-9); // getal in TeX met komma; afgerond = alle gevraagde decimalen
 const kg = (x, d = null) => W.komma(x, d);              // getal als tekst met komma
 const ggd = W.ggd;
 const kgv = (a, b) => a / ggd(a, b) * b;
