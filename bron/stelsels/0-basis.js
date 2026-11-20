@@ -16,7 +16,7 @@ const Q = (t, n = 1) => { if (n < 0) { t = -t; n = -n; } const g = ggd(t, n); re
 const qTex = (q) => q.n === 1 ? tg(q.t) : `${q.t < 0 ? '-' : ''}\\frac{${Math.abs(q.t)}}{${q.n}}`;
 const qHaak = (q) => q.v < 0 ? `\\left(${qTex(q)}\\right)` : qTex(q);
 // antwoorden met formule-editor (echte breuken)
-const getal = (q, voor = '') => ({ soort: 'getal', waarde: typeof q === 'number' ? q : q.v, voor, editor: true, placeholder: '' });
+const getal = (q, voor = '') => ({ soort: 'getal', waarde: typeof q === 'number' ? q : q.v, voor, editor: true, placeholder: '', ...(typeof q !== 'number' && q.n !== 1 ? { tex: qTex(q) } : {}) });
 const uitdr = (expr, tex, voor = '') => ({ soort: 'veelterm', expr, tex, voor, editor: true, placeholder: '' });
 
 // ---- vergelijkingen ax + by = c als TeX

@@ -5,7 +5,32 @@ const mix = (D, s, naam) => ({ naam: naam || D.soorten[s].naam, gen() { const v 
 const qOf = (s, k) => s[k + 'q'] || Q(s[k]);
 const ctrl = (v, x, y) => `${tg(v.a)} \\cdot ${qHaak(x)} ${v.b < 0 ? '-' : '+'} ${Math.abs(v.b)} \\cdot ${qHaak(y)} = ${tg(v.c)} \\;\\checkmark`;
 const STAPPEN_TYPEN = `<div class="kader"><div class="kader-titel">Zo vul je in</div>
-  <p>Werk op papier en vul bij elke stap je tussenresultaat in. Een breuk maak je met de toets <code>/</code> of met de knop <span class="tk-breuk" style="display:inline-flex"><span>a</span><span>b</span></span>: je ziet dan meteen een echte breuk. Met de pijltjestoetsen ga je van teller naar noemer en weer uit de breuk.</p></div>`;
+  <p>Werk op papier en vul bij elke stap je tussenresultaat in. Een <b>vergelijking</b> (bv. de gelijkstelling of de ingevulde vergelijking bij substitutie) typ je in twee vakken: het linkerlid en het rechterlid. Elke stap wordt apart nagekeken: enkel de eindoplossing invullen is niet genoeg.</p>
+  <p> Een breuk maak je met de toets <code>/</code> of met de knop <span class="tk-breuk" style="display:inline-flex"><span>a</span><span>b</span></span>: je ziet dan meteen een echte breuk. Met de pijltjestoetsen ga je van teller naar noemer en weer uit de breuk.</p></div>`;
+
+
+// ---- tussenstappen als vergelijking (antwoordsoort 'vgl') -----------------------------
+const vgl = (regel, extra) => ({ soort: 'vgl', regel, ...extra });
+const qMaal = (a, b) => Q(a.t * b.t, a.n * b.n), qMin = (a, b) => Q(a.t * b.n - b.t * a.n, a.n * b.n);
+const kgv = (...ns) => ns.reduce((k, n) => k * n / ggd(k, n), 1);
+const tgQ = (q) => qTex(q);
+// genummerde onderdelen: [['tekst', antw], …] → labels '1. tekst'
+const genummerd = (lijst) => delen(...lijst.map(([t, a], i) => [`\\text{${i + 1}. ${t}}`, a]));
+const haakTex = (k, tex) => k === 1 ? `(${tex})` : k === -1 ? `-(${tex})` : `${tg(k)}(${tex})`;
+// gelijkstelling: y = m1 x + q1 en y = m2 x + q2 (m, q als breuken Q)
+function gelijkDelen(y1, y2, x0, y0) {
+  const k = kgv(y1.m.n, y1.q.n, y2.m.n, y2.q.n), K = Q(k);
+  const m0 = qMaal(K, qMin(y1.m, y2.m)), n0 = qMaal(K, qMin(y2.q, y1.q));
+  const stappen = [
+    ['vgl. 1 naar y: } y =\\text{', uitdr(y1.expr, y1.tex)],
+    ['vgl. 2 naar y: } y =\\text{', uitdr(y2.expr, y2.tex)],
+    ['gelijkstelling:', vgl('zijden', { L: y1.expr, R: y2.expr, tex: `${y1.tex} = ${y2.tex}`, bericht: 'Je gelijkstelling klopt niet: zet de uitdrukking voor y uit vgl. 1 gelijk aan die uit vgl. 2.' })],
+  ];
+  if (k > 1) stappen.push(['noemers wegwerken (beide leden maal hetzelfde getal):', vgl('veelvoud', { L: y1.expr, R: y2.expr, tex: `${lid([[qMaal(K, y1.m), 'x'], [qMaal(K, y1.q), '']])} = ${lid([[qMaal(K, y2.m), 'x'], [qMaal(K, y2.q), '']])}` })]);
+  stappen.push(['herleid: x-termen links, getallen rechts:', vgl('eenterm', { letter: 'x', waarde: x0.v, m0: m0.v, L: '', R: '', tex: `${lid([[m0, 'x']])} = ${tgQ(n0)}` })]);
+  stappen.push(['} x =\\text{', getal(x0)], ['} y =\\text{', getal(y0)]);
+  return { antw: genummerd(stappen), k, m0, n0 };
+}
 
 // ---- 1. Wat is een stelsel? ---------------------------------------------------------
 const D1 = {
@@ -130,10 +155,10 @@ const D3 = {
   ],
   soorten: {
     volledig: { naam: 'Gelijkstelling: alle stappen', gen() {
-      const s = stelselQ(0.25), y1 = naarY(s.v1), y2 = naarY(s.v2);
-      return { soort: 'volledig', opdracht: 'Los op door gelijkstelling. Vul elke stap in.', tex: stelselTex(s.v1, s.v2),
-        antw: delen(['\\text{1. vgl. 1: } y =', uitdr(y1.expr, y1.tex)], ['\\text{1. vgl. 2: } y =', uitdr(y2.expr, y2.tex)], ...xyAntw(s).map(([l, a], i) => [i === 0 ? '\\text{2–3. } x =' : '\\text{4. } y =', a])),
-        uitleg: [`y = ${y1.tex} \\quad \\text{en} \\quad y = ${y2.tex}`, `${y1.tex} = ${y2.tex}`, `x = ${qTex(qOf(s, 'x'))}`, `y = ${qTex(qOf(s, 'y'))}`, VTex(qOf(s, 'x'), qOf(s, 'y'))] };
+      const s = stelselQ(0.25), y1 = naarY(s.v1), y2 = naarY(s.v2), x0 = qOf(s, 'x'), y0 = qOf(s, 'y');
+      const g = gelijkDelen(y1, y2, x0, y0);
+      return { soort: 'volledig', opdracht: 'Los op door gelijkstelling. Vul elke stap in.', tex: stelselTex(s.v1, s.v2), antw: g.antw,
+        uitleg: [`y = ${y1.tex} \\quad \\text{en} \\quad y = ${y2.tex}`, `${y1.tex} = ${y2.tex}`, ...(g.k > 1 ? [`\\text{beide leden} \\cdot ${g.k}`] : []), `${lid([[g.m0, 'x']])} = ${qTex(g.n0)}`, `x = ${qTex(x0)}`, `y = ${qTex(y0)}`, VTex(x0, y0)] };
     } },
     breuken: { naam: 'Gelijkstelling met breuken', gen() {
       for (;;) {
@@ -142,9 +167,11 @@ const D3 = {
         const c1 = Q(a1.t * x0, a1.n).v + y0; if (!Number.isInteger(c1) || x0 % a1.n) continue;
         const v2 = { a: kies([1, -1, 2]), b: kies([1, -1]) }; v2.c = v2.a * x0 + v2.b * y0;
         const e1 = `${lid([[a1, 'x'], [1, 'y']])} = ${tg(c1)}`;
-        const y2 = naarY(v2);
+        const y2 = naarY(v2), y1 = { m: Q(-a1.t, a1.n), q: Q(c1), expr: `${c1}-(${a1.t}/${a1.n})*x`, tex: lid([[c1, ''], [Q(-a1.t, a1.n), 'x']]) };
+        if (y1.m.t * y2.m.n === y2.m.t * y1.m.n) continue;
+        const g = gelijkDelen(y1, y2, Q(x0), Q(y0));
         return { soort: 'breuken', opdracht: 'Los op door gelijkstelling. Vul elke stap in.', tex: stelselTex(e1, vglTex(v2)),
-          antw: delen(['\\text{1. vgl. 1: } y =', uitdr(`${c1}-(${a1.t}/${a1.n})*x`, lid([[c1, ''], [Q(-a1.t, a1.n), 'x']]))], ['\\text{1. vgl. 2: } y =', uitdr(y2.expr, y2.tex)], ['\\text{2–3. } x =', getal(x0)], ['\\text{4. } y =', getal(y0)]),
+          antw: g.antw,
           uitleg: [`y = ${lid([[c1, ''], [Q(-a1.t, a1.n), 'x']])} \\quad \\text{en} \\quad y = ${y2.tex}`, `\\text{gelijkstellen, beide leden} \\cdot ${a1.n}`, `x = ${tg(x0)}, \\; y = ${tg(y0)}`, VTex(x0, y0)] };
       }
     } },
@@ -173,22 +200,36 @@ const D4 = {
       const s = stelsel({ een: true }), naarXv = Math.abs(s.v1.a) === 1 ? 1 : Math.abs(s.v2.a) === 1 ? 2 : 0;
       if (!naarXv) { // y afzonderen uit de vergelijking met b = ±1
         const i = Math.abs(s.v1.b) === 1 ? 1 : Math.abs(s.v2.b) === 1 ? 2 : 0; if (!i) return this.gen();
-        const v = i === 1 ? s.v1 : s.v2, y = naarY(v);
+        const v = i === 1 ? s.v1 : s.v2, o = i === 1 ? s.v2 : s.v1, y = naarY(v);
+        const m0 = o.a + o.b * (-v.a / v.b), n0 = o.c - o.b * (v.c / v.b);
+        const inTex = `${lid([[o.a, 'x']])} ${o.b < 0 ? '' : '+'} ${haakTex(o.b, y.tex)} = ${tg(o.c)}`;
         return { soort: 'volledig', opdracht: `Los op door substitutie. Zonder y af uit vergelijking ${i}.`, tex: stelselTex(s.v1, s.v2),
-          antw: delen([`\\text{1. uit vgl. ${i}: } y =`, uitdr(y.expr, y.tex)], ['\\text{2. } x =', getal(s.x)], ['\\text{3. } y =', getal(s.y)]),
-          uitleg: [`y = ${y.tex}`, `\\text{invullen in vgl. ${3 - i}} \\Rightarrow x = ${tg(s.x)}`, `y = ${tg(s.y)}`, VTex(s.x, s.y)] };
+          antw: genummerd([[`uit vgl. ${i}: } y =\\text{`, uitdr(y.expr, y.tex)],
+            [`invullen in vgl. ${3 - i} (met haakjes):`, vgl('zijden', { L: `(${o.a})*x+(${o.b})*(${y.expr})`, R: `${o.c}`, haakje: o.b !== 1, tex: inTex, bericht: `Vervang y in vergelijking ${3 - i} door de uitdrukking die je vond (tussen haakjes).` })],
+            ['uitgewerkt: x-termen links, getallen rechts:', vgl('eenterm', { letter: 'x', waarde: s.x, m0, tex: `${lid([[m0, 'x']])} = ${tg(n0)}` })],
+            ['} x =\\text{', getal(s.x)], ['} y =\\text{', getal(s.y)]]),
+          uitleg: [`y = ${y.tex}`, inTex, `${lid([[m0, 'x']])} = ${tg(n0)}`, `x = ${tg(s.x)}`, `y = ${tg(s.y)}`, VTex(s.x, s.y)] };
       }
-      const v = naarXv === 1 ? s.v1 : s.v2, x = naarX(v);
+      const v = naarXv === 1 ? s.v1 : s.v2, o = naarXv === 1 ? s.v2 : s.v1, x = naarX(v);
+      const m0 = o.b + o.a * (-v.b / v.a), n0 = o.c - o.a * (v.c / v.a);
+      const inTex = `${haakTex(o.a, x.tex)} ${o.b < 0 ? '-' : '+'} ${lid([[Math.abs(o.b), 'y']])} = ${tg(o.c)}`;
       return { soort: 'volledig', opdracht: `Los op door substitutie. Zonder x af uit vergelijking ${naarXv}.`, tex: stelselTex(s.v1, s.v2),
-        antw: delen([`\\text{1. uit vgl. ${naarXv}: } x =`, uitdr(x.expr, x.tex)], ['\\text{2. } y =', getal(s.y)], ['\\text{3. } x =', getal(s.x)]),
-        uitleg: [`x = ${x.tex}`, `\\text{invullen in vgl. ${3 - naarXv}} \\Rightarrow y = ${tg(s.y)}`, `x = ${tg(s.x)}`, VTex(s.x, s.y)] };
+        antw: genummerd([[`uit vgl. ${naarXv}: } x =\\text{`, uitdr(x.expr, x.tex)],
+          [`invullen in vgl. ${3 - naarXv} (met haakjes):`, vgl('zijden', { L: `(${o.a})*(${x.expr})+(${o.b})*y`, R: `${o.c}`, haakje: o.a !== 1, tex: inTex, bericht: `Vervang x in vergelijking ${3 - naarXv} door de uitdrukking die je vond (tussen haakjes).` })],
+          ['uitgewerkt: y-termen links, getallen rechts:', vgl('eenterm', { letter: 'y', waarde: s.y, m0, tex: `${lid([[m0, 'y']])} = ${tg(n0)}` })],
+          ['} y =\\text{', getal(s.y)], ['} x =\\text{', getal(s.x)]]),
+        uitleg: [`x = ${x.tex}`, inTex, `${lid([[m0, 'y']])} = ${tg(n0)}`, `y = ${tg(s.y)}`, `x = ${tg(s.x)}`, VTex(s.x, s.y)] };
     } },
     staatAl: { naam: 'Eén vergelijking staat al naar y', gen() {
       for (;;) {
         const x0 = nz(-5, 5), y0 = rnd(-6, 6), m = nz(-4, 4), q = y0 - m * x0; if (Math.abs(q) > 12) continue;
         const v2 = { a: nz(-5, 5), b: nz(-4, 4) }; if (v2.a + v2.b * m === 0) continue; v2.c = v2.a * x0 + v2.b * y0;
-        const e1 = `y = ${lid([[m, 'x'], [q, '']])}`;
-        return { soort: 'staatAl', opdracht: 'Los op door substitutie.', tex: stelselTex(e1, vglTex(v2)), antw: delen(['x =', getal(x0)], ['y =', getal(y0)]),
+        const e1 = `y = ${lid([[m, 'x'], [q, '']])}`, m0 = v2.a + v2.b * m, n0 = v2.c - v2.b * q;
+        const inTex = `${lid([[v2.a, 'x']])} ${v2.b < 0 ? '' : '+'} ${haakTex(v2.b, lid([[m, 'x'], [q, '']]))} = ${tg(v2.c)}`;
+        return { soort: 'staatAl', opdracht: 'Los op door substitutie. Vul elke stap in.', tex: stelselTex(e1, vglTex(v2)),
+          antw: genummerd([['invullen in vgl. 2 (met haakjes):', vgl('zijden', { L: `(${v2.a})*x+(${v2.b})*((${m})*x+(${q}))`, R: `${v2.c}`, haakje: v2.b !== 1, tex: inTex, bericht: 'Vervang y in vergelijking 2 door het rechterlid van vergelijking 1 (tussen haakjes).' })],
+            ['uitgewerkt: x-termen links, getallen rechts:', vgl('eenterm', { letter: 'x', waarde: x0, m0, tex: `${lid([[m0, 'x']])} = ${tg(n0)}` })],
+            ['} x =\\text{', getal(x0)], ['} y =\\text{', getal(y0)]]),
           uitleg: [`${lid([[v2.a, 'x']])} ${v2.b < 0 ? '-' : '+'} ${Math.abs(v2.b)}(${lid([[m, 'x'], [q, '']])}) = ${tg(v2.c)}`, `x = ${tg(x0)}`, `y = ${tg(m)} \\cdot ${h(x0)} ${q < 0 ? '-' : '+'} ${Math.abs(q)} = ${tg(y0)}`, VTex(x0, y0)] };
       }
     } },
@@ -221,14 +262,15 @@ const D5 = {
       const g = ggd(c1, c2), p = c2 / g, q = -c1 / g;
       const rest = wegX ? qOf(s, 'y') : qOf(s, 'x'), ander = wegX ? qOf(s, 'x') : qOf(s, 'y'), A = wegX ? 'y' : 'x';
       return { soort: 'volledig', opdracht: `Los op door combinatie. Werk eerst de ${L}-termen weg.`, tex: stelselTex(s.v1, s.v2),
-        antw: delen([`\\text{1. zodat de } ${L}\\text{-termen wegvallen:}`, { soort: 'combi', c1, c2, letter: L }], [`\\text{2. } ${A} =`, getal(rest)], [`\\text{3. } ${L} =`, getal(ander)]),
+        antw: delen(['', { soort: 'combistap', v1: s.v1, v2: s.v2, letter: L, ander: A }], [`\\text{d. } ${A} =`, getal(rest)], [`\\text{e. } ${L} = \\;(\\text{invullen of opnieuw combineren})`, getal(ander)]),
         uitleg: [`\\text{bv. vgl. 1} \\cdot ${h(p)} \\text{ en vgl. 2} \\cdot ${h(q)}: \\; ${tg(c1 * p)}${L} \\text{ en } ${tg(c2 * q)}${L} \\text{ vallen weg}`, `${A} = ${qTex(rest)}`, `${L} = ${qTex(ander)}`, VTex(qOf(s, 'x'), qOf(s, 'y'))] };
     } },
     tegengesteld: { naam: 'Termen al tegengesteld', gen() {
       for (;;) {
         const x0 = nz(-6, 6), y0 = rnd(-6, 6), b = nz(-5, 5), a1 = nz(-5, 5), a2 = nz(-5, 5); if (a1 + a2 === 0) continue;
         const v1 = { a: a1, b, c: a1 * x0 + b * y0 }, v2 = { a: a2, b: -b, c: a2 * x0 - b * y0 };
-        return { soort: 'tegengesteld', opdracht: 'Los op door combinatie.', tex: stelselTex(v1, v2), antw: delen(['x =', getal(x0)], ['y =', getal(y0)]),
+        return { soort: 'tegengesteld', opdracht: 'Los op door combinatie. Vul elke stap in.', tex: stelselTex(v1, v2),
+          antw: genummerd([['beide vergelijkingen opgeteld:', vgl('eenterm', { letter: 'x', waarde: x0, m0: a1 + a2, tex: `${lid([[a1 + a2, 'x']])} = ${tg(v1.c + v2.c)}`, bericht: 'Tel beide vergelijkingen lid per lid op: de y-termen vallen weg.' })], ['} x =\\text{', getal(x0)], ['} y =\\text{', getal(y0)]]),
           uitleg: ['\\text{de } y\\text{-termen zijn tegengesteld: tel op}', `${tg(a1 + a2)}x = ${tg(v1.c + v2.c)} \\iff x = ${tg(x0)}`, `y = ${tg(y0)}`, VTex(x0, y0)] };
       }
     } },

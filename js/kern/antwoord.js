@@ -16,6 +16,11 @@
 //   functie      {expr, vorm?: 'topvorm'|'vrij', tex?, voor?}  functievoorschrift in x (rekenkern FX); vergeleken op functiewaarden
 //   breuk        {t, n, voor?, vrij?}                           breuk t/n; moet onvereenvoudigbaar zijn (vrij: true = mag onvereenvoudigd)
 //   verzameling  {stukken:[{a, ai, b, bi}], voor?}              oplossingsverzameling: intervallen, unie ∪, ℝ, ∅, ℝ \ {a}, {a} (rekenkern VZ)
+//   vgl          {regel, L, R, tex, letter?, waarde?, m0?, haakje?, bericht?, voor?}   een vergelijking  links = rechts  als tussenstap
+//                regel 'zijden':   links ≡ L en rechts ≡ R (of omgekeerd), haakje: true = er moeten haakjes staan (substitutie)
+//                regel 'veelvoud': links ≡ k·L en rechts ≡ k·R met gehele coëfficiënten (noemers weggewerkt)
+//                regel 'eenterm':  m·letter = n met n/m = waarde (m ≠ ±1 tenzij m0 = ±1)
+//   combistap    {v1:{a,b,c}, v2:{a,b,c}, letter, ander}       combinatie: factoren, beide nieuwe vergelijkingen en de som
 const Antwoord = (() => {
   const esc = W.esc, T = (s) => W.tex(s);
   // ---------- breuken t/n (gehele teller en noemer)
@@ -125,6 +130,64 @@ const Antwoord = (() => {
     if (!p.waarde || !q.waarde) return { status: 'fout', bericht: 'Vermenigvuldigen met 0 mag niet: dan verlies je een vergelijking.' };
     return Math.abs(p.waarde * a.c1 + q.waarde * a.c2) < 1e-9 ? { status: 'juist' } : { status: 'fout', bericht: `Met deze getallen vallen de ${a.letter}-termen niet weg bij het optellen.` };
   }
+  // ---- vergelijking als tussenstap (veeltermen in x en/of y, rekenkern VT)
+  const QQ = (t, n = 1) => new E.Q(t, n);
+  const pGelijk = (a, b) => { if (a.size !== b.size) return false; for (const [k, c] of a) { const d = b.get(k); if (!d || !d.eq(c)) return false; } return true; };
+  const pMaal = (p, k) => { const r = new Map(); for (const [s, c] of p) { const m = c.mul(k); if (m.n !== 0) r.set(s, m); } return r; };
+  const pGeheel = (p) => [...p.values()].every(c => c.d === 1);
+  const qWaarde = (q) => q.n / q.d;
+  function nakijkVgl(a, w) {
+    const l = String(w.L || '').trim(), r = String(w.R || '').trim();
+    if (!l || !r) return { status: 'leeg', bericht: 'Vul beide leden van de vergelijking in.' };
+    const sl = VT.ontleed(l), sr = VT.ontleed(r);
+    if (!sl.ok) return { status: 'ongeldig', bericht: 'Linkerlid: ' + sl.fout };
+    if (!sr.ok) return { status: 'ongeldig', bericht: 'Rechterlid: ' + sr.fout };
+    const L = sl.p, R = sr.p;
+    if (a.regel === 'eenterm') {
+      const v = a.letter + '1';
+      const isTerm = (p) => p.size === 1 && p.has(v), isCst = (p) => p.size === 0 || (p.size === 1 && p.has(''));
+      let m, n;
+      if (isTerm(L) && isCst(R)) { m = L.get(v); n = R.get('') || QQ(0); }
+      else if (isTerm(R) && isCst(L)) { m = R.get(v); n = L.get('') || QQ(0); }
+      else return { status: 'fout', bericht: a.bericht || `Breng alle termen met ${a.letter} naar één kant en de getallen naar de andere kant, en tel ze samen: zo krijg je een vergelijking van de vorm (getal)·${a.letter} = (getal).` };
+      if (Math.abs(qWaarde(n) / qWaarde(m) - a.waarde) > 1e-9) return { status: 'fout', bericht: 'Deze vergelijking klopt niet: controleer je rekenwerk.' };
+      if (Math.abs(qWaarde(m)) === 1 && Math.abs(a.m0) !== 1) return { status: 'vorm', bericht: `Schrijf de vergelijking die je krijgt vóór je deelt, bv. ${a.m0}${a.letter} = …` };
+      return { status: 'juist' };
+    }
+    const A = VT.ontleed(a.L).p, B = VT.ontleed(a.R).p;
+    if (a.regel === 'zijden') {
+      const ok = (pGelijk(L, A) && pGelijk(R, B)) || (pGelijk(L, B) && pGelijk(R, A));
+      if (!ok) return { status: 'fout', bericht: a.bericht || 'Deze vergelijking klopt niet.' };
+      if (a.haakje && !/[()]/.test(l + r)) return { status: 'vorm', bericht: 'Schrijf de ingevulde vergelijking mét haakjes, nog vóór je uitwerkt, bv. 2(5 + 3y) + 5y = −1.' };
+      return { status: 'juist' };
+    }
+    if (a.regel === 'veelvoud') {
+      for (const [X, Y] of [[A, B], [B, A]]) {
+        const sleut = [...X.keys()].find(k => L.get(k)); if (sleut === undefined) continue;
+        const k = L.get(sleut).div(X.get(sleut));
+        if (pGelijk(L, pMaal(X, k)) && pGelijk(R, pMaal(Y, k))) {
+          if (!pGeheel(L) || !pGeheel(R)) return { status: 'vorm', bericht: 'Er staan nog breuken: vermenigvuldig beide leden met (een veelvoud van) de noemers.' };
+          return { status: 'juist' };
+        }
+      }
+      return { status: 'fout', bericht: a.bericht || 'Vermenigvuldig beide leden met hetzelfde getal: dan blijft de vergelijking gelijkwaardig.' };
+    }
+    return { status: 'fout' };
+  }
+  function nakijkCombistap(a, w) {
+    if (![w.p, w.q, ...w.e1, ...w.e2, ...w.s].every(x => String(x ?? '').trim())) return { status: 'leeg', bericht: 'Vul alle vakjes in.' };
+    const g = (x) => Invoer.getal(x), lijst = [w.p, w.q, ...w.e1, ...w.e2, ...w.s].map(g);
+    const slecht = lijst.find(x => !x.ok); if (slecht) return { status: 'ongeldig', bericht: slecht.fout };
+    const [p, q, a1, b1, c1, a2, b2, c2, m, n] = lijst.map(x => x.waarde), eq = (x, y) => Math.abs(x - y) < 1e-9;
+    if (!p || !q) return { status: 'fout', bericht: 'Vermenigvuldigen met 0 mag niet: dan verlies je een vergelijking.' };
+    const wegX = a.letter === 'x', c = (v) => wegX ? v.a : v.b;
+    if (!eq(p * c(a.v1) + q * c(a.v2), 0)) return { status: 'fout', bericht: `Met p = ${w.p} en q = ${w.q} vallen de ${a.letter}-termen niet weg bij het optellen.` };
+    if (!eq(a1, p * a.v1.a) || !eq(b1, p * a.v1.b) || !eq(c1, p * a.v1.c)) return { status: 'fout', bericht: `De eerste nieuwe vergelijking klopt niet: vermenigvuldig élke term van vgl. 1 (ook het rechterlid) met ${w.p}.` };
+    if (!eq(a2, q * a.v2.a) || !eq(b2, q * a.v2.b) || !eq(c2, q * a.v2.c)) return { status: 'fout', bericht: `De tweede nieuwe vergelijking klopt niet: vermenigvuldig élke term van vgl. 2 (ook het rechterlid) met ${w.q}.` };
+    if (!eq(m, wegX ? b1 + b2 : a1 + a2)) return { status: 'fout', bericht: `Tel de ${a.ander}-termen van beide nieuwe vergelijkingen op.` };
+    if (!eq(n, c1 + c2)) return { status: 'fout', bericht: 'Tel ook de rechterleden van beide nieuwe vergelijkingen op.' };
+    return { status: 'juist' };
+  }
   function nakijkBreuk(a, invoer) {
     const r = leesBreuk(invoer);
     if (r.leeg) return { status: 'leeg', bericht: 'Vul eerst een antwoord in.' };
@@ -149,6 +212,8 @@ const Antwoord = (() => {
     if (a.soort === 'wt') return LG.wtLeeg(a);
     if (a.soort === 'schakeling') return LG.bouwLeeg(a);
     if (a.soort === 'combi') return { p: '', q: '' };
+    if (a.soort === 'vgl') return { L: '', R: '' };
+    if (a.soort === 'combistap') return { p: '', q: '', e1: ['', '', ''], e2: ['', '', ''], s: ['', ''] };
     return { invoer: '' };
   }
 
@@ -222,6 +287,20 @@ const Antwoord = (() => {
       const v = (k, lab) => `<span class="is">${T(lab)}</span><input type="text" class="veld" id="${id}-${k}" value="${esc(w[k] || '')}" autocomplete="off" spellcheck="false" ${dis} style="width:80px">`;
       return `<div class="antwoordrij">${v('p', a.label1 || '\\text{vgl. 1} \\;\\cdot')}&nbsp;&nbsp;${v('q', a.label2 || '\\text{vgl. 2} \\;\\cdot')}</div>`;
     }
+    if (a.soort === 'vgl') {
+      laadMathLive();
+      const veld = (k) => `<input type="text" class="veld expr" id="${id}-${k}" value="${esc(w[k] || '')}" placeholder="${k === 'L' ? 'linkerlid' : 'rechterlid'}" autocomplete="off" autocapitalize="none" spellcheck="false" data-editor="1" ${dis}>`;
+      return `<div class="antwoordrij vgl">${a.voor ? `<span class="is">${T(a.voor)}</span>` : ''}${veld('L')}<span class="is">${T('=')}</span>${veld('R')}</div>`;
+    }
+    if (a.soort === 'combistap') {
+      const vak = (k, i, br) => `<input type="text" class="vak" style="width:${br ? 84 : 64}px" id="${id}-${k}${i ?? ''}" value="${esc(i === undefined ? (w[k] || '') : (w[k][i] || ''))}" autocomplete="off" autocapitalize="none" spellcheck="false" ${dis}>`;
+      const rij = (k, nr) => `<div class="vakjesrij"><span class="vt" style="min-width:150px">${T(`\\text{vgl. ${nr}} \\cdot ${nr === 1 ? '(p)' : '(q)'}:`)}</span>${vak(k, 0)}<span class="vt">${T('x \\;+')}</span>${vak(k, 1)}<span class="vt">${T('y \\;=')}</span>${vak(k, 2, true)}</div>`;
+      return `<div class="combistap">
+        <div class="vakjesrij"><span class="vt">${T('\\text{a. vermenigvuldig vgl. 1 met } p =')}</span>${vak('p')}<span class="vt">${T('\\text{ en vgl. 2 met } q =')}</span>${vak('q')}</div>
+        <div class="klein" style="margin:4px 0">${T('\\text{b. de nieuwe vergelijkingen (een negatief getal typ je met een minteken):}')}</div>
+        ${rij('e1', 1)}${rij('e2', 2)}
+        <div class="vakjesrij"><span class="vt">${T(`\\text{c. opgeteld (de } ${a.letter}\\text{-termen vallen weg):}`)}</span>${vak('s', 0)}<span class="vt">${T(`${a.ander} \\;=`)}</span>${vak('s', 1, true)}</div></div>`;
+    }
     if (a.editor) laadMathLive();
     const breed = a.soort !== 'getal' ? ' expr' : '';
     return `<div class="antwoordrij">${a.voor !== '' ? `<span class="is">${T(a.voor || (a.soort === 'formule' ? a.doel + ' =' : '='))}</span>` : ''}
@@ -244,6 +323,7 @@ const Antwoord = (() => {
     if (a.soort === 'functie') set.add('functie');
     if (a.soort === 'verzameling') set.add('verzameling');
     if (a.soort === 'breuk') set.add('breuk');
+    if (a.soort === 'vgl') { set.add('veelterm'); set.add('editor'); }
     if (a.soort === 'delen') a.delen.forEach(d => toetsen(d.antw, set));
     if (a.editor) set.add('editor');
     if (a.toetsen) a.toetsen.forEach(t => set.add(t));
@@ -344,6 +424,12 @@ const Antwoord = (() => {
         return;
       }
       if (a.soort === 'combi') { ['p', 'q'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) velden.push({ el, zet: (v) => { w[k] = v; }, a }); }); return; }
+      if (a.soort === 'vgl') { ['L', 'R'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) velden.push({ el, zet: (v) => { w[k] = v; }, a: { editor: true } }); }); return; }
+      if (a.soort === 'combistap') {
+        const plek = [['p'], ['q'], ['e1', 0], ['e1', 1], ['e1', 2], ['e2', 0], ['e2', 1], ['e2', 2], ['s', 0], ['s', 1]];
+        plek.forEach(([k, i]) => { const el = document.getElementById(`${id}-${k}${i ?? ''}`); if (el) velden.push({ el, zet: (v) => { if (i === undefined) w[k] = v; else w[k][i] = v; }, a: {} }); });
+        return;
+      }
       if (a.soort === 'vector') { VEC.koppel(id, a, w, opts); return; }
       if (a.soort === 'wt') { LG.wtKoppel(id, a, w, opts); return; }
       if (a.soort === 'schakeling') { LG.bouwKoppel(id, a, w, opts); return; }
@@ -403,6 +489,12 @@ const Antwoord = (() => {
     if (a.soort === 'vakjes') return a.velden.forEach((_, i) => { const el = document.getElementById(`${id}-${i}`); if (el) w.vakjes[i] = el.value; });
     if (a.soort === 'teken' || a.soort === 'wt' || a.soort === 'schakeling' || a.soort === 'vector') return;
     if (a.soort === 'combi') { ['p', 'q'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) w[k] = el.value; }); return; }
+    if (a.soort === 'vgl') { ['L', 'R'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) w[k] = waarde(el); }); return; }
+    if (a.soort === 'combistap') {
+      ['p', 'q'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) w[k] = el.value; });
+      [['e1', 3], ['e2', 3], ['s', 2]].forEach(([k, n]) => { for (let i = 0; i < n; i++) { const el = document.getElementById(`${id}-${k}${i}`); if (el) w[k][i] = el.value; } });
+      return;
+    }
     const el = document.getElementById(id); if (el) w.invoer = waarde(el);
   }
 
@@ -416,6 +508,8 @@ const Antwoord = (() => {
     if (a.soort === 'wt') return LG.wtIngevuld(a, w);
     if (a.soort === 'schakeling') return LG.bouwIngevuld(a, w);
     if (a.soort === 'combi') return !!String(w.p || '').trim() && !!String(w.q || '').trim();
+    if (a.soort === 'vgl') return !!String(w.L || '').trim() && !!String(w.R || '').trim();
+    if (a.soort === 'combistap') return [w.p, w.q, ...w.e1, ...w.e2, ...w.s].every(x => String(x ?? '').trim());
     return !!String(w.invoer || '').trim();
   }
 
@@ -487,6 +581,8 @@ const Antwoord = (() => {
       case 'wt': return LG.wtNakijk(a, w);
       case 'schakeling': return LG.bouwNakijk(a, w);
       case 'combi': return nakijkCombi(a, w);
+      case 'vgl': return nakijkVgl(a, w);
+      case 'combistap': return nakijkCombistap(a, w);
       case 'Vcomplex': return CX.controleerV(w.invoer, a);
       case 'hoek': {
         const t = CX.zonderGraden(w.invoer), gg = Invoer.getal(t);
@@ -533,7 +629,7 @@ const Antwoord = (() => {
     // afgerond antwoord: altijd met alle gevraagde decimalen (ook een 0 achteraan), exacte waarden zonder extra nullen
     const g = (x, d) => d !== undefined && d !== null ? W.texGetal(x, d, Math.abs(W.rond(x, d) - x) > 1e-9) : W.texGetal(x);
     switch (a.soort) {
-      case 'getal': return (a.vast && a.dec != null ? W.texGetal(a.waarde, a.dec, true) : g(a.waarde, a.dec)) + (a.na ? '\\ ' + a.na : '');
+      case 'getal': return (a.tex ? a.tex : a.vast && a.dec != null ? W.texGetal(a.waarde, a.dec, true) : g(a.waarde, a.dec)) + (a.na ? '\\ ' + a.na : '');
       case 'V': return a.speciaal === 'leeg' ? 'V = \\varnothing' : a.speciaal === 'R' ? 'V = \\mathbb{R}' : `V = \\{${g(a.waarde, a.dec ?? 2)}\\}`;
       case 'expr': return a.tex || E.texVan(a.expr);
       case 'complex': return a.tex || CX.texAbi(a.re, a.im);
@@ -541,6 +637,12 @@ const Antwoord = (() => {
       case 'teken': return a.rechten.map(r => r.tex).join(' \\quad \\text{en} \\quad ');
       case 'wt': return LG.wtTex(a);
       case 'schakeling': return a.tex;
+      case 'vgl': return a.tex;
+      case 'combistap': { const wegX = a.letter === 'x', c1 = wegX ? a.v1.a : a.v1.b, c2 = wegX ? a.v2.a : a.v2.b, g0 = ggdB(c1, c2) || 1; let p = c2 / g0, q = -c1 / g0; if (p < 0) { p = -p; q = -q; }
+        const co = (c) => c === 1 ? '' : c === -1 ? '-' : W.texGetal(c);
+        const vg = (v, k) => `${co(v.a * k)}x ${v.b * k < 0 ? '-' : '+'} ${co(Math.abs(v.b * k))}y = ${W.texGetal(v.c * k)}`;
+        const m = wegX ? a.v1.b * p + a.v2.b * q : a.v1.a * p + a.v2.a * q, n = a.v1.c * p + a.v2.c * q;
+        return `\\text{bv. } p = ${W.texGetal(p)},\\ q = ${W.texGetal(q)}: \\quad ${vg(a.v1, p)} \\ \\text{en}\\ ${vg(a.v2, q)} \\ \\Rightarrow\\ ${co(m)}${a.ander} = ${W.texGetal(n)}`; }
       case 'combi': { const g0 = ggdB(a.c1, a.c2) || 1; let p = a.c2 / g0, q = -a.c1 / g0; if (p < 0) { p = -p; q = -q; } return `\\text{bv. vgl. 1} \\cdot ${W.texGetal(p)} \\text{ en vgl. 2} \\cdot ${q < 0 ? '(' + W.texGetal(q) + ')' : W.texGetal(q)}`; }
       case 'verzameling': return (a.voor ? a.voor + ' ' : '') + VZ.texVan(a.stukken);
       case 'functie': return (a.voor ? a.voor + ' ' : '') + (a.tex || FX.texVan(a.expr));
@@ -600,6 +702,12 @@ const Antwoord = (() => {
     if (a.soort === 'vector') return VEC.gegeven(a, w);
     if (a.soort === 'teken') return { tekst: w.punten.map((ps, i) => `${a.parabool ? 'punten' : 'rechte ' + (i + 1)}: ${ps.map(p => `(${p[0]}, ${p[1]})`).join(' ') || '—'}`).join(' · '), tex: null };
     if (a.soort === 'combi') return { tekst: `vgl. 1 · ${w.p || '…'} en vgl. 2 · ${w.q || '…'}`, tex: null };
+    if (a.soort === 'vgl') {
+      const l = String(w.L || '').trim(), r = String(w.R || '').trim(); if (!l && !r) return { tekst: '—', tex: null };
+      const tl = VT.texVan(l), tr = VT.texVan(r);
+      return { tekst: `${l || '…'} = ${r || '…'}`, tex: tl && tr ? `${tl} = ${tr}` : null };
+    }
+    if (a.soort === 'combistap') return { tekst: `p = ${w.p || '…'}, q = ${w.q || '…'} · ${w.e1.join(' | ')} · ${w.e2.join(' | ')} · som: ${w.s[0] || '…'}${a.ander} = ${w.s[1] || '…'}`, tex: null };
     if (a.soort === 'Vmeer') {
       if (w.speciaal) return { tekst: 'V = ∅', tex: 'V = \\varnothing' };
       const t = zonderV(w.invoer).trim(); if (!t) return { tekst: '—', tex: null };
