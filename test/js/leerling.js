@@ -220,9 +220,12 @@
   }
   function nieuweVraag(d, o) {
     let v, i = 0;
-    const vorige = o.vraag && (o.vraag.sleutel || o.vraag.tex || o.vraag.html);
+    // de laatste 6 opgaven niet meteen opnieuw geven (minder herhaling bij het oefenen)
+    const sl = (x) => x.sleutel || x.tex || x.html;
+    o.recent = (o.recent || []);
+    if (o.vraag) { o.recent.push(sl(o.vraag)); o.recent = o.recent.slice(-6); }
     do { v = d.soorten[o.soort === 'alles' ? W.gewogen(d.oefenMix) : o.soort].gen(); }
-    while (vorige && (v.sleutel || v.tex || v.html) === vorige && i++ < 20);
+    while (o.recent.includes(sl(v)) && i++ < 30);
     Object.assign(o, { vraag: v, w: Antwoord.leeg(v.antw), nagekeken: null, melding: '' });
   }
   const opdracht = (d, v) => v.opdracht || d.opdracht || 'Bereken.';

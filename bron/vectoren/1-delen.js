@@ -116,6 +116,11 @@ const D2 = {
         ['Twee vectoren zijn gelijk als ze …', ['dezelfde grootte, richting én zin hebben', 'in hetzelfde punt starten', 'even lang zijn', 'op dezelfde rechte liggen']],
         ['Je verschuift een vector evenwijdig aan zichzelf naar een andere plaats. Dan …', ['blijft het dezelfde vector', 'krijg je de tegengestelde vector', 'verandert de richting', 'verandert de grootte']],
         ['De nulvector heeft …', ['grootte 0, geen richting en geen zin', 'grootte 1', 'dezelfde richting als elke vector', 'een richting maar geen zin']],
+        ['Twee tegengestelde vectoren hebben altijd …', ['dezelfde grootte', 'dezelfde zin', 'hetzelfde startpunt', 'grootte 0']],
+        ['De tegengestelde vector van −a is …', ['a', '−a', 'de nulvector', '2a']],
+        ['Twee vectoren liggen op evenwijdige rechten, zijn even lang en wijzen dezelfde kant op. Ze zijn …', ['gelijk', 'tegengesteld', 'allebei de nulvector', 'verschillend van richting']],
+        ['Twee vectoren hebben dezelfde richting en grootte, maar wijzen elk een andere kant op. Ze zijn …', ['tegengesteld', 'gelijk', 'allebei de nulvector', 'verschillend van grootte']],
+        ['Een vector gaat 3 naar rechts en 2 omhoog. Zijn tegengestelde vector gaat …', ['3 naar links en 2 omlaag', '3 naar rechts en 2 omlaag', '3 naar links en 2 omhoog', '2 naar rechts en 3 omhoog']],
       ]);
     } },
   },
@@ -160,14 +165,17 @@ const D3 = {
 };
 
 // ---- 4. Som: kop-staartmethode ---------------------------------------------------------
+// stippellijnen (verplicht) bij de parallellogrammethode: door de kop van a evenwijdig met b, en omgekeerd
+const hulpPG = (ia, ib, da, db) => [{ naam: 'hulplijn', hulp: true, door: ['p', ia], ev: ['p', ib], d: db }, { naam: 'hulplijn', hulp: true, door: ['p', ib], ev: ['p', ia], d: da }];
+const hulpPGgeg = (da, db) => [{ naam: 'hulplijn', hulp: true, door: ['g', 0], ev: ['g', 1], d: db }, { naam: 'hulplijn', hulp: true, door: ['g', 1], ev: ['g', 0], d: da }];
 function somOpgave(methode, vrij) {
   for (;;) {
-    const a = rv(4, 4), b = rv(4, 4); if (!pastInStrook([a, b]) || evenwijdig(a, b)) continue;
+    const a = rv(4, 4, { as: Math.random() < 0.25 }), b = rv(4, 4, { as: Math.random() < 0.25 }); if (!pastInStrook([a, b]) || evenwijdig(a, b)) continue;
     const s = som(a, b);
     const P = startVoor([[0, 0], a, b, s]); if (!P) continue;
     const teken = methode === 'ks'
       ? [{ naam: 'a', d: a, ...(vrij ? { vb: P } : { van: P }) }, { naam: 'b', d: b, kopVan: 0 }, { naam: 'a+b', d: s, startVan: 0 }]
-      : [{ naam: 'a', d: a, ...(vrij ? { vb: P } : { van: P }) }, { naam: 'b', d: b, startVan: 0 }, { naam: 'a+b', d: s, startVan: 0 }];
+      : [{ naam: 'a', d: a, ...(vrij ? { vb: P } : { van: P }) }, { naam: 'b', d: b, startVan: 0 }, ...hulpPG(0, 1, a, b), { naam: 'a+b', d: s, startVan: 0 }];
     return { a, b, s, P, antw: tekenAntw({ gegeven: strook([{ d: a, naam: 'a' }, { d: b, naam: 'b' }]), punten: vrij ? [] : [{ p: P, naam: 'P' }], teken }) };
   }
 }
@@ -196,25 +204,30 @@ const D4 = {
 };
 
 // ---- 5. Som: parallellogrammethode en a + (−a) --------------------------------------
+const TEKEN_PG = `<div class="kader"><div class="kader-titel">Stippellijnen tekenen op de computer (verplicht)</div>
+  <p>Bij de parallellogrammethode teken je eerst $\\vec{a}$ en $\\vec{b}$, daarna <b>twee stippellijnen</b>. Kies de knop met de stippellijn en klik <b>twee roosterpunten</b> die op de lijn liggen:
+  de kop van de vector en een tweede punt. De lijn moet door die kop gaan en evenwijdig zijn met de andere vector.
+  Zodra beide stippellijnen er staan, zie je hun <b style="color:#c0392b">snijpunt</b> in het rood: daar eindigt $\\vec{a} + \\vec{b}$.</p></div>`;
 const D5 = {
   nr: 5, titel: 'De som: parallellogrammethode', kort: 'a en b vanuit hetzelfde punt; de diagonaal is a + b. En a + (−a) = 0.', rekenmachine: false,
   theorie: `<div class="kader def"><div class="kader-titel">De parallellogrammethode</div>
-      <ol><li>Teken $\\vec{a}$ en $\\vec{b}$ vanuit <b>hetzelfde startpunt</b>.</li><li>Vervolledig de figuur tot een parallellogram.</li><li>De diagonaal vanuit het startpunt is $\\vec{a} + \\vec{b}$.</li></ol>
+      <ol><li>Teken $\\vec{a}$ en $\\vec{b}$ vanuit <b>hetzelfde startpunt</b>.</li><li>Trek door de kop van $\\vec{a}$ een <b>stippellijn evenwijdig met</b> $\\vec{b}$, en door de kop van $\\vec{b}$ een stippellijn evenwijdig met $\\vec{a}$. Zo vervolledig je de figuur tot een parallellogram.</li><li>Het <b>snijpunt van de stippellijnen</b> is de kop van de som: de diagonaal vanuit het startpunt naar dat snijpunt is $\\vec{a} + \\vec{b}$.</li></ol>
       ${vfig({ h: 6, b: 9, gegeven: [{ van: [1, 1], d: [4, 1], naam: 'a' }, { van: [1, 1], d: [1, 3], naam: 'b' }, { van: [1, 1], d: [5, 4], naam: 'a+b', kleur: OR }], lijnen: [{ van: [5, 2], naar: [6, 5], stippel: true }, { van: [2, 4], naar: [6, 5], stippel: true }] })}
       <p>Beide methodes geven <b>dezelfde som</b>. De parallellogrammethode is handig als de vectoren in hetzelfde punt starten, zoals krachten op een voorwerp.</p></div>
     <div class="kader eig"><div class="kader-titel">Een vector plus zijn tegengestelde vector</div>
-      <p>Tel je bij $\\vec{a}$ zijn tegengestelde vector op, dan kom je terug in het startpunt: $\\vec{a} + (-\\vec{a}) = \\vec{0}$.</p></div>${TEKENEN}`,
+      <p>Tel je bij $\\vec{a}$ zijn tegengestelde vector op, dan kom je terug in het startpunt: $\\vec{a} + (-\\vec{a}) = \\vec{0}$.</p></div>${TEKENEN}${TEKEN_PG}`,
   voorbeelden: [
     { html: `Teken $\\vec{a} + \\vec{b}$ met de parallellogrammethode, vanuit P. ${vfig({ h: 7, b: 14, gegeven: [{ van: [0, 5], d: [4, 1], naam: 'a' }, { van: [1, 1], d: [1, 3], naam: 'b' }], punten: [{ p: [7, 1], naam: 'P' }] })}`,
-      stappen: ['\\text{Teken } \\vec{a} \\text{ en } \\vec{b} \\text{ allebei vanuit P.}', '\\text{Trek door de kop van } \\vec{a} \\text{ een lijn evenwijdig met } \\vec{b}\\text{, en omgekeerd.}',
+      stappen: ['\\text{Teken } \\vec{a} \\text{ en } \\vec{b} \\text{ allebei vanuit P.}', '\\text{Trek door de kop van } \\vec{a} \\text{ een stippellijn evenwijdig met } \\vec{b}\\text{, en door de kop van } \\vec{b} \\text{ een stippellijn evenwijdig met } \\vec{a}\\text{.}',
         stapfig({ h: 7, b: 14, gegeven: [{ van: [0, 5], d: [4, 1], naam: 'a' }, { van: [1, 1], d: [1, 3], naam: 'b' }], punten: [{ p: [7, 1], naam: 'P' }], lijnen: [{ van: [11, 2], naar: [12, 5], stippel: true }, { van: [8, 4], naar: [12, 5], stippel: true }] }, [{ van: [7, 1], d: [4, 1], naam: 'a', kleur: BL }, { van: [7, 1], d: [1, 3], naam: 'b', kleur: OR }, { van: [7, 1], d: [5, 4], naam: 'a+b', kleur: GR }]),
-        '\\text{De diagonaal vanuit P is } \\vec{a} + \\vec{b}\\text{: 5 naar rechts en 4 omhoog. Dezelfde som als met kop-staart!}'] },
+        '\\text{De stippellijnen snijden elkaar in de kop van de som. De diagonaal van P naar dat snijpunt is } \\vec{a} + \\vec{b}\\text{: 5 naar rechts en 4 omhoog. Dezelfde som als met kop-staart!}'] },
     { html: `Wat is $\\vec{a} + (-\\vec{a})$?`,
       stappen: ['\\text{Teken } \\vec{a}\\text{, en vanuit de kop van } \\vec{a} \\text{ de vector } -\\vec{a}\\text{: even lang, maar terug.}',
         stapfig({ h: 5, b: 9, gegeven: [] }, [{ van: [2, 1], d: [5, 3], naam: 'a', kleur: BL }, { van: [7, 4], d: [-5, -3], naam: '-a', kleur: OR }]), '\\text{Je komt terug in het startpunt: } \\vec{a} + (-\\vec{a}) = \\vec{0}.'] },
   ],
   soorten: {
-    pg: { naam: 'Parallellogrammethode vanuit P', gen() { const o = somOpgave('pg', false); return { opdracht: 'Teken a en b vanuit P, en dan a + b.', html: `<p class="opgave-tekst">Teken met de parallellogrammethode: $\\vec{a}$ en $\\vec{b}$ allebei vanuit P, en dan $\\vec{a} + \\vec{b}$.</p>`, antw: o.antw, uitleg: [uitlegD('a', o.a), uitlegD('b', o.b), `\\vec{a} + \\vec{b}\\text{: ${woorden(o.s)}}`] }; } },
+    pg: { naam: 'Parallellogrammethode vanuit P', gen() { const o = somOpgave('pg', false); return { opdracht: 'Teken a en b vanuit P, de twee stippellijnen en dan a + b.', html: `<p class="opgave-tekst">Teken met de parallellogrammethode: $\\vec{a}$ en $\\vec{b}$ allebei vanuit P, dan de twee stippellijnen, en tot slot $\\vec{a} + \\vec{b}$ naar het snijpunt van de stippellijnen.</p>`, antw: o.antw, uitleg: [uitlegD('a', o.a), uitlegD('b', o.b), '\\text{Stippellijnen: door de kop van } \\vec{a} \\parallel \\vec{b}\\text{ en door de kop van } \\vec{b} \\parallel \\vec{a}', `\\vec{a} + \\vec{b}\\text{: ${woorden(o.s)}}`] }; } },
+    pgvrij: { naam: 'Parallellogrammethode, zelf een startpunt kiezen', gen() { const o = somOpgave('pg', true); return { opdracht: 'Teken a + b met de parallellogrammethode (startpunt vrij).', html: `<p class="opgave-tekst">Kies zelf een startpunt in het rooster. Teken $\\vec{a}$ en $\\vec{b}$ vanuit dat punt, de twee stippellijnen, en dan $\\vec{a} + \\vec{b}$.</p>`, antw: o.antw, uitleg: [uitlegD('a', o.a), uitlegD('b', o.b), `\\vec{a} + \\vec{b}\\text{: ${woorden(o.s)}}`] }; } },
     nul: { naam: 'a + (−a) tekenen', gen() {
       for (;;) {
         const a = rv(4, 4); if (!pastInStrook([a])) continue;
@@ -231,11 +244,19 @@ const D5 = {
         ['Bij de parallellogrammethode teken je a en b …', ['vanuit hetzelfde startpunt', 'b vanuit de kop van a', 'in tegengestelde zin', 'evenwijdig naast elkaar']],
         ['a + b en b + a zijn …', ['gelijke vectoren', 'tegengestelde vectoren', 'altijd de nulvector', 'verschillend van richting']],
         ['Twee krachten grijpen aan in hetzelfde punt van een voorwerp. Welke methode is dan het handigst?', ['de parallellogrammethode', 'de kop-staartmethode', 'geen van beide', 'vermenigvuldigen met een getal']],
+        ['De stippellijn door de kop van a teken je …', ['evenwijdig met b', 'evenwijdig met a', 'loodrecht op a', 'door het startpunt van b']],
+        ['De stippellijn door de kop van b teken je …', ['evenwijdig met a', 'evenwijdig met b', 'loodrecht op b', 'door het startpunt van a']],
+        ['Het snijpunt van de twee stippellijnen is …', ['de kop (het eindpunt) van a + b', 'het startpunt van a + b', 'de kop van a', 'het midden van a + b']],
+        ['De vector a + b is bij de parallellogrammethode …', ['de diagonaal vanuit het gemeenschappelijke startpunt', 'de andere diagonaal', 'een zijde van het parallellogram', 'de stippellijn door de kop van a']],
+        ['Welke figuur vormen a, b en de twee stippellijnen samen?', ['een parallellogram', 'altijd een vierkant', 'een driehoek', 'een trapezium met één paar evenwijdige zijden']],
+        ['De overstaande zijden van het parallellogram zijn …', ['evenwijdig en even lang', 'loodrecht op elkaar', 'altijd verschillend van lengte', 'tegengestelde vectoren van a + b']],
+        ['a staat horizontaal en b verticaal, vanuit hetzelfde punt. Het parallellogram is dan …', ['een rechthoek', 'een driehoek', 'een ruit met schuine zijden', 'niet te tekenen']],
+        ['Waarom moeten a en b bij deze methode in hetzelfde punt starten?', ['anders vormen ze geen parallellogram met de diagonaal a + b', 'omdat ze dan even lang worden', 'omdat de som anders nul is', 'dat hoeft niet, je mag ze overal tekenen']],
       ]);
     } },
   },
-  oefenMix: [['pg', 2], ['nul', 1], ['begrip', 1]],
-  test: [['pg', 5], ['nul', 2], ['begrip', 3]], testSchudden: true,
+  oefenMix: [['pg', 3], ['pgvrij', 1], ['nul', 1], ['begrip', 1]],
+  test: [['pg', 4], ['pgvrij', 2], ['nul', 1], ['begrip', 3]], testSchudden: true,
 };
 
 // ---- 6. Vermenigvuldiging met een getal ----------------------------------------------
@@ -406,6 +427,11 @@ const D9 = {
         ['Bij een verschuiving over v …', ['verplaatsen alle punten zich over dezelfde vector v', 'draait de figuur rond een punt', 'wordt de figuur groter', 'verplaatst enkel één hoekpunt']],
         ['Het beeld van een figuur onder een verschuiving …', ['heeft dezelfde vorm en dezelfde grootte', 'is altijd groter', 'is gespiegeld', 'heeft een andere vorm']],
         ["Bij een verschuiving zijn de vectoren AA', BB' en CC' …", ['gelijke vectoren', 'tegengestelde vectoren', 'telkens de nulvector', 'verschillend van grootte']],
+        ['Een verschuiving over de nulvector …', ['laat elke figuur op haar plaats', 'spiegelt de figuur', 'maakt de figuur kleiner', 'draait de figuur een halve toer']],
+        ["Driehoek A'B'C' is het beeld van ABC onder een verschuiving. Dan is A'B' …", ['even lang als AB', 'twee keer zo lang als AB', 'loodrecht op AB', 'altijd korter dan AB']],
+        ["Je verschuift een figuur over v en daarna over −v. Dan …", ['ligt de figuur terug op haar oorspronkelijke plaats', 'is de figuur twee keer zo ver verschoven', 'is de figuur gespiegeld', 'is de figuur verdwenen']],
+        ["Om het beeld van een veelhoek te tekenen, verschuif je …", ['elk hoekpunt over dezelfde vector', 'enkel het eerste hoekpunt', 'elk hoekpunt over een andere vector', 'de zijden loodrecht op de vector']],
+        ["Bij een verschuiving zijn een zijde en haar beeld …", ['evenwijdig en even lang', 'loodrecht op elkaar', 'altijd van verschillende lengte', 'tegengestelde vectoren']],
       ]);
     } },
   },
@@ -445,8 +471,8 @@ const D10 = {
         const [x, y, c] = kies(TRIPEL), sx = kies([1, -1]), sy = kies([1, -1]);
         const F1 = [sx * x, 0], F2 = [0, sy * y], F = som(F1, F2);
         const P = startVoor([[0, 0], F1, F2, F], 0); if (!P) continue;
-        return { opdracht: 'Teken de resulterende kracht en bepaal haar grootte (1 vakje = 10 N).', html: `<p class="opgave-tekst">Op een kist in P werken $\\vec{F_1}$ (${x * 10} N) en $\\vec{F_2}$ (${y * 10} N). Teken de resulterende kracht $\\vec{F}$ vanuit P met de parallellogrammethode. Schaal: 1 vakje = 10 N.</p>`,
-          antw: delen(['', tekenAntw({ punten: [{ p: P, naam: 'P' }], gegeven: [{ van: P, d: F1, naam: 'F1', kleur: '#b0590f' }, { van: P, d: F2, naam: 'F2', kleur: '#1c4e8a' }], teken: [{ naam: 'F', d: F, van: P }] })],
+        return { opdracht: 'Teken de resulterende kracht en bepaal haar grootte (1 vakje = 10 N).', html: `<p class="opgave-tekst">Op een kist in P werken $\\vec{F_1}$ (${x * 10} N) en $\\vec{F_2}$ (${y * 10} N). Teken met de parallellogrammethode eerst de twee stippellijnen en dan de resulterende kracht $\\vec{F}$ vanuit P. Schaal: 1 vakje = 10 N.</p>`,
+          antw: delen(['', tekenAntw({ punten: [{ p: P, naam: 'P' }], gegeven: [{ van: P, d: F1, naam: 'F1', kleur: '#b0590f' }, { van: P, d: F2, naam: 'F2', kleur: '#1c4e8a' }], teken: [...hulpPGgeg(F1, F2), { naam: 'F', d: F, van: P }] })],
             ['\\text{grootte van } \\vec{F} =', grootteKeuze(c, x, y, { f: 10, t: 'N' })]),
           uitleg: [`\\vec{F}\\text{: ${woorden(F)}}`, `\\text{De pijl is ${c} vakjes lang, dus ${c * 10} N.}`] };
       }
@@ -456,8 +482,8 @@ const D10 = {
         const [y, x, c] = kies(TRIPEL), sx = kies([1, -1]);
         const v1 = [0, y], v2 = [sx * x, 0], v = som(v1, v2);
         const P = startVoor([[0, 0], v1, v2, v], 0); if (!P) continue;
-        return { opdracht: 'Teken de werkelijke snelheid en bepaal haar grootte (1 vakje = 1 m/s).', html: `<p class="opgave-tekst">Een boot vaart met ${y} m/s naar de overkant ($\\vec{v_1}$). Het water stroomt met ${x} m/s naar ${sx > 0 ? 'rechts' : 'links'} ($\\vec{v_2}$). Teken de werkelijke snelheid $\\vec{v}$ vanuit P. Schaal: 1 vakje = 1 m/s.</p>`,
-          antw: delen(['', tekenAntw({ punten: [{ p: P, naam: 'P' }], gegeven: [{ van: P, d: v1, naam: 'v1', kleur: '#b0590f' }, { van: P, d: v2, naam: 'v2', kleur: '#1c4e8a' }], teken: [{ naam: 'v', d: v, van: P }] })],
+        return { opdracht: 'Teken de werkelijke snelheid en bepaal haar grootte (1 vakje = 1 m/s).', html: `<p class="opgave-tekst">Een boot vaart met ${y} m/s naar de overkant ($\\vec{v_1}$). Het water stroomt met ${x} m/s naar ${sx > 0 ? 'rechts' : 'links'} ($\\vec{v_2}$). Teken met de parallellogrammethode de twee stippellijnen en dan de werkelijke snelheid $\\vec{v}$ vanuit P. Schaal: 1 vakje = 1 m/s.</p>`,
+          antw: delen(['', tekenAntw({ punten: [{ p: P, naam: 'P' }], gegeven: [{ van: P, d: v1, naam: 'v1', kleur: '#b0590f' }, { van: P, d: v2, naam: 'v2', kleur: '#1c4e8a' }], teken: [...hulpPGgeg(v1, v2), { naam: 'v', d: v, van: P }] })],
             ['\\text{grootte van } \\vec{v} =', grootteKeuze(c, x, y, { f: 1, t: 'm/s' })]),
           uitleg: [`\\vec{v} = \\vec{v_1} + \\vec{v_2}\\text{: ${woorden(v)}}`, `\\text{De pijl is ${c} vakjes lang: ${c} m/s.}`] };
       }
@@ -495,6 +521,17 @@ const D11 = {
   oefenMix: [['te', 1], ['tg', 1], ['ks', 1], ['pg', 1], ['k', 1], ['vs', 1], ['co', 1], ['sch', 1], ['kr', 1], ['wa', 1]],
   test: [['te', 1], ['tg', 1], ['ks', 1], ['pg', 1], ['k', 1], ['vs', 1], ['co', 1], ['sch', 1], ['kr', 1], ['wa', 1]], testSchudden: false,
 };
+
+// Unieke sleutel per vraag: de opgavetekst is bij tekenvragen vaak gelijk, de vectoren niet.
+// Zonder sleutel vielen bij het samenstellen van een test vragen weg en kwam bij het oefenen dezelfde opgave terug.
+const antwSleutel = (a) => !a ? '' : a.soort === 'keuze' ? 'k:' + ((a.opties.find(o => o.k === a.juist) || {}).l)
+  : a.soort === 'delen' ? a.delen.map(d => antwSleutel(d.antw)).join('|')
+  : a.soort === 'vector' ? 'v:' + JSON.stringify([a.gegeven, a.punten, a.vormen, a.teken.map(t => [t.d, t.van || t.vb])]) : JSON.stringify(a);
+for (const D of [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11]) for (const k of Object.keys(D.soorten)) {
+  const s = D.soorten[k]; if (s._sleutel) continue;
+  const gen = s.gen; s._sleutel = true;
+  s.gen = function () { const v = gen.apply(this, arguments); if (!v.sleutel) v.sleutel = (v.html || v.tex || '') + '#' + antwSleutel(v.antw); return v; };
+}
 
 Leerpaden.registreer({
   code: 'vectoren', titel: 'Vectoren', ondertitel: 'Wiskunde · 4BW-MWW', klas: '4BW-MWW', drempel: 70,
