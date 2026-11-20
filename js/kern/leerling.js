@@ -21,7 +21,8 @@
     const testen = st.testen.filter(t => t.deel === nr);
     const bezig = testen.find(t => t.status === 'bezig');
     const ingediend = testen.filter(t => t.status === 'ingediend');
-    const over = (st.toegestaan[nr] || 1) - testen.length;
+    // Niet geslaagd? De test gaat automatisch opnieuw open (nieuwe vragen); elke poging telt.
+    const over = geslaagd ? 0 : Infinity;
     const oef = st.oefeningen[nr] || { aantal: 0, juist: 0 };
     const beste = ingediend.reduce((b, t) => (!b || t.score > b.score ? t : b), null);
     return { d, geslaagd, open, testen, bezig, ingediend, over, oef, beste, laatste: ingediend[ingediend.length - 1] };
@@ -313,12 +314,13 @@
       <ul class="regels">
         <li>De test bestaat uit <b>${aantal} vragen</b>.</li>
         <li>Je hebt minstens <b>${nodig(aantal)}/${aantal}</b> (${S.status.drempel}%) nodig om naar het volgende deel te gaan.</li>
-        <li>Je kan de test <b>maar één keer</b> maken. Zodra je start, telt je poging, ook als je de pagina sluit.</li>
+        <li>Zodra je start, telt je poging, ook als je de pagina sluit. <b>Elke poging telt mee</b> voor je punten.</li>
+        <li>Niet geslaagd? Bekijk je fouten, oefen verder en probeer de test daarna opnieuw (met nieuwe vragen).</li>
         <li>${d.rekenmachine === true ? 'Je mag je <b>rekenmachine</b> gebruiken. ' : d.rekenmachine === false ? 'Gebruik <b>geen rekenmachine</b>. ' : ''}Neem een kladblad om je tussenstappen te noteren.</li>
         ${(d.testRegels || []).map(r => `<li>${r}</li>`).join('')}
         <li>Een antwoord dat klopt maar niet in de gevraagde vorm staat (bv. niet vereenvoudigd of niet afgerond zoals gevraagd), telt als fout.</li>
       </ul>
-      ${i.ingediend.length ? `<p class="klein">Je leerkracht heeft de test opnieuw opengezet. Vorige score: ${i.laatste.score}/${i.laatste.max}.</p>` : ''}
+      ${i.ingediend.length ? `<p class="klein">Dit wordt je <b>poging ${i.ingediend.length + 1}</b>. Vorige score: ${i.laatste.score}/${i.laatste.max}.</p>` : ''}
       <div class="melding info">Twijfel je nog? <button class="link" data-a="tab" data-tab="oefenen">Oefen eerst nog wat</button>.</div>
       <div class="knoppen"><button class="oranje" data-a="teststart">Start de test</button></div></div>
       ${lijstIngediend(i)}`;
@@ -370,7 +372,7 @@
         ${r.geslaagd
           ? `<p><b>Proficiat, je bent geslaagd!</b> ${volgende ? `Deel ${volgende.nr} is nu open.` : 'Je hebt het hele leerpad afgewerkt!'}</p>
              <div class="knoppen" style="justify-content:center">${volgende && volgende.klaar ? `<button data-a="deel" data-nr="${volgende.nr}">Naar deel ${volgende.nr} →</button>` : ''}${pdfKnop}</div>`
-          : `<p>Je had minstens ${nodig(r.max)}/${r.max} nodig. Bekijk hieronder je fouten en oefen verder. Je leerkracht kan de test daarna opnieuw openzetten.</p>
+          : `<p>Je had minstens ${nodig(r.max)}/${r.max} nodig. Bekijk hieronder je fouten en oefen verder. Daarna kan je de test opnieuw maken, met nieuwe vragen.</p>
              <div class="knoppen" style="justify-content:center"><button data-a="tab" data-tab="oefenen">Verder oefenen</button>${pdfKnop}</div>`}
         <p class="klein">Je kan deze verbetering later altijd terugvinden onder het tabblad Test.</p>
       </div>
@@ -460,7 +462,7 @@
   async function testStart() {
     const d = deelVan(S.deel), i = info(d.nr);
     if (!i.bezig) {
-      const ok = await modaal('Test starten?', '<p>Je kan deze test maar <b>één keer</b> maken. Zodra je start, telt je poging.</p>', [['Nog niet', false, 'licht'], ['Start de test', true, 'oranje']]);
+      const ok = await modaal('Test starten?', '<p>Zodra je start, telt je poging (ook als je de pagina sluit). Elke poging telt mee voor je punten.</p>', [['Nog niet', false, 'licht'], ['Start de test', true, 'oranje']]);
       if (!ok) return;
     }
     try {

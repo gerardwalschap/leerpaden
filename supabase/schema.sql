@@ -230,9 +230,11 @@ end $$;
 
 -- Start een test. Bestaat er al een lopende test voor dit deel, dan krijg je die terug
 -- (herladen geeft dus geen nieuwe vragen en geen nieuwe kans).
+-- Niet geslaagd? Dan mag de leerling meteen een nieuwe poging starten (automatisch heropenen);
+-- elke poging blijft bewaard en telt mee.
 create or replace function ll_test_start(p_token uuid, p_programma text, p_deel int, p_vragen jsonb) returns jsonb
 language plpgsql security definer set search_path = public, extensions as $$
-declare v uuid := _leerling(p_token); t testen; gebruikt int; toegestaan int;
+declare v uuid := _leerling(p_token); t testen;
 begin
   perform _ingeschreven(v, p_programma);
   select * into t from testen where leerling_id = v and programma = p_programma and deel = p_deel and status = 'bezig'
@@ -244,9 +246,6 @@ begin
   if exists (select 1 from testen where leerling_id = v and programma = p_programma and deel = p_deel and geslaagd) then
     raise exception 'AL_GESLAAGD';
   end if;
-  select count(*) into gebruikt from testen where leerling_id = v and programma = p_programma and deel = p_deel;
-  select coalesce((select pogingen_toegestaan from toegang where leerling_id = v and programma = p_programma and deel = p_deel), 1) into toegestaan;
-  if gebruikt >= toegestaan then raise exception 'GEEN_POGINGEN'; end if;
   if jsonb_typeof(p_vragen) <> 'array' or jsonb_array_length(p_vragen) < 1 then raise exception 'GEEN_VRAGEN'; end if;
   insert into testen (leerling_id, programma, deel, vragen) values (v, p_programma, p_deel, p_vragen) returning * into t;
   return jsonb_build_object('id', t.id, 'vragen', t.vragen, 'gestart', t.gestart);

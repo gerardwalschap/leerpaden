@@ -8,7 +8,7 @@ const API = (() => {
     NIET_INGESCHREVEN: 'Je bent (nog) niet gekoppeld aan dit leerpad. Vraag het aan je leerkracht.',
     DEEL_GESLOTEN: 'Dit deel is nog niet open.',
     AL_GESLAAGD: 'Je bent al geslaagd voor deze test.',
-    GEEN_POGINGEN: 'Je hebt deze test al gemaakt. Enkel je leerkracht kan hem opnieuw openzetten.',
+    GEEN_POGINGEN: 'De test kan nog niet opnieuw starten: de databank is nog niet bijgewerkt. Meld dit aan je leerkracht.',
     AL_INGEDIEND: 'Deze test is al ingediend.',
     ONBEKEND_PROGRAMMA: 'Dit programma bestaat nog niet in de databank. Meld je opnieuw aan als leerkracht.',
     ONGELDIGE_DREMPEL: 'Kies een slaagdrempel tussen 1 en 100.',

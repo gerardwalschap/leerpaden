@@ -1,4 +1,4 @@
-// Leerkrachtenpagina: programma's, leerlingen beheren en koppelen, testen heropenen, rapporten downloaden.
+// Leerkrachtenpagina: programma's, leerlingen beheren en koppelen, testen opvolgen, rapporten downloaden.
 (() => {
   const app = document.getElementById('app');
   const esc = W.esc, T = (s) => W.tex(s);
@@ -29,10 +29,11 @@
     const testen = st.testen.filter(t => t.deel === nr);
     const bezig = testen.find(t => t.status === 'bezig');
     const ingediend = testen.filter(t => t.status === 'ingediend');
-    const over = (st.toegestaan[nr] || 1) - testen.length;
+    // Niet geslaagd? De test gaat automatisch opnieuw open; er wordt nooit meer gewacht op de leerkracht.
+    const over = geslaagd ? 0 : Infinity;
     const oef = st.oefeningen[nr] || { aantal: 0, juist: 0 };
     const beste = ingediend.reduce((b, t) => (!b || t.score > b.score ? t : b), null);
-    const wacht = open && !geslaagd && !bezig && over <= 0;
+    const wacht = false;
     return { geslaagd, open, viaTest, vrij, testen, bezig, ingediend, over, oef, beste, wacht, laatste: ingediend[ingediend.length - 1] };
   }
   function huidig(st) {
@@ -45,7 +46,7 @@
     if (i.geslaagd) return `<span class="etiket groen">✓ Geslaagd (${i.beste.score}/${i.beste.max})</span>`;
     if (!i.open) return '<span class="etiket grijs">Vergrendeld</span>';
     if (i.bezig) return '<span class="etiket oranje">Test bezig</span>';
-    if (i.wacht) return '<span class="etiket rood">Test niet geslaagd – wacht op heropenen</span>';
+    if (i.ingediend.length) return `<span class="etiket oranje">Open – ${i.ingediend.length}× niet geslaagd, mag opnieuw</span>`;
     return `<span class="etiket oranje">Open${i.vrij && !i.viaTest ? ' (door jou vrijgegeven)' : ''}</span>`;
   }
   const soortNaam = (deelnr, soort) => { const d = DELEN().find(x => x.nr === deelnr); return d && d.soorten && d.soorten[soort] ? d.soorten[soort].naam : soort; };
@@ -127,7 +128,6 @@
 
   function vOverzicht() {
     const alle = S.data.leerlingen, ll = filter(alle);
-    const wachten = ll.filter(l => l.actief && KLAAR().some(d => info(l.status, d.nr).wacht));
     const db = S.dbProgs.find(p => p.code === S.prog);
     return `${kruimel()}<div class="werkbalk"><h1 class="vul" style="margin:0">${esc(S.P.titel)} <span class="klein">(${alle.length} leerlingen)</span></h1>
         <button data-a="toevoegen">+ Nieuwe leerlingen</button>
@@ -135,10 +135,6 @@
         <button class="licht" data-a="vernieuw">Vernieuwen</button></div>
       <p class="klein">Link voor de leerlingen: <b>${esc(leerlingLink(S.prog))}</b> · slaagdrempel <b>${db ? db.drempel : 80}%</b> <button class="link" data-a="drempel">wijzigen</button></p>
       ${alle.length ? filterbalk(alle) : ''}
-      ${wachten.length ? `<div class="melding let"><b>Wachten op heropenen:</b> ${wachten.map(l => {
-        const d = KLAAR().find(d => info(l.status, d.nr).wacht);
-        return `<button class="link" data-a="leerling" data-id="${l.id}">${esc(l.voornaam)} ${esc(l.naam)}</button> (deel ${d.nr})`;
-      }).join(', ')}</div>` : ''}
       ${alle.length === 0 ? '<div class="kaart"><p>Nog geen leerlingen in dit leerpad. Klik op <b>+ Nieuwe leerlingen</b> om accounts te maken, of op <b>Bestaande leerlingen koppelen</b> als ze al een account hebben.</p></div>' : `
       <div class="werkbalk"><span class="klein vul">${ll.length} getoond</span>
         <button class="licht" data-a="csv">Overzicht (Excel)</button>
@@ -150,7 +146,7 @@
           return `<tr class="klik" data-a="leerling" data-id="${l.id}">
             <td><b>${esc(l.naam)} ${esc(l.voornaam)}</b><div class="klein">${esc(l.klas)} · ${esc(l.gebruikersnaam)}${l.actief ? '' : ' · <span class="etiket grijs">gedeactiveerd</span>'}</div></td>
             <td><div class="voortgang">${DELEN().map(d => { const i = info(st, d.nr); return `<span class="${i.geslaagd ? 'g' : i.wacht ? 'w' : (i.open && d.klaar) ? 'b' : ''}" title="Deel ${d.nr}: ${esc(d.titel)}">${d.nr}</span>`; }).join('')}</div></td>
-            <td>${h === 'klaar' ? '<span class="etiket groen">Alles geslaagd</span>' : h ? `Deel ${h.nr}${info(st, h.nr).wacht ? ' <span class="etiket rood">wacht</span>' : info(st, h.nr).bezig ? ' <span class="etiket oranje">test bezig</span>' : ''}` : '—'}</td>
+            <td>${h === 'klaar' ? '<span class="etiket groen">Alles geslaagd</span>' : h ? `Deel ${h.nr}${info(st, h.nr).bezig ? ' <span class="etiket oranje">test bezig</span>' : ''}${(n => n ? ` <span class="etiket rood" title="aantal niet-geslaagde pogingen voor dit deel">${n}× niet geslaagd</span>` : '')(info(st, h.nr).ingediend.filter(t => !t.geslaagd).length)}` : '—'}</td>
             <td>${tot.aantal} <span class="klein">(${pct(tot.juist, tot.aantal)} juist)</span></td>
             <td class="klein">${datum(l.laatst_actief)}</td>
             <td><button class="licht" data-a="rapport" data-id="${l.id}">Rapport</button></td></tr>`;
@@ -158,7 +154,6 @@
       </table></div>
       <p class="klein legende"><span class="voortgang"><span class="g"></span></span> geslaagd
         <span class="voortgang"><span class="b"></span></span> open
-        <span class="voortgang"><span class="w"></span></span> test niet geslaagd, wacht op heropenen
         <span class="voortgang"><span></span></span> vergrendeld</p>`}`;
   }
 
@@ -290,7 +285,6 @@
                 <tr class="verborgen" id="test-${t.id}"><td colspan="5">${vol ? testDetail(vol, d) : ''}</td></tr>`;
             }).join('')}</table>` : '<p class="klein">Nog geen test gemaakt.</p>'}
           <div class="knoppen" style="justify-content:flex-start">
-            ${d.klaar && i.open && !i.geslaagd && !i.bezig && i.over <= 0 ? `<button class="oranje" data-a="heropen" data-deel="${d.nr}">Test opnieuw openzetten</button>` : ''}
             ${d.klaar && d.nr > 1 && !i.viaTest ? (i.vrij ? `<button class="licht" data-a="vrij" data-deel="${d.nr}" data-aan="0">Vrijgave intrekken</button>` : `<button class="licht" data-a="vrij" data-deel="${d.nr}" data-aan="1">Deel vrijgeven zonder test</button>`) : ''}
           </div></div>`;
       }).join('')}
@@ -658,7 +652,7 @@
       ${stap(2, 'Kies je leerpad', 'Je ziet enkel de leerpaden die je leerkracht voor jou heeft opengezet. Heb je er meer dan één, kies dan eerst het vak en daarna het leerpad. Heb je er maar één, dan kom je er meteen in.')}
       ${stap(3, 'Werk deel per deel', 'Een leerpad bestaat uit delen. Elk deel heeft vier stappen: <b>Theorie</b> (lees aandachtig), <b>Voorbeelden</b> (probeer eerst zelf, klik dan stap voor stap door de oplossing), <b>Oefenen</b> en <b>Test</b>.')}
       ${stap(4, 'Oefenen', 'Je mag zoveel oefenen als je wil. Na elke oefening zie je meteen of je antwoord juist is, met de volledige uitwerking. Oefen tot het vlot gaat, pas dan maak je de test.')}
-      ${stap(5, 'De test', `Een test heeft 10 vragen en je krijgt <b>één poging</b>. Die telt vanaf het moment dat je hem start: de pagina herladen of sluiten helpt niet. Haal je ${drempel ? `<b>${drempel}%</b>` : 'de slaagdrempel'}, dan gaat het volgende deel open. Niet geslaagd? Oefen verder; je leerkracht kan de test opnieuw openzetten.`)}
+      ${stap(5, 'De test', `Een test heeft 10 vragen. Je poging telt vanaf het moment dat je hem start: de pagina herladen of sluiten helpt niet. Elke poging telt mee voor je punten. Haal je ${drempel ? `<b>${drempel}%</b>` : 'de slaagdrempel'}, dan gaat het volgende deel open. Niet geslaagd? Bekijk je fouten, oefen verder en maak de test opnieuw (met nieuwe vragen).`)}
       ${stap(6, 'Antwoorden typen', 'Een kommagetal typ je met een komma (<b>2,5</b>), een breuk met een schuine streep (<b>3/4</b>), een macht met <b>^</b>. De knoppen onder het vakje helpen je (√, x², …). Onder het vakje zie je hoe je antwoord gelezen wordt: kijk dat na vóór je op <i>Controleer</i> klikt.')}
       ${stap(7, 'Afmelden en hulp', 'Klik op <i>Afmelden</i> als je klaar bent, zeker op een gedeelde computer. Je voortgang wordt automatisch bewaard. Wachtwoord vergeten of een probleem? Vraag het aan je leerkracht.')}
       </div>`;

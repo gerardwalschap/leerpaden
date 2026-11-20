@@ -68,10 +68,11 @@ ontkoppelen. Ontkoppelen wist geen resultaten. Je kan ook een hele klas selecter
 keer koppelen, of nieuwe wachtwoorden + kaartjes maken.
 
 **Opvolgen** — per leerpad zie je de voortgang van elke leerling (filter op klas of zoek op naam).
-Bovenaan staat wie wacht op het heropenen van een test.
+Bij *Nu bezig met* zie je hoeveel keer een leerling de test van dat deel al niet haalde.
 
-* **Test opnieuw openzetten**: klik op de leerling en dan op de knop bij het deel.
-  Je ziet er ook hoeveel de leerling sinds de vorige test geoefend heeft.
+* **Niet geslaagd = automatisch opnieuw open**: de leerling kan de test meteen opnieuw maken,
+  met nieuwe vragen. Elke poging blijft bewaard (en telt mee in de puntenlijst). Bij de leerling
+  zie je hoeveel er sinds de vorige test geoefend werd.
 * **Lopende test laten vallen**: heeft een leerling per ongeluk een test gestart, dan kan je die
   wissen; dat telt dan niet als poging.
 * **Deel vrijgeven zonder test**: om een leerling bv. meteen in deel 5 te laten starten.

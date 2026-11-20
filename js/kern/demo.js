@@ -80,9 +80,6 @@ const Demo = (() => {
       if (bezig) return { id: bezig.id, vragen: bezig.vragen, gestart: bezig.gestart };
       if (!deelOpen(db, l.id, p_programma, p_deel)) fout('DEEL_GESLOTEN');
       if (db.testen.some(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel && t.geslaagd)) fout('AL_GESLAAGD');
-      const gebruikt = db.testen.filter(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel).length;
-      const mag = (db.toegang.find(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel) || { pogingen: 1 }).pogingen;
-      if (gebruikt >= mag) fout('GEEN_POGINGEN');
       const t = { id: db.volg++, ll: l.id, prog: p_programma, deel: p_deel, vragen: p_vragen, antwoorden: null, score: null, max_score: null, geslaagd: null, status: 'bezig', gestart: nu(), ingediend: null };
       db.testen.push(t); return { id: t.id, vragen: t.vragen, gestart: t.gestart };
     },
