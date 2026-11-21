@@ -203,7 +203,7 @@
       d.voorbeelden.map((v, i) => {
         const k = S.prog + '-' + d.nr + '-' + i, n = vbStap[k] || 0;
         const stap = (s) => typeof s === 'object' ? s.html : T(s);
-        return `<div class="vb"><div class="opgave"><b>Voorbeeld ${i + 1}.</b> &nbsp; ${v.html || T(v.tex)}</div>
+        return `<div class="vb"><div class="opgave"><b>Voorbeeld ${i + 1}.</b> &nbsp; ${W.opgave(v)}</div>
           <div class="stappen">${v.stappen.slice(0, n).map(s => `<div>${stap(s)}</div>`).join('')}</div>
           ${n < v.stappen.length ? `<div style="margin-top:8px"><button class="licht" data-a="vbstap" data-k="${k}">${n === 0 ? 'Toon de oplossing' : 'Volgende stap'}</button>
             ${n === 0 && v.stappen.length > 1 ? `<button class="link klein" data-a="vballes" data-k="${k}" data-n="${v.stappen.length}">alles tonen</button>` : ''}</div>` : ''}
@@ -229,7 +229,7 @@
     Object.assign(o, { vraag: v, w: Antwoord.leeg(v.antw), nagekeken: null, melding: '' });
   }
   const opdracht = (d, v) => v.opdracht || d.opdracht || 'Bereken.';
-  const opgave = (v) => v.html ? v.html : v.tex ? T('\\displaystyle ' + v.tex) : '';
+  const opgave = (v) => W.opgave(v);
   const uitlegHTML = (v) => (v.uitlegHtml || '') + [].concat(v.uitleg || []).map(u => `<div class="uitlegregel">${T(u)}</div>`).join('');
 
   function vOefenen(d) {
@@ -455,7 +455,7 @@
   }
 
   const testSleutel = (id) => `test-${S.prog}-${id}`;
-  function testOpslaan() { if (S.test && !S.test.resultaat) API.sessie.set(testSleutel(S.test.id), JSON.stringify(S.test.antw)); }
+  function testOpslaan() { if (S.test && !S.test.resultaat) API.sessie.set(testSleutel(S.test.id), JSONX.stringify(S.test.antw)); }
   function leesTestInvoer() {
     if (!S.test || S.test.resultaat || S.tab !== 'test' || S.view !== 'deel') return;
     S.test.vragen.forEach((v, k) => Antwoord.lees('t' + k, v.antw, S.test.antw[k]));
@@ -471,7 +471,7 @@
     try {
       const r = await roep('ll_test_start', { p_programma: S.prog, p_deel: d.nr, p_vragen: Leerpaden.maakTest(d) });
       let antw = null;
-      try { antw = JSON.parse(API.sessie.get(testSleutel(r.id))); } catch (e) { }
+      try { antw = JSONX.parse(API.sessie.get(testSleutel(r.id))); } catch (e) { }
       if (!Array.isArray(antw) || antw.length !== r.vragen.length) antw = r.vragen.map(v => Antwoord.leeg(v.antw));
       S.test = { id: r.id, deel: d.nr, vragen: r.vragen, antw };
       S.tab = 'test';

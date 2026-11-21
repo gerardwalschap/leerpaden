@@ -76,5 +76,10 @@ const W = (() => {
             .replace(/\\cdot/g, '·').replace(/\\colon/g, ':').replace(/\\times/g, '×').replace(/(^|[^\w])-/g, '$1−').replace(/[{}]/g, '').replace(/⦃/g, '{').replace(/⦄/g, '}').replace(/\s+/g, ' ').trim();
   }
 
-  return { rnd, kies, schud, gewogen, esc, rond, grensgeval, komma, texGetal, duizend, haakjes, wortel, ggd, breukTex, tex, renderIn, platteTekst, sup, sub };
+  // Opgave tonen: staat er naast een figuur (html) ook een formule (tex), dan komt de formule erboven.
+  function opgave(v) {
+    if (!v.html) return v.tex ? tex('\\displaystyle ' + v.tex) : '';
+    return (v.tex && !v.texInHtml ? `<div class="opg-formule">${tex('\\displaystyle ' + v.tex)}</div>` : '') + v.html;
+  }
+  return { opgave, rnd, kies, schud, gewogen, esc, rond, grensgeval, komma, texGetal, duizend, haakjes, wortel, ggd, breukTex, tex, renderIn, platteTekst, sup, sub };
 })();

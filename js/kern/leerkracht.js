@@ -306,7 +306,7 @@
     if (!t.antwoorden) return '';
     return `<div style="padding:6px 0">${t.vragen.map((v, k) => {
       const a = t.antwoorden[k] || {};
-      return `<div class="klein testregel">${a.juist ? '✓' : '✗'} <span class="opg-klein">${v.html || T('\\displaystyle ' + v.tex)}</span> &nbsp;→ juist: ${Antwoord.juistHTML(v.antw)} &nbsp;· leerling: ${a.g ? Antwoord.gegevenHTML(a.g) : `<b>${esc(a.gegeven)}</b>`}${a.bericht ? ` <i>(${esc(a.bericht)})</i>` : ''}</div>`;
+      return `<div class="klein testregel">${a.juist ? '✓' : '✗'} <span class="opg-klein">${W.opgave(v)}</span> &nbsp;→ juist: ${Antwoord.juistHTML(v.antw)} &nbsp;· leerling: ${a.g ? Antwoord.gegevenHTML(a.g) : `<b>${esc(a.gegeven)}</b>`}${a.bericht ? ` <i>(${esc(a.bericht)})</i>` : ''}</div>`;
     }).join('')}</div>`;
   }
 

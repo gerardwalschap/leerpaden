@@ -15,12 +15,12 @@ const Demo = (() => {
     };
   }
   function laad() {
-    try { const s = localStorage.getItem(SLEUTEL); if (s) geheugen = JSON.parse(s); }
+    try { const s = localStorage.getItem(SLEUTEL); if (s) geheugen = JSONX.parse(s); }
     catch (e) { /* opslag geblokkeerd: verder in geheugen */ }
     if (!geheugen) geheugen = nieuw();
     return geheugen;
   }
-  function bewaar() { try { localStorage.setItem(SLEUTEL, JSON.stringify(geheugen)); } catch (e) { /* enkel in geheugen */ } }
+  function bewaar() { try { localStorage.setItem(SLEUTEL, JSONX.stringify(geheugen)); } catch (e) { /* enkel in geheugen */ } }
   const nu = () => new Date().toISOString();
   const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
   const fout = (c) => { throw new Error(c); };
@@ -193,9 +193,9 @@ const Demo = (() => {
   async function call(fn, params) {
     const db = laad();
     if (!F[fn]) fout('ONBEKENDE_FUNCTIE');
-    const r = F[fn](db, JSON.parse(JSON.stringify(params)));
+    const r = F[fn](db, JSONX.parse(JSONX.stringify(params)));
     bewaar();
-    return r === undefined ? null : JSON.parse(JSON.stringify(r));
+    return r === undefined ? null : JSONX.parse(JSONX.stringify(r));
   }
   function wis() { geheugen = nieuw(); bewaar(); }
   return { call, wis };

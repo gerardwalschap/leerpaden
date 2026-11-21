@@ -328,7 +328,7 @@ function stukGen(x0, x1, eindKeuzes) {
   }
 }
 function domBerGrafiek() {
-  const v = kies(['een', 'een', 'een', 'twee', 'constant']);
+  const v = kies(['een', 'een', 'een', 'een', 'een', 'twee', 'twee', 'constant']);   // horizontale rechte: hooguit af en toe
   if (v === 'constant') { const c = nz(-4, 4); return [{ pts: [[-3, c], [3, c]], begin: 'door', eind: 'door' }]; }
   if (v === 'een') return [stukGen(-6, 6, ['vol', 'hol', 'door', 'vol'])];
   const L = stukGen(-6, -1, ['vol', 'hol', 'door']), R = stukGen(1, 6, ['vol', 'hol', 'door']);
@@ -513,7 +513,7 @@ const D5 = {
     } },
     zoeka: { naam: 'Zoek a', gen() {
       const a = kies([Q(2), Q(3), Q(-2), Q(-1, 2), Q(1, 2), Q(-3), Q(4), Q(3, 2), Q(-2, 3)]), p = a.n * nz(-3, 3), q = a.v * p;
-      return { soort: 'zoeka', opdracht: `De grafiek van f(x) = ax gaat door het punt (${tekst(p)}, ${tekst(q)}). Bereken a.`, tex: `f(x) = ax \\text{ door } (${tg(p)}, ${tg(q)})`, antw: getal(a.v, { voor: 'a =' }),
+      return { soort: 'zoeka', opdracht: `De grafiek van f(x) = ax gaat door het punt (${tekst(p)}, ${tekst(q)}). Bereken a.`, tex: `f(x) = ax \\text{ door } (${tg(p)}, ${tg(q)})`, antw: qGetal(a, { voor: 'a =' }),
         uitleg: [`a \\cdot ${h(p)} = ${tg(q)}`, `a = ${tg(q)} : ${h(p)} = ${qTex(a)}`] };
     } },
   },
@@ -603,7 +603,7 @@ const D7 = {
   theorie: `<div class="kader def"><div class="kader-titel">Het toenamegetal $a$</div>
       <p class="midden">$a = \\dfrac{\\Delta y}{\\Delta x} = \\dfrac{y_B - y_A}{x_B - x_A}$</p>
       <p>Kies 2 punten die je goed kan aflezen. $\\Delta x$: stappen naar rechts (naar links = negatief). $\\Delta y$: stappen naar boven (naar beneden = negatief). De volgorde van A en B mag je omwisselen, maar boven en onder in dezelfde volgorde!</p>
-      <p class="klein">In een functiewaardentabel van een eerstegraadsfunctie is de toename van $x$ overal dezelfde en de toename van $y$ ook. Is dat niet zo, dan hoort de tabel <b>niet</b> bij een eerstegraadsfunctie.</p></div>
+      <p class="klein">Bij een eerstegraadsfunctie is $a = \\frac{\\Delta y}{\\Delta x}$ overal hetzelfde. Is de toename van $x$ overal dezelfde, dan moet de toename van $y$ dus ook overal dezelfde zijn. Kom je ergens een andere $a$ uit, dan hoort de tabel <b>niet</b> bij een eerstegraadsfunctie.</p></div>
     <div class="kader eig"><div class="kader-titel">Methode 1: gegeven $a$ en één punt A</div>
       <p class="midden">$y - y_A = a(x - x_A)$</p>
       <p>Vul in, werk de haakjes uit en breng $y_A$ naar het rechterlid. &nbsp; $a = 4$, $A(3, 5)$: $y - 5 = 4(x - 3) \\Rightarrow y = 4x - 12 + 5 \\Rightarrow f(x) = 4x - 7$</p></div>
@@ -653,8 +653,9 @@ const D7 = {
       const dx = kies([1, 2, 3, 5]), dy = nz(-6, 6), x0 = rnd(-6, 0), y0 = rnd(-10, 10), ok = kies([true, false]);
       let xs = Array.from({ length: 6 }, (_, i) => x0 + i * dx), ys = xs.map((_, i) => y0 + i * dy), reden;
       if (!ok) {
-        if (kies([true, false])) { const i = rnd(2, 4); ys = ys.map((y, k) => k >= i ? y + kies([1, -1]) : y); reden = '\\text{de toename van } y \\text{ is niet overal dezelfde}'; }
-        else { const i = rnd(2, 4); xs = xs.map((x, k) => k >= i ? x + 1 : x); reden = '\\text{de toename van } x \\text{ is niet overal dezelfde}'; }
+        const i = rnd(2, 4), plus = kies([1, -1]);
+        if (kies([true, false])) { ys = ys.map((y, k) => k >= i ? y + plus : y); reden = `\\Delta x = +${dx} \\text{ overal, maar van } x = ${tg(xs[i - 1])} \\text{ naar } ${tg(xs[i])} \\text{ is } \\Delta y = ${tg(dy + plus)} \\text{ i.p.v. } ${tg(dy)}`; }
+        else { xs = xs.map((x, k) => k >= i ? x + 1 : x); reden = `\\text{van } x = ${tg(xs[i - 1])} \\text{ naar } ${tg(xs[i])} \\text{ is } \\Delta x = +${dx + 1} \\text{ maar } \\Delta y = ${tg(dy)} \\text{ blijft: } \\tfrac{\\Delta y}{\\Delta x} \\text{ is daar anders}`; }
       } else reden = `\\Delta x = +${dx} \\text{ en } \\Delta y = ${tg(dy)} \\text{ overal}`;
       return { soort: 'herken', opdracht: 'Hoort deze tabel bij een eerstegraadsfunctie?', tex: tabelTex(xs, ys), antw: keuze(kT(['ja', 'nee']), ok ? 0 : 1), uitleg: [reden, `\\text{${ok ? 'ja' : 'nee'}}`] };
     } },
@@ -672,7 +673,6 @@ function rechteDoor(x0, y0, aKeuzes) { // a (Q) en b (geheel) zodat de rechte do
   }
 }
 const A_KEUZES = [Q(1), Q(2), Q(-1), Q(-2), Q(1, 2), Q(-1, 2), Q(3), Q(-3)];
-const metVgl = (tex, fig) => `<div style="text-align:center;font-size:1.15em;margin-bottom:6px">${W.tex('\\displaystyle ' + tex)}</div>` + fig;
 const rTex = (L, n = 'f') => linTex(L.a, L.b, n);
 const exprTex = (L) => linTex(L.a, L.b, null);
 // oplossing van  f(x) teken g(x)  met snijpunt in x0, verschil = f − g heeft richting d (d > 0: f − g stijgt)
@@ -691,21 +691,21 @@ const D8 = {
     <div class="kader eig"><div class="kader-titel">Een ongelijkheid grafisch oplossen</div>
       <p>$\\tfrac12 x + 1 > 3$: waar ligt de grafiek van $f$ <b>boven</b> de rechte $y = 3$? Rechts van het snijpunt $(4, 3)$, dus voor alle $x > 4$: $V = \\,]4, +\\infty[$.</p>
       <ul><li>$f(x) > \\ldots$: de grafiek ligt <b>boven</b>, &nbsp; $f(x) < \\ldots$: de grafiek ligt <b>onder</b>.</li>
-      <li>$\\geq$ of $\\leq$: het snijpunt hoort erbij, haakje naar binnen $[\;]$. &nbsp; $>$ of $<$: het hoort er niet bij, haakje naar buiten $]\;[$.</li>
+      <li>$\\geq$ of $\\leq$: het snijpunt hoort erbij, haakje naar binnen <b>[ ]</b>. &nbsp; $>$ of $<$: het hoort er niet bij, haakje naar buiten <b>] [</b>.</li>
       <li>Opgelet bij een <b>dalende</b> rechte: $-x + 2 < 0$ is <b>rechts</b> van $x = 2$. Kijk dus altijd naar de grafiek!</li></ul></div>
     <div class="kader"><div class="kader-titel">Twee rechten</div>
       <p>$f(x) = g(x)$: waar zijn ze even hoog? De $x$-waarde van het snijpunt. &nbsp; $f(x) > g(x)$: waar ligt $f$ boven $g$?</p>
       <p class="klein">Vergelijking → één getal: $V = \\{2\\}$. Ongelijkheid → een halfrechte: $V = \\,]2, +\\infty[$.</p></div>
     <div class="kader"><div class="kader-titel">Zo typ je</div><p><code>{4}</code> &nbsp; · &nbsp; <code>]4, +∞[</code> &nbsp; · &nbsp; <code>]-∞, 4]</code>. Gebruik de knoppen $-\\infty$ en $+\\infty$ onder het invulvak.</p></div>`,
   voorbeelden: [
-    { html: metVgl('\\tfrac12 x + 1 = 3', fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: 0.5, b: 1, label: 'f' }, { a: 0, b: 3, label: 'y = 3', kleur: ORANJE }], punten: [{ x: 4, y: 3, label: '(4, 3)' }] })), tex: '\\tfrac12 x + 1 = 3', stappen: ['\\text{teken } y = 3', '\\text{snijpunt } (4, 3)', 'V = \\{4\\}'] },
-    { html: metVgl('-x + 2 < 0', fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: -1, b: 2, label: 'f' }], punten: [{ x: 2, y: 0, label: '(2, 0)', hol: true }] })), tex: '-x + 2 < 0', stappen: ['< 0: \\text{ onder de } x\\text{-as}', '\\text{de rechte daalt: onder de } x\\text{-as rechts van } x = 2', '2 \\text{ hoort er niet bij: } V = \\,]2, +\\infty['] },
+    { html: fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: 0.5, b: 1, label: 'f' }, { a: 0, b: 3, label: 'y = 3', kleur: ORANJE }], punten: [{ x: 4, y: 3, label: '(4, 3)' }] }), tex: '\\tfrac12 x + 1 = 3', stappen: ['\\text{teken } y = 3', '\\text{snijpunt } (4, 3)', 'V = \\{4\\}'] },
+    { html: fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: -1, b: 2, label: 'f' }], punten: [{ x: 2, y: 0, label: '(2, 0)', hol: true }] }), tex: '-x + 2 < 0', stappen: ['< 0: \\text{ onder de } x\\text{-as}', '\\text{de rechte daalt: onder de } x\\text{-as rechts van } x = 2', '2 \\text{ hoort er niet bij: } V = \\,]2, +\\infty['] },
   ],
   soorten: {
     vgl: { naam: 'Vergelijking: f(x) = getal', gen() {
       const x0 = rnd(-4, 4), c = kies([rnd(-5, 5), 0]), L = rechteDoor(x0, c, A_KEUZES);
       const rechten = [{ a: L.a.v, b: L.b.v, label: 'f' }]; if (c !== 0) rechten.push({ a: 0, b: c, label: `y = ${c < 0 ? '−' + -c : c}`, kleur: ORANJE });
-      return { soort: 'vgl', opdracht: 'Los grafisch op. Gebruik de grafiek van f.', tex: `${exprTex(L)} = ${tg(c)}`, html: metVgl(`${exprTex(L)} = ${tg(c)}`, fgraf({ x: [-6, 6], y: [-6, 6], rechten })), sleutel: `v${x0},${c},${L.a.t}/${L.a.n}`,
+      return { soort: 'vgl', opdracht: 'Los grafisch op. Gebruik de grafiek van f.', tex: `${exprTex(L)} = ${tg(c)}`, html: fgraf({ x: [-6, 6], y: [-6, 6], rechten }), sleutel: `v${x0},${c},${L.a.t}/${L.a.n}`,
         antw: vzAntw([{ a: x0, ai: true, b: x0, bi: true }], 'V ='),
         uitleg: [c === 0 ? '\\text{hoogte } 0 = \\text{ de } x\\text{-as}' : `\\text{teken de rechte } y = ${tg(c)}`, `\\text{snijpunt: } (${tg(x0)}, ${tg(c)})`, `V = \\{${tg(x0)}\\}`] };
     } },
@@ -713,7 +713,7 @@ const D8 = {
       const x0 = rnd(-4, 4), c = kies([rnd(-5, 5), 0]), L = rechteDoor(x0, c, A_KEUZES), t = kies(['<', '>', '<=', '>=']), [tt, waar, incl] = TEKENS[t];
       const rechten = [{ a: L.a.v, b: L.b.v, label: 'f' }]; if (c !== 0) rechten.push({ a: 0, b: c, label: `y = ${c < 0 ? '−' + -c : c}`, kleur: ORANJE });
       const iv = ivOpl(x0, t, L.a.v), rechts = iv.b === Infinity;
-      return { soort: 'ongelijk', opdracht: 'Los grafisch op. Gebruik de grafiek van f.', tex: `${exprTex(L)} ${tt} ${tg(c)}`, html: metVgl(`${exprTex(L)} ${tt} ${tg(c)}`, fgraf({ x: [-6, 6], y: [-6, 6], rechten })), sleutel: `o${x0},${c},${t},${L.a.t}/${L.a.n}`,
+      return { soort: 'ongelijk', opdracht: 'Los grafisch op. Gebruik de grafiek van f.', tex: `${exprTex(L)} ${tt} ${tg(c)}`, html: fgraf({ x: [-6, 6], y: [-6, 6], rechten }), sleutel: `o${x0},${c},${t},${L.a.t}/${L.a.n}`,
         antw: vzAntw([iv], 'V ='),
         uitleg: [`\\text{waar ligt de grafiek ${waar} } ${c === 0 ? '\\text{de } x\\text{-as}' : `\\text{de rechte } y = ${tg(c)}`}?`, `\\text{snijpunt } (${tg(x0)}, ${tg(c)}) \\text{; de rechte ${L.a.v > 0 ? 'stijgt' : 'daalt'}: ${rechts ? 'rechts' : 'links'} van } x = ${tg(x0)}`,
           `${tg(x0)} \\text{ hoort er${incl ? '' : ' niet'} bij: } V = ${vzTex([iv])}`] };
@@ -722,7 +722,7 @@ const D8 = {
       for (;;) {
         const x0 = rnd(-3, 3), y0 = rnd(-4, 4), F = rechteDoor(x0, y0, A_KEUZES), G = rechteDoor(x0, y0, A_KEUZES);
         if (F.a.v === G.a.v) continue;
-        return { soort: 'twee', opdracht: 'Los grafisch op met de grafieken van f en g.', tex: `${exprTex(F)} = ${exprTex(G)}`, html: metVgl(`${exprTex(F)} = ${exprTex(G)}`, fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: F.a.v, b: F.b.v, label: 'f' }, { a: G.a.v, b: G.b.v, label: 'g', kleur: ORANJE }] })),
+        return { soort: 'twee', opdracht: 'Los grafisch op met de grafieken van f en g.', tex: `${exprTex(F)} = ${exprTex(G)}`, html: fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: F.a.v, b: F.b.v, label: 'f' }, { a: G.a.v, b: G.b.v, label: 'g', kleur: ORANJE }] }),
           sleutel: `t${x0},${y0},${F.a.t}/${F.a.n},${G.a.t}/${G.a.n}`, antw: vzAntw([{ a: x0, ai: true, b: x0, bi: true }], 'V ='),
           uitleg: [`${rTex(F)} \\text{ en } ${rTex(G, 'g')}`, `\\text{even hoog in het snijpunt } (${tg(x0)}, ${tg(y0)})`, `\\text{enkel de } x\\text{-waarde: } V = \\{${tg(x0)}\\}`] };
       }
@@ -732,7 +732,7 @@ const D8 = {
         const x0 = rnd(-3, 3), y0 = rnd(-4, 4), F = rechteDoor(x0, y0, A_KEUZES), G = rechteDoor(x0, y0, A_KEUZES);
         if (F.a.v === G.a.v) continue;
         const t = kies(['<', '>', '<=', '>=']), [tt, waar, incl] = TEKENS[t], iv = ivOpl(x0, t, F.a.v - G.a.v);
-        return { soort: 'tweeOngelijk', opdracht: 'Los grafisch op met de grafieken van f en g.', tex: `${exprTex(F)} ${tt} ${exprTex(G)}`, html: metVgl(`${exprTex(F)} ${tt} ${exprTex(G)}`, fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: F.a.v, b: F.b.v, label: 'f' }, { a: G.a.v, b: G.b.v, label: 'g', kleur: ORANJE }] })),
+        return { soort: 'tweeOngelijk', opdracht: 'Los grafisch op met de grafieken van f en g.', tex: `${exprTex(F)} ${tt} ${exprTex(G)}`, html: fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: F.a.v, b: F.b.v, label: 'f' }, { a: G.a.v, b: G.b.v, label: 'g', kleur: ORANJE }] }),
           sleutel: `u${x0},${y0},${t},${F.a.t}/${F.a.n},${G.a.t}/${G.a.n}`, antw: vzAntw([iv], 'V ='),
           uitleg: [`\\text{waar ligt de grafiek van } f \\text{ ${waar} die van } g?`, `\\text{snijpunt } (${tg(x0)}, ${tg(y0)}) \\text{: ${iv.b === Infinity ? 'rechts' : 'links'} ervan}`, `${tg(x0)} \\text{ hoort er${incl ? '' : ' niet'} bij: } V = ${vzTex([iv])}`] };
       }

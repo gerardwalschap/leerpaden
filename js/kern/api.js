@@ -1,3 +1,9 @@
+// JSON met ±Infinity (intervallen zoals ]4, +∞[): gewone JSON maakt er null van, waardoor
+// opgeslagen testvragen hun juiste antwoord verloren. JSONX bewaart ∞ als tekstmarkering.
+const JSONX = {
+  stringify: (x) => JSON.stringify(x, (k, v) => v === Infinity ? '__+oo__' : v === -Infinity ? '__-oo__' : v),
+  parse: (t) => JSON.parse(t, (k, v) => v === '__+oo__' ? Infinity : v === '__-oo__' ? -Infinity : v),
+};
 // Verbinding met de databank (Supabase). Zonder SUPABASE_URL draait alles in demo-modus in de browser.
 const API = (() => {
   const DEMO = !(window.CONFIG && CONFIG.SUPABASE_URL);
@@ -32,12 +38,12 @@ const API = (() => {
         // nieuwe 'sb_publishable_'-sleutels gaan enkel in de apikey-header; oude JWT-sleutels ook als Bearer
         headers: Object.assign({ 'Content-Type': 'application/json', apikey: CONFIG.SUPABASE_ANON_KEY },
           String(CONFIG.SUPABASE_ANON_KEY).startsWith('eyJ') ? { Authorization: 'Bearer ' + CONFIG.SUPABASE_ANON_KEY } : {}),
-        body: JSON.stringify(params),
+        body: JSONX.stringify(params),
       });
     } catch (e) { throw new Fout('NETWERK'); }
     const txt = await r.text();
     let data = null;
-    try { data = txt ? JSON.parse(txt) : null; } catch (e) { data = txt; }
+    try { data = txt ? JSONX.parse(txt) : null; } catch (e) { data = txt; }
     if (!r.ok) throw new Fout((data && data.message) || 'NETWERK');
     return data;
   }

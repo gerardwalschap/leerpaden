@@ -310,3 +310,9 @@ De map `test/` mag blijven staan: daar kan je later een nieuwe versie eerst uitp
 - Dekt BV3_06.07. Soorten: vergelijking f(x) = c, ongelijkheid f(x) < c, twee rechten f(x) = g(x) en f(x) > g(x); antwoord als V = {…} of halfrechte (verzameling).
 - De oude delen 8, 9 en 10 zijn nu 9, 10 en 11 (eindtest). De eindtest bevat één ongelijkheid uit deel 8 (in plaats van functiewaarde berekenen).
 - Hoort bij PWP 2.8 en Werkbundel 2.8 in OneDrive (mappen 2.8 → 2.11 hernummerd).
+
+### 4q. Bugfixes na het uitproberen (21 nov 2026)
+- **∞ in opgeslagen tests**: gewone JSON maakt van ±Infinity `null`. Daardoor verloren testvragen met een halfrechte of ℝ als antwoord hun juiste antwoord (bv. "dom f = ∅" i.p.v. ℝ) en werd een juist antwoord fout gerekend. Nieuw: `JSONX` (in api.js) bewaart ∞ als tekstmarkering; gebruikt voor de databank, de demo-opslag en de sessie-opslag. Geldt voor alle leerpaden. Tests die al vóór deze update gestart waren, blijven foutief.
+- **Formule boven een figuur**: had een vraag zowel een figuur (html) als een formule (tex), dan werd de formule niet getoond (bv. "Welke rechte hoort bij het voorschrift?"). Nieuw: `W.opgave(v)` in hulp.js toont de formule boven de figuur. Ook in stelsels (D2, D8) en tweedegraadsfuncties-ax2 (D3, D9).
+- Functieleer: "Zoek a" (deel 5) geeft een breuk i.p.v. −0,6666…; uitleg bij "eerstegraadsfunctie of niet?" (deel 7) wijst de plaats aan waar Δy/Δx verandert; minder horizontale rechten bij domein en bereik.
+- test/js/leerling.js en test/js/leerkracht.js zijn opnieuw gelijkgezet met js/kern/.
