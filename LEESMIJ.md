@@ -301,3 +301,7 @@ Een leerpad hoort bij een hoofdstuk via `leerpaden: ['code-van-het-leerpad']`.
 
 **Online sinds november 2026** op de gewone links (leerlingen: …/leerpaden/, leerkracht: …/leerpaden/leerkracht.html).
 De map `test/` mag blijven staan: daar kan je later een nieuwe versie eerst uitproberen.
+
+### 4o. Functieleer: breuken als antwoord (nov 2026)
+- Toenamegetal a, nulwaarde en "a aflezen" kunnen een breuk zijn (bv. −1/3). Die vragen krijgen nu de formule-editor en het juiste antwoord wordt als breuk getoond i.p.v. −0,333333.
+- Aangepast rechtstreeks in `programmas/functieleer.js` (de bron-map van functieleer is verouderd: niet herbouwen met bouw.sh).

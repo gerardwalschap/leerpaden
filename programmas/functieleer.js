@@ -21,7 +21,7 @@ const opgave = (t) => `<p class="opgave-tekst">${t}</p>`;
 const Q = (t, n = 1) => { if (n < 0) { t = -t; n = -n; } const g = ggd(t, n); return { t: t / g, n: n / g, v: t / n }; };
 const qTex = (q) => q.n === 1 ? tg(q.t) : `${q.t < 0 ? '-' : ''}\\frac{${Math.abs(q.t)}}{${q.n}}`;
 const qStr = (q) => q.n === 1 ? String(q.t) : `(${q.t}/${q.n})`;
-const qGetal = (q, extra = {}) => getal(q.v, extra);
+const qGetal = (q, extra = {}) => getal(q.v, q.n === 1 ? extra : { editor: true, placeholder: '', tex: qTex(q), ...extra });
 // ax + b als TeX (a en b als Q of getal)
 function linTex(a, b, naam = 'f', vr = 'x') {
   a = typeof a === 'number' ? Q(a) : a; b = typeof b === 'number' ? Q(b) : b;
