@@ -353,6 +353,9 @@ const Antwoord = (() => {
     if (s.has('functie')) h += k('x', '<i>x</i>', 'x') + k('²', 'x²', 'kwadraat') + k('³', 'x³', 'derde macht') + k('√()', '√', 'vierkantswortel') + k('()', '( )', 'haakjes') + k('/', '/', 'breukstreep');
     if (s.has('editor')) { const kb = k('/', '<span class="tk-breuk"><span>a</span><span>b</span></span>', 'breuk'); h = h.includes('data-ins="/"') ? h.replace(/<button[^>]*data-ins="\/"[^>]*>[^<]*<\/button>/, kb) : kb + h; }
     if (!h) return '';
+    // dubbele toetsen weglaten (bv. een test met wortels én veeltermen: één keer ( ), ·, /, xⁿ)
+    const gezien = new Set();
+    h = h.replace(/<button type="button" class="tk" data-ins="([^"]*)"[^>]*>.*?<\/button>/g, (m, ins) => gezien.has(ins) ? '' : (gezien.add(ins), m));
     return `<div class="toetsenbord" role="toolbar" aria-label="Wiskundige tekens">${h}${k('⌫', '⌫', 'wis laatste teken')}</div>`;
   }
   function voegIn(el, txt) {

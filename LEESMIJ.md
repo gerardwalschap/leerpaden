@@ -257,6 +257,46 @@ met gerichte tips (verkeerd bereik, STDEV.P in plaats van STDEV.S, 1 − vergete
 Stond de computer van een leerling in donkere modus, dan werd het vakje van een breuk (of ander deel van de formule) waarin je typt donkergrijs,
 zodat je de cijfers niet meer zag. De formule-editor blijft nu altijd in lichte kleuren (`css/platform.css`): dat geldt meteen voor alle leerpaden.
 
+## 4p. De instaptoets getallenleer (7VJHO) — november 2026
+
+**Eenmalig nodig:** voer `supabase/update-instaptoets.sql` uit (Supabase → SQL Editor → New query → plakken → **Run**).
+Er gaat niets verloren en de gewone leerpaden werken zoals voordien.
+
+De instaptoets staat bij **7VJHO › Wiskunde** als eerste rij (★ *Instaptoets*), vóór hoofdstuk 1.
+Bedoeld voor de eerste schooldag: het niveau van elke leerling bepalen in getallenleer.
+
+* **Geen theorie, geen oefenen**: de leerling komt meteen bij de toets.
+* **40 vragen, zonder rekenmachine**, ongeveer 50 à 60 minuten (de leerlingen krijgen twee lesuren).
+* **Deel A · Basis**: 24 vragen (6 per getallenverzameling) = 60 punten.
+  **Deel B · Uitdagend**: 16 vragen (4 per getallenverzameling) = 40 punten.
+  Elke vraag telt even zwaar (2,5 punten op 100); per getallenverzameling (ℕ, ℤ, ℚ, ℝ) 25 punten.
+* **Niveau**: minder dan 70/100 = **Beginner**, 70/100 of meer = **Gevorderd**.
+  Met enkel het basisdeel (max. 60) is een leerling dus nooit gevorderd: er moet ook uitdagend werk juist zijn.
+* **Eén poging.** Sluit een leerling per ongeluk de pagina, dan kan hij verdergaan (zelfde vragen, antwoorden bewaard).
+  Liep er iets mis? Klik op de leerling → **Nieuwe poging geven**. Een gestarte maar niet ingediende toets kan je
+  ook laten vallen (telt dan niet).
+* **De vragen** komen uit de leerpaden Rekenen in ℕ, ℤ, ℚ en De reële getallen (zelfde notaties, afspraken en verbetering:
+  bv. procenten met een verhoudingstabel). Elke leerling krijgt andere getallen.
+* **Na het indienen** ziet de leerling zijn score op 100, zijn niveau, een tabel per getallenverzameling en de verbetering (ook als PDF).
+* **Resultatenoverzicht** (leerkrachtpagina, instaptoets openen): per leerling score, niveau, punten per getallenverzameling,
+  basis en uitdagend; filter per klas, sorteer op score; download als **Excel** of **PDF**; per leerling de verbetering (PDF).
+  De instaptoets staat niet in het afdrukcentrum (telt niet voor Skore).
+* **Doorschakelen gebeurt niet automatisch**: je koppelt de leerlingen zelf aan het juiste leerpad
+  (later bv. *Natuurlijke getallen* of *Natuurlijke getallen +*).
+
+Inhoud (vraag per vraag):
+
+| | ℕ | ℤ | ℚ | ℝ |
+|---|---|---|---|---|
+| **Basis** | volgorde · volgorde met wortels · eentermen vereenvoudigen · getalwaarde · vergelijken · x% van een getal | optellen · aftrekken · vermenigvuldigen/delen · (−a)ⁿ · vierkantswortels · getalwaarde | afronden · breuk vereenvoudigen · percentage → breuk · breuk op de getallenas · breuken optellen/aftrekken · breuken vermenigvuldigen | ℚ of ℝ\ℚ · derdemachtswortel · wortel vereenvoudigen · wortels optellen · ongelijkheid → interval · logaritme |
+| **Uitdagend** | volgorde met logaritmen · vraagstuk procenten · recht of omgekeerd evenredig · omgekeerde evenredigheid | volgorde in ℤ · −aⁿ · rekenregels machten · uitwerken en vereenvoudigen | breuken delen · negatieve exponent · volgorde in ℚ · repeterend → breuk | eerst vereenvoudigen, dan optellen · noemer wortelvrij · wortel → rationale exponent · vergelijking met haakjes |
+
+De samenstelling, de grens van 70 en de teksten voor de leerling staan in `bron/instaptoets-7vjho/0-basis.js`.
+Na een aanpassing: `sh bron/bouw.sh instaptoets-7vjho` (bouwt enkel dit programma).
+
+> Ook nieuw: dubbele knoppen op het toetsenbord onder een test (bv. twee keer `( )`) worden nu weggelaten,
+> in alle leerpaden.
+
 ## Inlogbrieven
 
 Na het aanmaken van accounts (of nieuwe wachtwoorden) krijg je per leerling **één A4** met de inloggegevens én de handleiding.

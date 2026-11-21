@@ -8,7 +8,7 @@ const Demo = (() => {
     const LP = typeof Leerpaden !== 'undefined' ? Leerpaden.lijst : [];
     const eerste = LP[0] ? LP[0].code : 'demo';
     return {
-      lk: 'demo', programmas: LP.map(p => ({ code: p.code, titel: p.titel, drempel: 80, aangemaakt: new Date().toISOString() })),
+      lk: 'demo', programmas: LP.map(p => ({ code: p.code, titel: p.titel, drempel: 80, eenmalig: !!p.eenmalig, aangemaakt: new Date().toISOString() })),
       leerlingen: [{ id: 'd1', gebruikersnaam: 'demo', voornaam: 'Demo', naam: 'Leerling', klas: '7VJHO', pw: 'demo', actief: true, aangemaakt: new Date().toISOString(), laatst_actief: null }],
       inschrijvingen: [{ ll: 'd1', prog: eerste, sinds: new Date().toISOString() }],
       sessies: [], oefeningen: [], testen: [], toegang: [], volg: 1,
@@ -79,7 +79,12 @@ const Demo = (() => {
       const bezig = db.testen.find(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel && t.status === 'bezig');
       if (bezig) return { id: bezig.id, vragen: bezig.vragen, gestart: bezig.gestart };
       if (!deelOpen(db, l.id, p_programma, p_deel)) fout('DEEL_GESLOTEN');
-      if (db.testen.some(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel && t.geslaagd)) fout('AL_GESLAAGD');
+      const pr = db.programmas.find(x => x.code === p_programma);
+      if (pr && pr.eenmalig) { // één poging, tenzij de leerkracht er een extra gaf
+        const gebruikt = db.testen.filter(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel).length;
+        const tg = db.toegang.find(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel);
+        if (gebruikt >= (tg ? tg.pogingen : 1)) fout('AL_GEMAAKT');
+      } else if (db.testen.some(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel && t.geslaagd)) fout('AL_GESLAAGD');
       const t = { id: db.volg++, ll: l.id, prog: p_programma, deel: p_deel, vragen: p_vragen, antwoorden: null, score: null, max_score: null, geslaagd: null, status: 'bezig', gestart: nu(), ingediend: null };
       db.testen.push(t); return { id: t.id, vragen: t.vragen, gestart: t.gestart };
     },
@@ -105,8 +110,8 @@ const Demo = (() => {
     lk_logout(db, { p_token }) { db.sessies = db.sessies.filter(s => s.token !== p_token); },
     lk_programmas(db, { p_token, p_lijst }) {
       leerkracht(db, p_token);
-      (p_lijst || []).forEach(r => { const p = db.programmas.find(x => x.code === r.code); if (p) p.titel = r.titel; else db.programmas.push({ code: r.code, titel: r.titel, drempel: 80, aangemaakt: nu() }); });
-      return db.programmas.map(p => ({ code: p.code, titel: p.titel, drempel: p.drempel, leerlingen: db.inschrijvingen.filter(i => i.prog === p.code).length }));
+      (p_lijst || []).forEach(r => { const p = db.programmas.find(x => x.code === r.code); if (p) { p.titel = r.titel; p.eenmalig = !!r.eenmalig; } else db.programmas.push({ code: r.code, titel: r.titel, drempel: 80, eenmalig: !!r.eenmalig, aangemaakt: nu() }); });
+      return db.programmas.map(p => ({ code: p.code, titel: p.titel, drempel: p.drempel, eenmalig: !!p.eenmalig, leerlingen: db.inschrijvingen.filter(i => i.prog === p.code).length }));
     },
     lk_drempel(db, { p_token, p_programma, p_drempel }) {
       leerkracht(db, p_token); if (!(p_drempel >= 1 && p_drempel <= 100)) fout('ONGELDIGE_DREMPEL');
@@ -161,6 +166,12 @@ const Demo = (() => {
         per_soort: Object.values(soort), per_dag: Object.values(dag),
         recent: oef.slice(-500).map(o => ({ deel: o.deel, soort: o.soort, juist: o.juist, tijd: o.tijd })),
       };
+    },
+    lk_instaptoets(db, { p_token, p_programma }) {
+      leerkracht(db, p_token);
+      return db.testen.filter(t => t.prog === p_programma && t.status === 'ingediend').sort((a, b) => String(a.ingediend).localeCompare(String(b.ingediend)))
+        .map(t => ({ leerling: t.ll, id: t.id, score: t.score, max: t.max_score, geslaagd: t.geslaagd, gestart: t.gestart, ingediend: t.ingediend,
+          items: t.vragen.map((v, k) => ({ d: v.domein, n: v.niveau, j: !!((t.antwoorden || [])[k] || {}).juist })) }));
     },
     lk_test_heropenen(db, { p_token, p_id, p_programma, p_deel }) {
       leerkracht(db, p_token);

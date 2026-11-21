@@ -43,6 +43,12 @@
   function totaalOef(st) { return Object.values(st.oefeningen).reduce((a, o) => ({ aantal: a.aantal + o.aantal, juist: a.juist + o.juist }), { aantal: 0, juist: 0 }); }
   function statusLabel(i, d) {
     if (!d.klaar) return '<span class="etiket grijs">Nog niet online</span>';
+    if (S.P && S.P.instaptoets) {
+      if (i.bezig) return '<span class="etiket oranje">Instaptoets bezig</span>';
+      if (!i.laatste) return '<span class="etiket grijs">Nog niet gemaakt</span>';
+      const u = Instap.uitslag(S.P, i.laatste.score, i.laatste.max);
+      return `<span class="etiket ${u.kleur}">${esc(u.naam)} (${Instap.punten(i.laatste.score, i.laatste.max)}/100)</span>`;
+    }
     if (i.geslaagd) return `<span class="etiket groen">✓ Geslaagd (${i.beste.score}/${i.beste.max})</span>`;
     if (!i.open) return '<span class="etiket grijs">Vergrendeld</span>';
     if (i.bezig) return '<span class="etiket oranje">Test bezig</span>';
@@ -127,6 +133,7 @@
   }
 
   function vOverzicht() {
+    if (S.P.instaptoets) return vInstapOverzicht();
     const alle = S.data.leerlingen, ll = filter(alle);
     const db = S.dbProgs.find(p => p.code === S.prog);
     return `${kruimel()}<div class="werkbalk"><h1 class="vul" style="margin:0">${esc(S.P.titel)} <span class="klein">(${alle.length} leerlingen)</span></h1>
@@ -157,6 +164,115 @@
         <span class="voortgang"><span></span></span> vergrendeld</p>`}`;
   }
 
+  // ---------- instaptoets: resultatenoverzicht (score op 100, niveau, per getallenverzameling)
+  // Per leerling de laatste ingediende poging (normaal is er maar één).
+  function instapRijen() {
+    const P = S.P, alle = S.data.leerlingen;
+    return filter(alle).map(l => {
+      const pogingen = (S.instap || []).filter(t => t.leerling === l.id);
+      const t = pogingen[pogingen.length - 1] || null;
+      const bezig = l.status.testen.some(x => x.status === 'bezig');
+      const tel = t ? Instap.telling(P, t.items) : null;
+      return { l, t, n: pogingen.length, bezig, tel, u: t ? Instap.uitslag(P, t.score, t.max) : null, p: t ? Instap.pct(t.score, t.max) : null };
+    });
+  }
+  function instapSorteer(rijen) {
+    const r = rijen.slice();
+    if (S.instapSort === 'score') r.sort((a, b) => (b.p ?? -1) - (a.p ?? -1) || (a.l.naam + a.l.voornaam).localeCompare(b.l.naam + b.l.voornaam));
+    return r;
+  }
+  function instapCellen(x) {
+    const P = S.P, D = P.instaptoets.domeinen, N = P.instaptoets.niveaus;
+    if (!x.tel) return null;
+    const { T, niv, n } = x.tel;
+    return {
+      dom: D.map(d => Instap.deelPunten(T[d.k].tot.j, n)),
+      niv: N.map(k => Instap.deelPunten(niv[k.k].j, n)),
+      domMax: D.map(d => Instap.deelPunten(T[d.k].tot.n, n)), nivMax: N.map(k => Instap.deelPunten(niv[k.k].n, n)),
+    };
+  }
+  function vInstapOverzicht() {
+    const P = S.P, alle = S.data.leerlingen, rijen = instapSorteer(instapRijen());
+    const D = P.instaptoets.domeinen, N = P.instaptoets.niveaus, U = P.instaptoets.uitslag;
+    const gemaakt = rijen.filter(x => x.t), nog = rijen.filter(x => !x.t && !x.bezig).length, bezig = rijen.filter(x => !x.t && x.bezig).length;
+    const voorbeeld = gemaakt.map(instapCellen).find(Boolean);
+    return `${kruimel()}<div class="werkbalk"><h1 class="vul" style="margin:0">${esc(P.titel)} <span class="klein">(${alle.length} leerlingen)</span></h1>
+        <button data-a="toevoegen">+ Nieuwe leerlingen</button>
+        <button class="licht" data-a="alle">Bestaande leerlingen koppelen</button>
+        <button class="licht" data-a="vernieuw">Vernieuwen</button></div>
+      <p class="klein">Link voor de leerlingen: <b>${esc(leerlingLink(S.prog))}</b> · ${U.map((u, k) => `<b>${esc(u.naam)}</b>: ${k ? `vanaf ${u.min}/100` : `minder dan ${U[1].min}/100`}`).join(' · ')}
+        · één poging per leerling (nieuwe poging geven: klik op de leerling)</p>
+      ${alle.length ? filterbalk(alle) : ''}
+      ${alle.length === 0 ? '<div class="kaart"><p>Nog geen leerlingen gekoppeld aan de instaptoets. Klik op <b>+ Nieuwe leerlingen</b> om accounts te maken, of op <b>Bestaande leerlingen koppelen</b>.</p></div>' : `
+      <div class="cijfers">
+        <div class="cijfer"><div class="w">${gemaakt.length}/${rijen.length}</div><div class="l">gemaakt</div></div>
+        ${U.map(u => `<div class="cijfer"><div class="w">${gemaakt.filter(x => x.u.naam === u.naam).length}</div><div class="l">${esc(u.naam.toLowerCase())}</div></div>`).join('')}
+        <div class="cijfer"><div class="w">${bezig}</div><div class="l">nu bezig</div></div>
+        <div class="cijfer"><div class="w">${nog}</div><div class="l">nog niet gestart</div></div>
+        <div class="cijfer"><div class="w">${gemaakt.length ? Instap.komma(gemaakt.reduce((s, x) => s + x.p, 0) / gemaakt.length) : '—'}</div><div class="l">gemiddelde /100</div></div>
+      </div>
+      <div class="werkbalk"><span class="klein vul">${rijen.length} getoond ·
+          sorteer op <select id="instapsort" aria-label="Sorteer"><option value="naam" ${S.instapSort !== 'score' ? 'selected' : ''}>klas en naam</option><option value="score" ${S.instapSort === 'score' ? 'selected' : ''}>score (hoog → laag)</option></select></span>
+        <button class="licht" data-a="csv">Resultaten (Excel)</button>
+        <button class="licht" data-a="instappdf">Resultaten (PDF)</button>
+        <button class="licht" data-a="klasrapport">Verbeteringen van deze ${rijen.length} (PDF)</button></div>
+      <div class="kaart tabelwrap"><table class="lijst instap-tabel">
+        <tr><th>Leerling</th><th class="sc">Score</th><th class="sc">Niveau</th>
+          ${D.map((d, k) => `<th class="sc" title="${esc(d.naam)}">${d.teken}${voorbeeld ? `<div class="klein">/${voorbeeld.domMax[k]}</div>` : ''}</th>`).join('')}
+          ${N.map((x, k) => `<th class="sc">${esc(x.kort)}${voorbeeld ? `<div class="klein">/${voorbeeld.nivMax[k]}</div>` : ''}</th>`).join('')}
+          <th>Ingediend</th><th></th></tr>
+        ${rijen.map(x => {
+          const c = instapCellen(x), l = x.l;
+          return `<tr class="klik" data-a="leerling" data-id="${l.id}">
+            <td><b>${esc(l.naam)} ${esc(l.voornaam)}</b><div class="klein">${esc(l.klas)} · ${esc(l.gebruikersnaam)}${l.actief ? '' : ' · <span class="etiket grijs">gedeactiveerd</span>'}</div></td>
+            ${c ? `<td class="sc"><b>${Instap.komma(x.p)}</b>/100${x.n > 1 ? `<div class="klein">poging ${x.n}</div>` : ''}</td>
+              <td class="sc"><span class="etiket ${x.u.kleur}">${esc(x.u.naam)}</span></td>
+              ${c.dom.map(v => `<td class="sc">${v}</td>`).join('')}${c.niv.map(v => `<td class="sc">${v}</td>`).join('')}
+              <td class="klein">${datum(x.t.ingediend)}</td>`
+            : `<td class="sc">—</td><td class="sc">${x.bezig ? '<span class="etiket oranje">bezig</span>' : '<span class="etiket grijs">nog niet gemaakt</span>'}</td>
+              ${D.map(() => '<td class="sc">—</td>').join('')}${N.map(() => '<td class="sc">—</td>').join('')}<td class="klein">—</td>`}
+            <td><button class="licht" data-a="rapport" data-id="${l.id}">Verbetering</button></td></tr>`;
+        }).join('')}
+      </table></div>
+      <p class="klein legende">Punten op 100: elke vraag telt even zwaar. Per getallenverzameling en per deel (basis/uitdagend) zie je hoeveel punten de leerling daar haalde.
+        Na de instaptoets koppel je de leerlingen zelf aan het juiste leerpad (bij <button class="link" data-a="alle">Alle leerlingen</button>).</p>`}`;
+  }
+  function instapCSV() {
+    const P = S.P, D = P.instaptoets.domeinen, N = P.instaptoets.niveaus;
+    const rijen = instapSorteer(instapRijen());
+    const kop = ['Klas', 'Naam', 'Voornaam', 'Gebruikersnaam', 'Score /100', 'Niveau', ...D.map(d => `${d.teken} ${d.naam}`), ...N.map(x => x.kort), 'Juist', 'Vragen', 'Poging', 'Ingediend'];
+    const lijnen = rijen.map(x => { const c = instapCellen(x), l = x.l;
+      return [l.klas, l.naam, l.voornaam, l.gebruikersnaam, c ? Instap.komma(x.p) : '', c ? x.u.naam : (x.bezig ? 'bezig' : 'nog niet gemaakt'),
+        ...(c ? c.dom : D.map(() => '')), ...(c ? c.niv : N.map(() => '')), x.t ? x.t.score : '', x.t ? x.t.max : '', x.t ? x.n : '', x.t ? datum(x.t.ingediend) : '']; });
+    return csv([kop, ...lijnen]);
+  }
+  function instapPDF() {
+    const P = S.P, D = P.instaptoets.domeinen, N = P.instaptoets.niveaus, rijen = instapSorteer(instapRijen());
+    const gemaakt = rijen.filter(x => x.t);
+    return `<div class="rapport">${RAPPORTSTIJL}${AFDSTIJL}
+      ${afdKop(`Resultaten ${esc(P.titel)}`, `${esc(S.klas || [...new Set(rijen.map(x => x.l.klas))].join(', '))} · ${gemaakt.length} van ${rijen.length} leerlingen gemaakt · ${P.instaptoets.uitslag.map(u => `${esc(u.naam)}: ${gemaakt.filter(x => x.u.naam === u.naam).length}`).join(' · ')}`)}
+      <table><tr><th>Klas</th><th>Leerling</th><th class="sc">Score /100</th><th class="sc">Niveau</th>${D.map(d => `<th class="sc">${d.teken}</th>`).join('')}${N.map(x => `<th class="sc">${esc(x.kort)}</th>`).join('')}</tr>
+      ${rijen.map(x => { const c = instapCellen(x);
+        return `<tr><td>${esc(x.l.klas)}</td><td>${esc(x.l.naam)} ${esc(x.l.voornaam)}</td>${c ? `<td class="sc"><b>${Instap.komma(x.p)}</b></td><td class="sc">${esc(x.u.naam)}</td>${c.dom.map(v => `<td class="sc">${v}</td>`).join('')}${c.niv.map(v => `<td class="sc">${v}</td>`).join('')}`
+          : `<td class="sc">—</td><td class="sc">${x.bezig ? 'bezig' : 'niet gemaakt'}</td>${D.map(() => '<td class="sc">—</td>').join('')}${N.map(() => '<td class="sc">—</td>').join('')}`}</tr>`; }).join('')}</table>
+      ${gemaakt.length ? (() => { const c = instapCellen(gemaakt[0]); return `<p class="klein">Maximum per kolom: ${D.map((d, k) => `${d.teken} ${c.domMax[k]}`).join(' · ')} · ${N.map((x, k) => `${x.kort} ${c.nivMax[k]}`).join(' · ')}</p>`; })() : ''}</div>`;
+  }
+  // Rapport per leerling voor de instaptoets: score, niveau, tabel per getallenverzameling, (volledig) alle antwoorden.
+  function instapRapportBlok(det, volledig) {
+    const P = S.P, l = det.leerling;
+    const ingediend = det.testen.filter(t => t.status === 'ingediend');
+    const rij = (cellen, th) => `<tr>${cellen.map(c => `<${th ? 'th' : 'td'}>${c}</${th ? 'th' : 'td'}>`).join('')}</tr>`;
+    const opg = (v) => esc(v.rapport || W.platteTekst(v.tex || v.html || ''));
+    const kopband = `<div class="kopband"><div><h1>${esc(P.titel)}</h1>
+        <div><b>${esc(l.voornaam)} ${esc(l.naam)}</b> · ${esc(l.klas)} · gebruikersnaam ${esc(l.gebruikersnaam)}</div></div>
+        <div style="text-align:right"><img src="${LOGO}" alt="${esc(CONFIG.SCHOOL || 'De Resonant')}" style="height:28px"><br>${datum(new Date().toISOString())}</div></div>`;
+    if (!ingediend.length) return kopband + '<p>De instaptoets is nog niet ingediend.</p>';
+    return kopband + ingediend.map((t, k) => { const u = Instap.uitslag(P, t.score, t.max_score);
+      return `<div class="blok"><h2>${ingediend.length > 1 ? `Poging ${k + 1} · ` : ''}Ingediend op ${datum(t.ingediend)} · <b>${Instap.punten(t.score, t.max_score)}/100</b> · niveau <b>${esc(u.naam)}</b></h2>
+        ${Instap.tabel(P, t.vragen, t.antwoorden || []).replace('class="kaart tabelwrap"', '').replace(/<h2[^>]*>Per getallenverzameling<\/h2>/, '')}
+        ${volledig ? `<table>${rij(['', 'Opgave', 'Juiste antwoord', 'Antwoord leerling'], true)}
+        ${t.vragen.map((v, q) => { const a = (t.antwoorden || [])[q] || {}; return rij([a.juist ? '<span class="g">✓</span>' : '<span class="r">✗</span>', `<span class="wis">${q + 1}. ${opg(v)}</span>`, `<span class="wis">${esc(Antwoord.juistTekst(v.antw))}</span>`, `<span class="wis">${esc(a.gegeven ?? '—')}</span>` + (a.bericht ? `<br><i>${esc(a.bericht)}</i>` : '')]); }).join('')}</table>` : ''}</div>`; }).join('');
+  }
 
   // ---------- Klassen en leerpaden (klas → vak → hoofdstuk)
   const CAT = () => Catalogus.C;
@@ -174,7 +290,7 @@
     return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> ›
       <button class="link" data-a="boom" data-niveau="klas" data-klas="${esc(kl)}">${esc(kl)}</button> ›
       <button class="link" data-a="boom" data-niveau="vak" data-klas="${esc(kl)}" data-vak="${esc(p.vak)}">${vakTitel(p.vak)}</button> ›
-      Hoofdstuk ${p.h.nr}: ${esc(p.h.titel)}</p>`;
+      ${p.h.nr ? `Hoofdstuk ${p.h.nr}: ` : ''}${esc(p.h.titel)}</p>`;
   }
   // Leerlingen (actieve accounts) van een klas, en hoeveel daarvan aan een leerpad gekoppeld zijn.
   const leerlingenVanKlas = (k) => (S.alle || []).filter(l => l.actief && Catalogus.inKlas(l.klas, k));
@@ -239,7 +355,7 @@
               <span class="etiket oranje">oud platform</span> <span class="klein">${esc(e.opm || '')}</span></div>`),
         ];
         const leeg = !regels.length;
-        return `<div class="stap hoofdstuk ${leeg ? 'dicht' : 'open'}"><div class="nr">${h.nr}</div>
+        return `<div class="stap hoofdstuk ${leeg ? 'dicht' : 'open'}"><div class="nr">${h.nr || '★'}</div>
           <div class="vul"><div class="titel">${esc(h.titel)}</div>${h.sub ? `<div class="sub">${esc(h.sub)}</div>` : ''}
             ${leeg ? '' : `<div class="lp-lijst">${regels.join('')}</div>`}</div>
           ${leeg ? '<span class="etiket grijs">Nog te maken</span>' : ''}</div>`;
@@ -262,29 +378,36 @@
       <div class="werkbalk"><h1 class="vul" style="margin:0">${esc(l.voornaam)} ${esc(l.naam)}</h1>
         <button data-a="rapport" data-id="${l.id}">Rapport downloaden (PDF)</button></div>
       <p class="klein">${esc(l.klas)} · gebruikersnaam <b>${esc(l.gebruikersnaam)}</b> · account sinds ${datum(l.aangemaakt, false)}${l.actief ? '' : ' · <b>gedeactiveerd</b>'}</p>
-      <div class="cijfers">
+      ${S.P.instaptoets ? (() => { const i = info(st, 1), u = i.laatste ? Instap.uitslag(S.P, i.laatste.score, i.laatste.max) : null;
+        return `<div class="cijfers"><div class="cijfer"><div class="w">${i.laatste ? Instap.punten(i.laatste.score, i.laatste.max) + '/100' : '—'}</div><div class="l">score instaptoets</div></div>
+          <div class="cijfer"><div class="w">${u ? esc(u.naam) : i.bezig ? 'bezig' : '—'}</div><div class="l">niveau</div></div>
+          <div class="cijfer"><div class="w">${i.ingediend.length}</div><div class="l">poging(en)</div></div>
+          <div class="cijfer"><div class="w" style="font-size:15px">${datum(l.laatst_actief)}</div><div class="l">laatst actief</div></div></div>`; })() : `<div class="cijfers">
         <div class="cijfer"><div class="w">${st.geslaagd.length}/${DELEN().length}</div><div class="l">delen geslaagd</div></div>
         <div class="cijfer"><div class="w">${h === 'klaar' ? '✓ klaar' : h ? 'Deel ' + h.nr : '—'}</div><div class="l">nu bezig met</div></div>
         <div class="cijfer"><div class="w">${tot.aantal}</div><div class="l">oefeningen (${pct(tot.juist, tot.aantal)} juist)</div></div>
         <div class="cijfer"><div class="w" style="font-size:15px">${datum(l.laatst_actief)}</div><div class="l">laatst actief</div></div>
-      </div>
-      <h2>Per deel</h2>
+      </div>`}
+      <h2>${S.P.instaptoets ? 'Instaptoets' : 'Per deel'}</h2>
       ${delen.map(d => {
         const i = info(st, d.nr), sinds = sindsLaatsteTest(det, d.nr);
         const soorten = det.per_soort.filter(s => s.deel === d.nr);
         return `<div class="deelblok"><div class="kop"><b>Deel ${d.nr}: ${esc(d.titel)}</b>${statusLabel(i, d)}</div>
-          <p class="klein">Oefeningen: <b>${i.oef.aantal}</b> (${pct(i.oef.juist, i.oef.aantal)} juist)
+          ${S.P.instaptoets ? '' : `<p class="klein">Oefeningen: <b>${i.oef.aantal}</b> (${pct(i.oef.juist, i.oef.aantal)} juist)
             ${sinds ? ` · sinds de laatste test: <b>${sinds.aantal}</b> (${pct(sinds.juist, sinds.aantal)} juist)` : ''}
-            ${soorten.length ? ' · ' + soorten.map(s => `${esc(soortNaam(d.nr, s.soort))}: ${s.juist}/${s.aantal}`).join(' · ') : ''}</p>
+            ${soorten.length ? ' · ' + soorten.map(s => `${esc(soortNaam(d.nr, s.soort))}: ${s.juist}/${s.aantal}`).join(' · ') : ''}</p>`}
           ${i.testen.length ? `<table class="lijst"><tr><th>Poging</th><th>Gestart</th><th>Score</th><th>Resultaat</th><th></th></tr>
             ${i.testen.map((t, k) => {
               const vol = det.testen.find(x => x.id === t.id);
-              return `<tr><td>${k + 1}</td><td class="klein">${datum(t.gestart)}</td><td>${t.status === 'bezig' ? '—' : `${t.score}/${t.max}`}</td>
-                <td>${t.status === 'bezig' ? '<span class="etiket oranje">bezig</span>' : t.geslaagd ? '<span class="etiket groen">geslaagd</span>' : '<span class="etiket rood">niet geslaagd</span>'}</td>
+              return `<tr><td>${k + 1}</td><td class="klein">${datum(t.gestart)}</td><td>${t.status === 'bezig' ? '—' : S.P.instaptoets ? `${Instap.punten(t.score, t.max)}/100 <span class="klein">(${t.score}/${t.max} juist)</span>` : `${t.score}/${t.max}`}</td>
+                <td>${t.status === 'bezig' ? '<span class="etiket oranje">bezig</span>' : S.P.instaptoets ? (u => `<span class="etiket ${u.kleur}">${esc(u.naam)}</span>`)(Instap.uitslag(S.P, t.score, t.max)) : t.geslaagd ? '<span class="etiket groen">geslaagd</span>' : '<span class="etiket rood">niet geslaagd</span>'}</td>
                 <td>${t.status === 'ingediend' ? `<button class="link" data-a="toontest" data-id="${t.id}">antwoorden</button>` : `<button class="link" data-a="annuleer" data-id="${t.id}" data-deel="${d.nr}">laten vallen</button>`}</td></tr>
                 <tr class="verborgen" id="test-${t.id}"><td colspan="5">${vol ? testDetail(vol, d) : ''}</td></tr>`;
             }).join('')}</table>` : '<p class="klein">Nog geen test gemaakt.</p>'}
+          ${S.P.instaptoets && i.laatste ? Instap.tabel(S.P, (det.testen.find(x => x.id === i.laatste.id) || {}).vragen || [], (det.testen.find(x => x.id === i.laatste.id) || {}).antwoorden || []) : ''}
           <div class="knoppen" style="justify-content:flex-start">
+            ${S.P.eenmalig && !i.bezig && i.ingediend.length >= ((st.toegestaan || {})[d.nr] || 1) ? `<button class="licht" data-a="heropen" data-deel="${d.nr}">Nieuwe poging geven</button>` : ''}
+            ${S.P.eenmalig && !i.bezig && i.ingediend.length < ((st.toegestaan || {})[d.nr] || 1) && i.ingediend.length ? '<span class="etiket oranje">Nieuwe poging gegeven, nog niet gestart</span>' : ''}
             ${d.klaar && d.nr > 1 && !i.viaTest ? (i.vrij ? `<button class="licht" data-a="vrij" data-deel="${d.nr}" data-aan="0">Vrijgave intrekken</button>` : `<button class="licht" data-a="vrij" data-deel="${d.nr}" data-aan="1">Deel vrijgeven zonder test</button>`) : ''}
           </div></div>`;
       }).join('')}
@@ -405,6 +528,7 @@
       <p class="klein">Dagen met activiteit: ${lijst.map(dt).join(', ')}</p>`;
   }
   function rapportBlok(det, volledig = true) {
+    if (S.P.instaptoets) return instapRapportBlok(det, volledig);
     const l = det.leerling, st = det.status, tot = totaalOef(st), h = huidig(st);
     const rij = (cellen, th) => `<tr>${cellen.map(c => `<${th ? 'th' : 'td'}>${c}</${th ? 'th' : 'td'}>`).join('')}</tr>`;
     const delen = DELEN().filter(d => d.klaar || info(st, d.nr).oef.aantal || info(st, d.nr).testen.length);
@@ -478,7 +602,7 @@
   const afdLeerlingen = () => (S.alle || []).filter(l => AFD().klassen.has(l.klas));
   function afdProgs() { // leerpaden met minstens één gekoppelde leerling in de gekozen klassen
     const ll = afdLeerlingen();
-    return Leerpaden.lijst.map(P => ({ P, n: ll.filter(l => l.programmas.includes(P.code)).length })).filter(x => x.n > 0);
+    return Leerpaden.lijst.filter(P => !P.instaptoets).map(P => ({ P, n: ll.filter(l => l.programmas.includes(P.code)).length })).filter(x => x.n > 0); // instaptoets: eigen resultatenlijst, telt niet voor Skore
   }
   const klaarDelen = (P) => P.delen.filter(d => d.klaar);
   const ingediendVan = (st, nr) => st.testen.filter(t => t.deel === nr && t.status === 'ingediend').sort((a, b) => String(a.ingediend).localeCompare(String(b.ingediend)));
@@ -650,11 +774,17 @@
       <div style="font-size:16px;font-weight:bold;color:${blauw};margin-bottom:4px">Handleiding</div>
       ${stap(1, 'Aanmelden', `Surf naar <b>${esc(link)}</b> (op je computer, laptop of gsm). Typ je gebruikersnaam en je wachtwoord precies zoals hierboven, en klik op <i>Aanmelden</i>. Tip: bewaar de website als bladwijzer.`)}
       ${stap(2, 'Kies je leerpad', 'Je ziet enkel de leerpaden die je leerkracht voor jou heeft opengezet. Heb je er meer dan één, kies dan eerst het vak en daarna het leerpad. Heb je er maar één, dan kom je er meteen in.')}
+      ${P && P.instaptoets ? `
+      ${stap(3, 'De instaptoets', `Je maakt één toets van ${P.delen[0].test.length} vragen over getallenleer, <b>zonder rekenmachine</b>. Eerst een deel basisvragen, daarna een deel uitdagende vragen. Neem een kladblad en een pen. Je hebt ongeveer 50 à 60 minuten nodig.`)}
+      ${stap(4, 'Eén kans', 'Zodra je de toets start, telt je poging. Sluit je per ongeluk de pagina, meld je dan opnieuw aan: je kan verdergaan, je antwoorden blijven bewaard tot je indient. Weet je een vraag niet, ga dan gewoon verder.')}
+      ${stap(5, 'Na het indienen', 'Je ziet meteen je score op 100 en je verbetering. Je leerkracht kiest daarna het leerpad dat bij jou past.')}
+      ${stap(6, 'Antwoorden typen', 'Een kommagetal typ je met een komma (<b>2,5</b>), een breuk met een schuine streep (<b>3/4</b>), een macht met <b>^</b>. De knoppen onder het vakje helpen je (√, x², …). Onder het vakje zie je hoe je antwoord gelezen wordt: kijk dat na.')}
+      ${stap(7, 'Afmelden en hulp', 'Klik op <i>Afmelden</i> als je klaar bent, zeker op een gedeelde computer. Wachtwoord vergeten of een probleem? Vraag het aan je leerkracht.')}` : `
       ${stap(3, 'Werk deel per deel', 'Een leerpad bestaat uit delen. Elk deel heeft vier stappen: <b>Theorie</b> (lees aandachtig), <b>Voorbeelden</b> (probeer eerst zelf, klik dan stap voor stap door de oplossing), <b>Oefenen</b> en <b>Test</b>.')}
       ${stap(4, 'Oefenen', 'Je mag zoveel oefenen als je wil. Na elke oefening zie je meteen of je antwoord juist is, met de volledige uitwerking. Oefen tot het vlot gaat, pas dan maak je de test.')}
       ${stap(5, 'De test', `Een test heeft 10 vragen. Je poging telt vanaf het moment dat je hem start: de pagina herladen of sluiten helpt niet. Elke poging telt mee voor je punten. Haal je ${drempel ? `<b>${drempel}%</b>` : 'de slaagdrempel'}, dan gaat het volgende deel open. Niet geslaagd? Bekijk je fouten, oefen verder en maak de test opnieuw (met nieuwe vragen).`)}
       ${stap(6, 'Antwoorden typen', 'Een kommagetal typ je met een komma (<b>2,5</b>), een breuk met een schuine streep (<b>3/4</b>), een macht met <b>^</b>. De knoppen onder het vakje helpen je (√, x², …). Onder het vakje zie je hoe je antwoord gelezen wordt: kijk dat na vóór je op <i>Controleer</i> klikt.')}
-      ${stap(7, 'Afmelden en hulp', 'Klik op <i>Afmelden</i> als je klaar bent, zeker op een gedeelde computer. Je voortgang wordt automatisch bewaard. Wachtwoord vergeten of een probleem? Vraag het aan je leerkracht.')}
+      ${stap(7, 'Afmelden en hulp', 'Klik op <i>Afmelden</i> als je klaar bent, zeker op een gedeelde computer. Je voortgang wordt automatisch bewaard. Wachtwoord vergeten of een probleem? Vraag het aan je leerkracht.')}`}
       </div>`;
     const leeg = `<div class="nieuwe-pagina" style="font-family:Verdana,sans-serif;background:#fff;width:680px;height:40px;color:#bbb;font-size:9px;text-align:center">(achterkant: bewust leeg gelaten)</div>`;
     return `<div>${lijst.map((n, k) => brief(n, k) + (rectoVerso ? leeg : '')).join('')}</div>`;
@@ -663,7 +793,7 @@
 
   // ---------- laden
   async function laadProgrammas() {
-    S.dbProgs = await roep('lk_programmas', { p_lijst: Leerpaden.lijst.map(p => ({ code: p.code, titel: p.titel })) });
+    S.dbProgs = await roep('lk_programmas', { p_lijst: Leerpaden.lijst.map(p => ({ code: p.code, titel: p.titel, eenmalig: !!p.eenmalig })) });
     // Standaard-slaagdrempel van een nieuw leerpad (bv. drempel: 70 in het programmabestand), zolang er nog geen leerlingen gekoppeld zijn.
     for (const P of Leerpaden.lijst.filter(p => p.drempel)) {
       const db = S.dbProgs.find(x => x.code === P.code);
@@ -672,7 +802,7 @@
     if (!Leerpaden.vind(S.prog)) S.prog = Leerpaden.lijst[0] && Leerpaden.lijst[0].code;
     S.P = Leerpaden.vind(S.prog);
   }
-  async function laadOverzicht() { S.data = await roep('lk_overzicht', { p_programma: S.prog }); }
+  async function laadOverzicht() { S.data = await roep('lk_overzicht', { p_programma: S.prog }); S.instap = S.P && S.P.instaptoets ? await roep('lk_instaptoets', { p_programma: S.prog }) : null; }
   async function laadDetail(id) { S.detail = await roep('lk_leerling', { p_id: id, p_programma: S.prog }); }
   async function laadAlle() { S.alle = await roep('lk_alle_leerlingen', {}); }
   async function naarOverzicht() { await laadOverzicht(); S.view = 'overzicht'; S.nieuw = null; S.detail = null; }
@@ -698,6 +828,8 @@
     };
     const kf = document.getElementById('klasfilter');
     if (kf) kf.onchange = () => { S.klas = kf.value; API.sessie.set('lk-klas', S.klas); render(); };
+    const is = document.getElementById('instapsort');
+    if (is) is.onchange = () => { S.instapSort = is.value; render(); };
     const zk = document.getElementById('zoek');
     if (zk) zk.oninput = () => { S.zoek = zk.value; const pos = zk.selectionStart; render(); const z = document.getElementById('zoek'); z.focus(); z.setSelectionRange(pos, pos); };
 
@@ -763,6 +895,8 @@
           await roep('lk_drempel', { p_programma: S.prog, p_drempel: parseInt(w, 10) || 0 });
           await laadProgrammas(); S.melding = 'Slaagdrempel aangepast.'; return render();
         }
+        if (a === 'csv' && S.P.instaptoets) return download(`Resultaten_${bestandsnaam(S.P.titel)}_${S.klas ? bestandsnaam(S.klas) + '_' : ''}${vandaag()}.csv`, instapCSV(), 'text/csv;charset=utf-8');
+        if (a === 'instappdf') { const t = el.textContent; el.disabled = true; el.textContent = 'Bezig…'; try { await maakPDF(instapPDF(), `Resultaten_${bestandsnaam(S.P.titel)}_${S.klas ? bestandsnaam(S.klas) + '_' : ''}${vandaag()}.pdf`); } finally { el.disabled = false; el.textContent = t; } return; }
         if (a === 'csv') {
           const kop = ['Klas', 'Naam', 'Voornaam', 'Gebruikersnaam', 'Actief', 'Delen geslaagd', 'Nu bezig met', 'Oefeningen', '% juist', ...KLAAR().map(d => `Test deel ${d.nr}`), 'Laatst actief'];
           const rijen = filter(S.data.leerlingen).map(l => {
@@ -813,11 +947,11 @@
         const l = S.detail && S.detail.leerling;
         if (a === 'heropen') {
           const nr = +el.dataset.deel, sinds = sindsLaatsteTest(S.detail, nr);
-          const ok = await modaal('Test opnieuw openzetten?', `<p>${esc(l.voornaam)} krijgt <b>één nieuwe poging</b> voor de test van deel ${nr}, met nieuwe vragen.</p>
+          const ok = await modaal('Test opnieuw openzetten?', `<p>${esc(l.voornaam)} krijgt <b>één nieuwe poging</b> voor ${S.P.instaptoets ? 'de instaptoets' : `de test van deel ${nr}`}, met nieuwe vragen.${S.P.instaptoets ? ' De vorige poging blijft bewaard; in het overzicht telt de laatste.' : ''}</p>
             ${sinds ? `<p class="klein">Sinds de vorige test: ${sinds.aantal} oefeningen, ${pct(sinds.juist, sinds.aantal)} juist.</p>` : ''}`, [['Annuleren', 0, 'licht'], ['Openzetten', 1, 'oranje']]);
           if (!ok) return;
           await roep('lk_test_heropenen', { p_id: l.id, p_programma: S.prog, p_deel: nr }); await laadDetail(l.id);
-          S.melding = `De test van deel ${nr} staat opnieuw open voor ${esc(l.voornaam)}.`; return render();
+          S.melding = `${S.P.instaptoets ? 'De instaptoets' : `De test van deel ${nr}`} staat opnieuw open voor ${esc(l.voornaam)}.`; return render();
         }
         if (a === 'annuleer') {
           const ok = await modaal('Lopende test laten vallen?', `<p>De test van deel ${el.dataset.deel} die ${esc(l.voornaam)} gestart heeft, wordt gewist en telt <b>niet</b> als poging. De leerling kan daarna een nieuwe test starten (met nieuwe vragen).</p>`, [['Annuleren', 0, 'licht'], ['Laten vallen', 1, 'oranje']]);

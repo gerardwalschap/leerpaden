@@ -67,6 +67,7 @@
     if (!P) return;
     S.status = await roep('ll_status', { p_programma: code });
     Object.assign(S, { prog: code, P, view: 'pad', oef: {}, test: null });
+    if (P.instaptoets) Object.assign(S, { view: 'deel', deel: 1, tab: 'test' }); // instaptoets: meteen de toets, geen theorie/oefenen
     API.sessie.set('ll-prog', code);
     document.title = P.titel;
   }
@@ -87,7 +88,7 @@
       <header class="balk"><div class="schoollogo" role="img" aria-label="De Resonant"></div>
         <div class="logo">${esc(titel)}<small>${esc(onder)}</small></div>
         ${S.leerling ? `<div class="rechts"><span>${naam}</span>
-          ${S.view === 'deel' ? '<button class="licht" data-a="pad">Leerpad</button>' : ''}
+          ${S.view === 'deel' && !(S.P && S.P.instaptoets) ? '<button class="licht" data-a="pad">Leerpad</button>' : ''}
           ${S.P && beschikbaar().length > 1 ? '<button class="licht" data-a="kies">Andere leerpaden</button>' : ''}
           <button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>`;
@@ -134,7 +135,7 @@
   }
   function leerpadKnop({ p, P, h }) {
     return `<button class="stap open" data-a="prog" data-code="${esc(p.code)}"><div class="nr">→</div>
-      <div><div class="titel">${esc(P.titel)}</div><div class="sub">${h ? `Hoofdstuk ${h.nr}: ${esc(h.titel)}` : esc(P.ondertitel || '')}</div></div><span></span></button>`;
+      <div><div class="titel">${esc(P.titel)}</div><div class="sub">${h ? (h.nr ? `Hoofdstuk ${h.nr}: ${esc(h.titel)}` : esc(h.titel)) : esc(P.ondertitel || '')}</div></div><span></span></button>`;
   }
   function vKies() {
     const groepen = perVak();
@@ -183,6 +184,7 @@
 
   function vDeel() {
     const d = deelVan(S.deel);
+    if (S.P.instaptoets) return vInstap(d);
     const tabs = [['theorie', 'Theorie'], ['voorbeelden', 'Voorbeelden'], ['oefenen', 'Oefenen'], ['test', 'Test']];
     let inhoud = '';
     if (S.tab === 'theorie') inhoud = d.theorie + (S.P.invoerhulp ? S.P.invoerhulp(d) : '') + `<div class="knoppen"><button data-a="tab" data-tab="voorbeelden">Verder naar de voorbeelden →</button></div>`;
@@ -332,12 +334,13 @@
   function vTestBezig(d, t) {
     const beantwoord = t.vragen.filter((v, k) => Antwoord.isIngevuld(v.antw, t.antw[k])).length;
     const sets = new Set(); t.vragen.forEach(v => Antwoord.toetsen(v.antw, sets));
-    let vorige = '';
-    return `<div class="melding info" id="testteller">Test deel ${d.nr} · ${beantwoord} van ${t.vragen.length} vragen beantwoord. Je antwoorden worden bijgehouden tot je indient.</div>
+    let vorige = '', vorigeKop = '';
+    return `<div class="melding info" id="testteller">${S.P.instaptoets ? 'Instaptoets' : `Test deel ${d.nr}`} · ${beantwoord} van ${t.vragen.length} vragen beantwoord. Je antwoorden worden bijgehouden tot je indient.</div>
       <div class="kaart">
       ${t.vragen.map((v, k) => {
+        const kop = v.kop && v.kop !== vorigeKop ? v.kop : ''; if (kop) { vorigeKop = v.kop; vorige = ''; }
         const o = opdracht(d, v), toon = o !== vorige; vorige = o;
-        return `<div class="testvraag blok"><div class="vnr">${k + 1}.</div>
+        return `${kop ? `<h2 class="instap-kop">${esc(kop)}</h2>` : ''}<div class="testvraag blok"><div class="vnr">${k + 1}.</div>
           <div class="inhoud-blok">${toon ? `<div class="klein">${esc(o)}</div>` : ''}
             <div class="opg">${opgave(v)}</div>${Antwoord.html('t' + k, v.antw, t.antw[k], false)}</div></div>`;
       }).join('')}
@@ -359,6 +362,7 @@
   }
 
   function vResultaat(d, t) {
+    if (S.P.instaptoets) return vInstapResultaat(d, t);
     const r = t.resultaat;
     const volgende = deelVan(d.nr + 1);
     const pdfKnop = `<button class="licht" data-a="pdf">⬇ Download als PDF</button>`;
@@ -379,6 +383,56 @@
              <div class="knoppen" style="justify-content:center"><button data-a="tab" data-tab="oefenen">Verder oefenen</button>${pdfKnop}</div>`}
         <p class="klein">Je kan deze verbetering later altijd terugvinden onder het tabblad Test.</p>
       </div>
+      <h2>Verbetering</h2>${verbeteringHTML(d, t)}`;
+  }
+
+  // ---------- instaptoets (geen theorie/oefenen, één poging, uitslag = niveau)
+  function vInstap(d) {
+    const i = info(d.nr), P = S.P;
+    const t = S.test && S.test.deel === d.nr ? S.test : null;
+    const kop = `<h1>${esc(P.titel)}</h1><div class="rekenmachine nee">✏️ Zonder rekenmachine</div>`;
+    if (t && t.resultaat) return kop + vInstapResultaat(d, t);
+    if (t) return kop + vTestBezig(d, t);
+    if (i.bezig) return `${kop}<div class="kaart"><h2>Je instaptoets is nog bezig</h2><p>Je bent de instaptoets al gestart. Ga verder waar je gebleven was.</p>
+        <div class="knoppen"><button class="oranje" data-a="teststart">Ga verder met de instaptoets</button></div></div>`;
+    const mag = (S.status.toegestaan || {})[d.nr] || 1;
+    if (i.ingediend.length >= mag) {
+      const l = i.laatste, u = Instap.uitslag(P, l.score, l.max);
+      return `${kop}<div class="kaart midden"><p class="klein">Ingediend op ${esc(datum(l.ingediend))}</p>
+          <div class="score-groot">${Instap.punten(l.score, l.max)}/100</div>
+          <p>Jouw niveau: <span class="etiket ${u.kleur}" style="font-size:1em">${esc(u.naam)}</span></p>
+          <p>${u.leerling}</p>
+          <p class="klein">Je hebt de instaptoets gemaakt. Je leerkracht zet je leerpaden voor je klaar.</p>
+          <div class="knoppen" style="justify-content:center"><button class="licht" data-a="bekijk" data-id="${l.id}">Bekijk je verbetering</button></div></div>`;
+    }
+    const aantal = d.test.reduce((s, x) => s + x[1], 0), ni = P.instaptoets.niveaus;
+    const perNiv = (k) => d.test.filter(([s]) => s.startsWith(k)).length;
+    return `${kop}${P.intro || ''}
+      <div class="kaart"><h2>Zo werkt de instaptoets</h2>
+      <ul class="regels">
+        <li>De toets heeft <b>${aantal} vragen</b>: eerst <b>${esc(ni[0].naam.replace(' · ', ': ').toLowerCase().replace(/^deel (\w)/, (m, x) => 'deel ' + x.toUpperCase()))}</b> (${perNiv('A')} vragen), daarna <b>${esc(ni[1].naam.replace(' · ', ': ').toLowerCase().replace(/^deel (\w)/, (m, x) => 'deel ' + x.toUpperCase()))}</b> (${perNiv('B')} vragen).
+          Elke vraag telt even zwaar; samen staan ze op <b>100 punten</b>.</li>
+        <li>Er zijn vragen over ${P.instaptoets.domeinen.map(x => `${esc(x.naam.toLowerCase())} (${x.teken})`).join(', ')}.</li>
+        <li>Je hebt ongeveer <b>50 à 60 minuten</b> nodig. Je krijgt <b>twee lesuren</b>: neem je tijd.</li>
+        <li>Gebruik <b>geen rekenmachine</b>. Neem een kladblad en schrijf je tussenstappen op.</li>
+        <li>Je krijgt <b>één kans</b>. Zodra je start, telt je poging. Sluit je per ongeluk de pagina, dan kan je verdergaan: je antwoorden blijven bewaard tot je indient.</li>
+        <li>Een antwoord dat klopt maar niet in de gevraagde vorm staat (bv. een breuk die nog vereenvoudigd kan worden), telt als fout.</li>
+        <li>Weet je een vraag niet? Geen probleem: ga verder. Lege vragen tellen gewoon als fout.</li>
+      </ul>
+      <div class="knoppen"><button class="oranje" data-a="teststart">Start de instaptoets</button></div></div>`;
+  }
+
+  function vInstapResultaat(d, t) {
+    const r = t.resultaat, u = Instap.uitslag(S.P, r.score, r.max);
+    const pdfKnop = `<button class="licht" data-a="pdf">⬇ Download als PDF</button>`;
+    return `<div class="kaart midden">
+        ${r.oud ? `<p class="klein">Ingediend op ${esc(datum(r.ingediend))}</p>` : '<p><b>Je instaptoets is ingediend. Goed gewerkt!</b></p>'}
+        <div class="score-groot">${Instap.punten(r.score, r.max)}/100</div>
+        <p>Jouw niveau: <span class="etiket ${u.kleur}" style="font-size:1em">${esc(u.naam)}</span></p>
+        <p>${u.leerling}</p>
+        <div class="knoppen" style="justify-content:center">${r.oud ? '<button class="licht" data-a="terugtest">← Terug</button>' : ''}${pdfKnop}</div>
+      </div>
+      ${Instap.tabel(S.P, t.vragen, r.details || [])}
       <h2>Verbetering</h2>${verbeteringHTML(d, t)}`;
   }
 
@@ -427,12 +481,13 @@
           .pdf-verbetering .testvraag { padding: 8px 6px; }</style>
         <div style="display:flex;align-items:center;gap:14px;border-bottom:3px solid #1c4e8a;padding-bottom:6px;margin-bottom:10px">
           <img src="${logo}" alt="De Resonant" style="height:34px">
-          <div style="flex:1"><div style="font-size:20px;font-weight:bold;color:#1c4e8a">Verbetering test deel ${d.nr}: ${esc(d.titel)}</div>
+          <div style="flex:1"><div style="font-size:20px;font-weight:bold;color:#1c4e8a">${S.P.instaptoets ? `Verbetering ${esc(S.P.titel)}` : `Verbetering test deel ${d.nr}: ${esc(d.titel)}`}</div>
             <div class="klein">${esc(S.P.titel)} · ${esc(l.voornaam || '')} ${esc(l.naam || '')}${l.klas ? ' · ' + esc(l.klas) : ''}</div></div>
-          <div style="text-align:right"><div style="font-size:24px;font-weight:bold;color:${r.geslaagd ? '#2e7d4f' : '#b83a2e'}">${r.score}/${r.max}</div>
+          <div style="text-align:right"><div style="font-size:24px;font-weight:bold;color:${S.P.instaptoets ? '#1c4e8a' : r.geslaagd ? '#2e7d4f' : '#b83a2e'}">${S.P.instaptoets ? `${Instap.punten(r.score, r.max)}/100` : `${r.score}/${r.max}`}</div>
+            ${S.P.instaptoets ? `<div class="klein">niveau: <b>${esc(Instap.uitslag(S.P, r.score, r.max).naam)}</b></div>` : ''}
             <div class="klein">${esc(datum(wanneer))}</div></div>
         </div>
-        ${verbeteringHTML(d, t)}</div>`;
+        ${S.P.instaptoets ? Instap.tabel(S.P, t.vragen, r.details || []) : ''}${verbeteringHTML(d, t)}</div>`;
     document.body.appendChild(houder); W.renderIn(houder);
     svgNaarAfbeelding(houder);
     const tekst = knop ? knop.textContent : '';
@@ -465,7 +520,9 @@
   async function testStart() {
     const d = deelVan(S.deel), i = info(d.nr);
     if (!i.bezig) {
-      const ok = await modaal('Test starten?', '<p>Zodra je start, telt je poging (ook als je de pagina sluit). Elke poging telt mee voor je punten.</p>', [['Nog niet', false, 'licht'], ['Start de test', true, 'oranje']]);
+      const ok = await modaal(S.P.instaptoets ? 'Instaptoets starten?' : 'Test starten?', S.P.instaptoets
+        ? '<p>Je krijgt <b>één kans</b>. Zodra je start, telt je poging (ook als je de pagina sluit; je antwoorden blijven wel bewaard tot je indient).</p><p>Neem een kladblad en een pen. <b>Geen rekenmachine.</b></p>'
+        : '<p>Zodra je start, telt je poging (ook als je de pagina sluit). Elke poging telt mee voor je punten.</p>', [['Nog niet', false, 'licht'], [S.P.instaptoets ? 'Start de instaptoets' : 'Start de test', true, 'oranje']]);
       if (!ok) return;
     }
     try {
@@ -543,7 +600,7 @@
       const telBij = () => {
         const n = t.vragen.filter((v, k) => Antwoord.isIngevuld(v.antw, t.antw[k])).length;
         const el = document.getElementById('testteller');
-        if (el) el.textContent = `Test deel ${t.deel} · ${n} van ${t.vragen.length} vragen beantwoord. Je antwoorden worden bijgehouden tot je indient.`;
+        if (el) el.textContent = `${S.P.instaptoets ? 'Instaptoets' : `Test deel ${t.deel}`} · ${n} van ${t.vragen.length} vragen beantwoord. Je antwoorden worden bijgehouden tot je indient.`;
         testOpslaan();
       };
       const alle = [];
@@ -559,6 +616,7 @@
         if (a === 'kies') { leesTestInvoer(); S.view = 'kies'; S.test = null; S.P = null; S.prog = null; API.sessie.del('ll-prog'); document.title = CONFIG.TITEL || 'Leerpaden'; return render(); }
         if (a === 'prog') { await openProgramma(el.dataset.code); return render(); }
         if (a === 'vak') { S.vak = el.dataset.vak || null; return render(); }
+        if (a === 'pad' && S.P && S.P.instaptoets) { leesTestInvoer(); Object.assign(S, { view: 'deel', deel: 1, tab: 'test' }); if (S.test && S.test.resultaat) S.test = null; render(); return window.scrollTo(0, 0); }
         if (a === 'pad') { leesTestInvoer(); S.view = 'pad'; if (S.test && S.test.resultaat) S.test = null; render(); return window.scrollTo(0, 0); }
         if (a === 'deel') { leesTestInvoer(); S.view = 'deel'; S.deel = +el.dataset.nr; S.tab = 'theorie'; if (S.test && (S.test.resultaat || S.test.deel !== S.deel)) S.test = null; render(); return window.scrollTo(0, 0); }
         if (a === 'tab') {

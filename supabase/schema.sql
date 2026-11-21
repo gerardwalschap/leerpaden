@@ -30,8 +30,11 @@ create table if not exists programmas (
   code        text primary key check (code ~ '^[a-z0-9-]{2,40}$'),
   titel       text not null,
   drempel     int  not null default 80 check (drempel between 1 and 100),  -- slaagdrempel in %
+  eenmalig    boolean not null default false,  -- true = één poging (bv. instaptoets); leerkracht kan heropenen
   aangemaakt  timestamptz not null default now()
 );
+
+alter table programmas add column if not exists eenmalig boolean not null default false;  -- voor bestaande databanken
 
 create table if not exists leerlingen (
   id              uuid primary key default gen_random_uuid(),
@@ -234,7 +237,7 @@ end $$;
 -- elke poging blijft bewaard en telt mee.
 create or replace function ll_test_start(p_token uuid, p_programma text, p_deel int, p_vragen jsonb) returns jsonb
 language plpgsql security definer set search_path = public, extensions as $$
-declare v uuid := _leerling(p_token); t testen;
+declare v uuid := _leerling(p_token); t testen; eenm boolean; gebruikt int; mag int;
 begin
   perform _ingeschreven(v, p_programma);
   select * into t from testen where leerling_id = v and programma = p_programma and deel = p_deel and status = 'bezig'
@@ -243,7 +246,13 @@ begin
     return jsonb_build_object('id', t.id, 'vragen', t.vragen, 'gestart', t.gestart);
   end if;
   if not _deel_open(v, p_programma, p_deel) then raise exception 'DEEL_GESLOTEN'; end if;
-  if exists (select 1 from testen where leerling_id = v and programma = p_programma and deel = p_deel and geslaagd) then
+  select eenmalig into eenm from programmas where code = p_programma;
+  if coalesce(eenm, false) then
+    -- één poging, tenzij de leerkracht er een extra gaf
+    select count(*) into gebruikt from testen where leerling_id = v and programma = p_programma and deel = p_deel;
+    select coalesce((select pogingen_toegestaan from toegang where leerling_id = v and programma = p_programma and deel = p_deel), 1) into mag;
+    if gebruikt >= mag then raise exception 'AL_GEMAAKT'; end if;
+  elsif exists (select 1 from testen where leerling_id = v and programma = p_programma and deel = p_deel and geslaagd) then
     raise exception 'AL_GESLAAGD';
   end if;
   if jsonb_typeof(p_vragen) <> 'array' or jsonb_array_length(p_vragen) < 1 then raise exception 'GEEN_VRAGEN'; end if;
@@ -319,10 +328,11 @@ declare r jsonb;
 begin
   perform _leerkracht(p_token);
   for r in select * from jsonb_array_elements(coalesce(p_lijst, '[]'::jsonb)) loop
-    insert into programmas (code, titel) values (r->>'code', coalesce(nullif(trim(r->>'titel'), ''), r->>'code'))
-      on conflict (code) do update set titel = excluded.titel;
+    insert into programmas (code, titel, eenmalig)
+      values (r->>'code', coalesce(nullif(trim(r->>'titel'), ''), r->>'code'), coalesce((r->>'eenmalig')::boolean, false))
+      on conflict (code) do update set titel = excluded.titel, eenmalig = excluded.eenmalig;
   end loop;
-  return coalesce((select jsonb_agg(jsonb_build_object('code', p.code, 'titel', p.titel, 'drempel', p.drempel,
+  return coalesce((select jsonb_agg(jsonb_build_object('code', p.code, 'titel', p.titel, 'drempel', p.drempel, 'eenmalig', p.eenmalig,
             'leerlingen', (select count(*) from inschrijvingen i where i.programma = p.code)) order by p.aangemaakt)
           from programmas p), '[]'::jsonb);
 end $$;
@@ -487,6 +497,21 @@ begin
     update leerlingen set actief = p_actief where id = p_id;
     if not p_actief then delete from sessies where leerling_id = p_id; end if;
   end if;
+end $$;
+
+-- Resultaten van een instaptoets (per vraag: domein, niveau, juist).
+create or replace function lk_instaptoets(p_token uuid, p_programma text) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform _leerkracht(p_token);
+  return coalesce((select jsonb_agg(jsonb_build_object(
+      'leerling', t.leerling_id, 'id', t.id, 'score', t.score, 'max', t.max_score, 'geslaagd', t.geslaagd,
+      'gestart', t.gestart, 'ingediend', t.ingediend,
+      'items', (select coalesce(jsonb_agg(jsonb_build_object('d', x.v->>'domein', 'n', x.v->>'niveau',
+                  'j', coalesce((t.antwoorden->((x.o - 1)::int)->>'juist')::boolean, false)) order by x.o), '[]'::jsonb)
+                from jsonb_array_elements(t.vragen) with ordinality as x(v, o)))
+      order by t.ingediend)
+    from testen t where t.programma = p_programma and t.status = 'ingediend'), '[]'::jsonb);
 end $$;
 
 -- ---------- Rechten -----------------------------------------------------

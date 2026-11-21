@@ -16,6 +16,7 @@ const API = (() => {
     AL_GESLAAGD: 'Je bent al geslaagd voor deze test.',
     GEEN_POGINGEN: 'De test kan nog niet opnieuw starten: de databank is nog niet bijgewerkt. Meld dit aan je leerkracht.',
     AL_INGEDIEND: 'Deze test is al ingediend.',
+    AL_GEMAAKT: 'Je hebt deze toets al gemaakt. Je krijgt maar één kans; vraag je leerkracht als er iets misliep.',
     ONBEKEND_PROGRAMMA: 'Dit programma bestaat nog niet in de databank. Meld je opnieuw aan als leerkracht.',
     ONGELDIGE_DREMPEL: 'Kies een slaagdrempel tussen 1 en 100.',
     VOORNAAM_NODIG: 'Vul minstens een voornaam in.',

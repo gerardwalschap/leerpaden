@@ -89,6 +89,9 @@ window.CATALOGUS = {
     'wisk-7vjho': {
       naam: 'Wiskunde', map: 'WISKUNDE 7VJHO',
       hoofdstukken: [
+        // nr 0 = vóór hoofdstuk 1 (geen hoofdstuknummer getoond)
+        { nr: 0, titel: 'Instaptoets', sub: 'Eerste schooldag · niveau bepalen in getallenleer (ℕ, ℤ, ℚ, ℝ) · beginner of gevorderd',
+          leerpaden: ['instaptoets-7vjho'] },
         { nr: 1, titel: 'Getallenleer', sub: 'Rekenen in ℕ, ℤ, ℚ en ℝ',
           leerpaden: ['getallenleer-n', 'getallenleer-z', 'getallenleer-q', 'reele-getallen'] },
         { nr: 2, titel: 'Functieleer', sub: 'Functies · Domein en bereik · ax + b · Exponentiële functies',
