@@ -209,6 +209,29 @@ en *3. Tweedegraadsfuncties – contexten* (± 25 %). Enkel individueel werk; re
 * **C · Vergelijken en redeneren** (6–7): situatie ↔ voorschrift ↔ grafiek (berg/dal, breed/smal) · wie heeft gelijk? (juist/fout, verbeter).
 * **D · Eindtest** (8).
 
+## 4k. Het leerpad Telproblemen en kansrekenen (7VJHO, wiskunde)
+
+12 delen volgens de PWP's en werkbladen *3.1.1 Telproblemen* en *3.1.2 Kansen bepalen*, slaagdrempel **70%**, telkens een test van **10 vragen**.
+De oefeningen zijn andere situaties dan in de werkbladen (die blijven de klasoefening). Rekenmachine toegelaten.
+
+* **A · Telproblemen** (1–6): boomdiagrammen · productregel · somregel (en EN/OF samen) · tellen met een venndiagram (2 en 3 verzamelingen) · complementregel · welke regel? (alles door elkaar).
+* **B · Kansen bepalen** (7–11): kansexperiment, U, gebeurtenis, complement en kansschaal · relatieve frequentie en kans · wet van Laplace (kaartjes, knikkers, kaartspel, rad, ongelijke vakken, venndiagram) · twee dobbelstenen · kansbomen (met en zonder terugleggen, kansen in procent).
+* **C · Eindtest** (12).
+
+Afspraken (staan ook in de intro): een kans als **vereenvoudigde breuk** met de echte breuk in de formule-editor; een percentage enkel als het gevraagd wordt; een relatieve frequentie op **3 decimalen**.
+Boomdiagrammen, kansbomen, venndiagrammen, wegenkaarten en raden worden door de website zelf getekend (met telkens nieuwe getallen).
+
+In de catalogus is hoofdstuk 3 van 7VJHO opgesplitst: **3. Telproblemen en kansrekenen** (dit leerpad) en **4. Statistiek** (nog te maken).
+
+> Let op met `bron/bouw.sh`: de bronbestanden van *complexe-getallen*, *functieleer*, *getallenleer-nzq* en *merkwaardige-producten-ontbinden*
+> zijn niet meer gelijk aan hun programmabestand (die programma's werden rechtstreeks aangepast). Het script voegt alle mappen opnieuw samen
+> en zou die vier dus terugzetten naar een oudere versie. Upload daarom enkel `programmas/telproblemen-kansen.js` (dat is al samengevoegd).
+
+## 4l. Formule-editor in donkere modus (november 2026)
+
+Stond de computer van een leerling in donkere modus, dan werd het vakje van een breuk (of ander deel van de formule) waarin je typt donkergrijs,
+zodat je de cijfers niet meer zag. De formule-editor blijft nu altijd in lichte kleuren (`css/platform.css`): dat geldt meteen voor alle leerpaden.
+
 ## Inlogbrieven
 
 Na het aanmaken van accounts (of nieuwe wachtwoorden) krijg je per leerling **één A4** met de inloggegevens én de handleiding.

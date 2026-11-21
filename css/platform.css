@@ -41,6 +41,12 @@ header.balk .schoollogo { background: #fff url(../img/logo-deresonant.png) no-re
 .synth-ll:last-child { border-bottom: 0; }
 .synth-ll .werkbalk { margin-bottom: 4px; }
 /* ===== Formule-editor (MathLive) ===== */
+/* formule-editor altijd in lichte kleuren, ook als de computer in donkere modus staat
+   (anders wordt het vakje waarin je typt donkergrijs en zie je de cijfers niet) */
+math-field { color-scheme: light; color: #1f2733;
+  --contains-highlight-background-color: #fdeee3; --selection-background-color: #ffd9bf; --selection-color: #1f2733;
+  --caret-color: #e8772e; --placeholder-color: #9aa3af; --primary-color: #e8772e; --smart-fence-color: #1f2733; }
+math-field::selection { background: #ffd9bf; color: #1f2733; }
 math-field.veld { display: inline-block; min-width: 150px; font-size: 22px; padding: 4px 10px; border: 1.5px solid var(--lijn, #cfd6e0); border-radius: 10px; background: #fff; vertical-align: middle; }
 math-field.veld.expr { min-width: min(320px, 70vw); }
 math-field.veld:focus-within { border-color: #e8772e; box-shadow: 0 0 0 3px rgba(232,119,46,.18); outline: none; }
