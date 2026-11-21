@@ -32,8 +32,7 @@ const D4 = {
     <div class="kader def"><div class="kader-titel">Het histogram</div>
       <p>Bij gegroepeerde gegevens teken je een <b>histogram</b>: de staven raken elkaar, want de klassen sluiten op elkaar aan.</p>
       ${histogram([150, 160, 170, 180, 190], [2, 8, 10, 4], { xn: 'lengte (cm)', waarden: true, breed: 300, hoog: 150 })}
-      <p class="klein"><b>Met het rekenblad in het leerpad:</b> vul onder het rekenblad het begin van de eerste klasse en de klassenbreedte in en klik op <b>Maak histogram</b>.<br>
-      <b>In Excel:</b> selecteer de gegevens › Invoegen › Grafiek › Statistisch › Histogram. Rechtermuisklik op de horizontale as › As opmaken › breedte van de klasse.</p></div>`,
+      <p class="klein"><b>Met het rekenblad in het leerpad:</b> de gegevens staan in kolom A. Vul onder het rekenblad het begin van de eerste klasse en de klassenbreedte in en klik op <b>Maak histogram</b>.</p></div>`,
   voorbeelden: [
     { tex: '\\text{Klassen } [0;\\,10[,\\ [10;\\,20[,\\ [20;\\,30[,\\ \\ldots \\text{ In welke klasse hoort 30? En 29,9?}', stappen: ['30 \\in [30;\\, 40[ \\quad (\\text{30 hoort niet meer bij } [20;\\, 30[)', '29{,}9 \\in [20;\\, 30['] },
     { tex: '\\text{20 leerlingen, 5 in de klasse } [10;\\,20[. \\text{ Relatieve frequentie?}', stappen: ['20 \\text{ is } 100\\,\\%', '20 : 4 = 5 \\text{, dus } 100\\,\\% : 4 = 25\\,\\%'] },
@@ -112,8 +111,8 @@ const D5 = {
   theorie: `<div class="kader def"><div class="kader-titel">Gemiddelde en standaardafwijking</div>
       <ul><li>Het (rekenkundig) <b>gemiddelde</b> $\\bar{x}$ is de som van alle gegevens gedeeld door het aantal gegevens.</li>
       <li>De <b>standaardafwijking</b> $s$ geeft aan hoe ver de gegevens gemiddeld van het gemiddelde liggen.<br><b>kleine $s$</b>: de gegevens liggen dicht bij elkaar &nbsp;·&nbsp; <b>grote $s$</b>: de gegevens liggen ver uit elkaar.</li></ul>
-      <p>De formule voor $s$ hoef je niet te kennen: je laat Excel (of je rekenmachine) rekenen. Rond af op 1 decimaal.</p></div>
-    <div class="kader eig"><div class="kader-titel">De formules (rekenblad in het leerpad of Excel)</div>
+      <p>De formule voor $s$ hoef je niet te kennen: je laat het rekenblad rekenen. Rond af op 1 decimaal.</p></div>
+    <div class="kader eig"><div class="kader-titel">De formules in het rekenblad</div>
       ${htmlTabel([['', 'Nederlands', 'Engels'], ['gemiddelde', '<code>=GEMIDDELDE(A2:A25)</code>', '<code>=AVERAGE(A2:A25)</code>'], ['standaardafwijking', '<code>=STDEV.S(A2:A25)</code>', '<code>=STDEV.S(A2:A25)</code>']])}
       <p class="klein">De gegevens staan in A2 tot en met A25 (in A1 staat de titel). Lengte van de 24 leerlingen: $\\bar{x} \\approx 170{,}8$ cm en $s \\approx 8{,}1$ cm.
       Let op: <b>STDEV.S</b>, niet STDEV.P. Rond pas op het einde af op 1 decimaal.</p></div>
@@ -131,7 +130,7 @@ const D5 = {
       return { soort: 'gemiddelde', opdracht: 'Bereken het gemiddelde. Rond af op 1 decimaal.', html: opgave(Q.zin) + gegevensTabel(Q.data), sleutel: Q.data.join(), rapport: `${Q.zin} gemiddelde`,
         antw: getal(m, { dec: 1, voor: '\\bar{x} =' }), uitleg: [`\\bar{x} = \\frac{${Q.data.join(' + ')}}{${Q.n}} = \\frac{${som(Q.data)}}{${Q.n}} ${ongeveer(m)} ${tg(r1(m))}`] };
     } },
-    stdev: { naam: 'De standaardafwijking (Excel)', gen() {
+    stdev: { naam: 'De standaardafwijking', gen() {
       const Q = kleineReeks(), s = stdevS(Q.data); if (W.grensgeval(s, 1) || s === 0) return this.gen();
       return { soort: 'stdev', opdracht: 'Bereken de standaardafwijking met een formule in het rekenblad. Rond af op 1 decimaal.', html: opgave(Q.zin), sleutel: Q.data.join() + 's', rapport: `${Q.zin} standaardafwijking`,
         antw: delen(['\\text{rekenblad}', rekenblad(Q.e, Q.data, [{ ...rijStdev(Q.n), doel: s }])], ['s =', getal(s, { dec: 1 })]), uitleg: [`\\text{de gegevens staan in A2 tot en met A${Q.n + 1}}`, `\\text{=STDEV.S(A2:A${Q.n + 1})} \\approx ${tg(W.rond(s, 3))}`, `s \\approx ${tg(r1(s))}`] };
@@ -148,13 +147,14 @@ const D5 = {
       const fout = wat === 'gemiddelde' ? [`=GEMIDDELDE(A3:A${e})`, `=SOM(A2:A${e})`, `=STDEV.S(A2:A${e})`, `=GEMIDDELDE(A2:A${n})`] : [`=STDEV.S(A3:A${e})`, `=GEMIDDELDE(A2:A${e})`, `=STDEV.P(A2:A${e})`, `=STDEV.S(A2:A${n})`];
       const zin = `In cel A1 staat de titel. De ${n} gegevens staan in A2 tot en met A${e}. Met welke formule bereken je ${wat === 'gemiddelde' ? 'het' : 'de'} ${wat}?`;
       const k = uniekKeuze(`<code>${juist}</code>`, fout.map(f => `<code>${f}</code>`), kZin);
-      return { soort: 'excel', opdracht: 'Kies de juiste formule.', html: opgave(zin), sleutel: zin, rapport: `Excelformule ${wat} (${n})`, antw: k,
+      return { soort: 'excel', opdracht: 'Kies de juiste formule.', html: opgave(zin), sleutel: zin, rapport: `formule ${wat} (${n})`, antw: k,
         uitleg: [`\\text{${juist}}`, `\\text{${wat === 'gemiddelde' ? 'GEMIDDELDE (Engels: AVERAGE)' : 'STDEV.S'}, van A2 (zonder de titel) tot A${e}}`] };
     } },
     vergelijk: { naam: 'Welke s is groter?', gen() {
       const Z = zelfdeGemiddelde(), PQ = kies([true, false]), P = PQ ? Z.smal : Z.breed, Qd = PQ ? Z.breed : Z.smal;
       const sP = r1(stdevS(P)), sQ = r1(stdevS(Qd)), v = kies(['groot', 'koppel', 'tekort']);
-      const fig = stippen(P, `Klas P (gemiddelde ${Z.m})`) + stippen(Qd, `Klas Q (gemiddelde ${Z.m})`), grootQ = !PQ;
+      const hist = (d, t) => histogram(Array.from({ length: 21 }, (_, i) => i), Array.from({ length: 20 }, (_, i) => d.filter(x => x === i || (i === 19 && x === 20)).length), { xn: 'punten op 20', titel: t, elkeTweede: true, breed: 320, hoog: 120 });
+      const fig = `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px">${hist(P, `Klas P (gemiddelde ${Z.m})`)}${hist(Qd, `Klas Q (gemiddelde ${Z.m})`)}</div>`, grootQ = !PQ;
       if (v === 'groot') return { soort: 'vergelijk', opdracht: 'Beide klassen hebben hetzelfde gemiddelde. Welke klas heeft de grootste standaardafwijking?', html: fig, sleutel: P.join() + Qd.join() + v, rapport: 'grootste s (stippendiagram)',
         antw: keuze(kT(['klas P', 'klas Q']), grootQ ? 1 : 0), uitleg: [`\\text{in klas ${grootQ ? 'Q' : 'P'} liggen de punten veel verder uit elkaar}`] };
       if (v === 'koppel') { const lo = Math.min(sP, sQ), hi = Math.max(sP, sQ); if (lo === hi) return this.gen();

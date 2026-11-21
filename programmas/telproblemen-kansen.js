@@ -834,13 +834,7 @@ const D8 = {
       return { soort: 'verwacht', opdracht: `Hoeveel keer "${P.u}" verwacht je ongeveer bij ${duiz(N)} ${P.wat}?`, html: opgave(zin), sleutel: zin + N, rapport: `${P.u}: verwacht bij ${N}`,
         antw: aantal(W.rond(p * N, 6), '\\text{ongeveer}'), uitleg: [`${tg(p)} \\cdot ${tgd(N)} = ${tgd(W.rond(p * N, 6))}`] };
     } },
-    waarom: { naam: 'Kritisch kijken', gen() {
-      if (kies([true, false])) {
-        const P = kies(PROEVEN);
-        return { soort: 'waarom', opdracht: `Waarom kan je de kans op "${P.u}" niet zomaar berekenen (met de wet van Laplace)?`, html: opgave(P.t), sleutel: P.t, rapport: `${P.u}: waarom niet berekenen`,
-          antw: zinKeuze('De mogelijke uitkomsten zijn niet even waarschijnlijk: je moet de kans schatten met een relatieve frequentie.', ['Er zijn te veel mogelijke uitkomsten.', 'Er zijn maar twee uitkomsten, dus is de kans altijd 1/2.', 'Een kans kan je enkel bij een dobbelsteen berekenen.']),
-          uitleg: ['\\text{de uitkomsten zijn niet even waarschijnlijk}', '\\text{herhaal het experiment heel vaak en gebruik de relatieve frequentie}'] };
-      }
+    waarom: { naam: 'Genoeg herhalingen?', gen() {
       const N = kies([12, 18, 24, 30, 36]), o = rnd(1, 6), k = Math.round(N / 6) + kies([3, 4, 5, -3, -2]), nm = kies(['Wout', 'Ilse', 'Mehdi', 'Fien']);
       const zin = `${nm} gooit ${N} keer met een dobbelsteen en gooit ${k} keer een ${o}. ${nm} zegt: "Mijn dobbelsteen is vervalst, want de relatieve frequentie is ${tekst(W.komma(k / N, 3))} en dat zou ongeveer 0,167 moeten zijn."`;
       return { soort: 'waarom', opdracht: `Heeft ${nm} gelijk?`, html: opgave(zin), sleutel: zin, rapport: `vervalste dobbelsteen? ${k} op ${N}`,
@@ -856,8 +850,8 @@ const D8 = {
 const KN = { r: ['rode', 'rood'], b: ['blauwe', 'blauw'], g: ['groene', 'groen'], w: ['witte', 'wit'], z: ['zwarte', 'zwart'], ge: ['gele', 'geel'] };
 const KAARTVRAGEN = [
   ['een harten', 13, '\\text{13 harten}'], ['een aas', 4, '\\text{4 azen}'], ['de harten aas', 1, '\\text{1 harten aas}'], ['een rode kaart (harten of ruiten)', 26, '13 + 13 = 26'],
-  ['een prentkaart (boer, dame of heer)', 12, '4 \\cdot 3 = 12'], ['geen schoppen', 39, '52 - 13 = 39'], ['een harten of een aas', 16, '13 + 4 - 1 = 16 \\text{ (de harten aas maar één keer tellen)}'],
-  ['een rode kaart of een aas', 28, '26 + 4 - 2 = 28 \\text{ (de twee rode azen maar één keer tellen)}'], ['een klaveren heer', 1, '\\text{1 klaveren heer}'], ['een zwarte prentkaart', 6, '2 \\cdot 3 = 6'],
+  ['geen schoppen', 39, '52 - 13 = 39'], ['een harten of een aas', 16, '13 + 4 - 1 = 16 \\text{ (de harten aas maar één keer tellen)}'],
+  ['een rode kaart of een aas', 28, '26 + 4 - 2 = 28 \\text{ (de twee rode azen maar één keer tellen)}'], ['een klaveren heer', 1, '\\text{1 klaveren heer}'], ['een zwarte kaart', 26, '13 + 13 = 26'],
   ['geen aas', 48, '52 - 4 = 48'], ['een 7 of een 8', 8, '4 + 4 = 8'],
 ];
 const D9 = {
@@ -873,7 +867,7 @@ const D9 = {
     <div class="kader"><div class="kader-titel">Is alles even waarschijnlijk?</div>
       ${rad([{ l: 'panda', g: 2, kl: '#d5dbdb' }, { l: 'leeuw', g: 1, kl: '#f9e79f' }, { l: 'aap', g: 1, kl: '#abebc6' }])}
       <p>Tom: "3 dieren, dus 1 kans op 3 voor de panda." <b>Nee</b>: de vakken zijn niet even groot. Verdeel het rad in 4 gelijke vakken: de panda heeft er 2, dus $P(\\text{panda}) = \\dfrac{2}{4} = \\dfrac{1}{2}$.</p></div>
-    <div class="kader"><div class="kader-titel">Een kaartspel</div><p>52 kaarten: 4 kleuren (harten, ruiten, klaveren, schoppen) van elk 13 kaarten (aas, 2 tot en met 10, boer, dame, heer). Harten en ruiten zijn rood, klaveren en schoppen zwart.</p></div>`,
+    <div class="kader"><div class="kader-titel">Een kaartspel</div><p>52 kaarten: 4 kleuren (harten, ruiten, klaveren, schoppen) van elk 13 kaarten (aas, 2 tot en met 10, boer, dame, heer). Harten en ruiten zijn rood, klaveren en schoppen zwart.</p><p class="midden">$P(\\text{harten of aas}) = \\frac{13 + 4 - 1}{52} = \\frac{16}{52} = \\frac{4}{13}$ &nbsp; (de harten aas maar één keer tellen)</p></div>`,
   voorbeelden: [
     { tex: '\\text{4 rode, 5 blauwe en 3 groene knikkers. } P(\\text{rood of groen})?', stappen: ['\\#U = 4 + 5 + 3 = 12', 'P(\\text{rood of groen}) = \\frac{4 + 3}{12} = \\frac{7}{12}'] },
     { tex: '\\text{Kaartspel: } P(\\text{harten of aas})?', stappen: ['13 + 4 - 1 = 16 \\text{ gunstige kaarten (harten aas maar één keer)}', 'P = \\frac{16}{52} = \\frac{4}{13}'] },
@@ -912,6 +906,14 @@ const D9 = {
       return { soort: 'rad', opdracht: `Je draait één keer aan het rad. Alle vakken zijn even groot. Bereken ${vr[0]}.`, html: rad(vakken), sleutel: waarden.join() + v + k + m, rapport: `rad ${waarden.join(',')}: ${vr[0]}`,
         antw: kans(vr[1], n, `${vr[0].replace(/P\((.*)\)/, (mm, a) => `P(\\text{${a}})`)} =`), uitleg: [`\\#U = ${n} \\text{ gelijke vakken}`, `${vr[2]}: ${vr[1]}`, `P = ${frS(vr[1], n)}`] };
     } },
+    laplace: { naam: 'Mag je Laplace gebruiken?', gen() {
+      {
+        const P = kies(PROEVEN);
+        return { soort: 'laplace', opdracht: `Waarom kan je de kans op "${P.u}" niet zomaar berekenen (met de wet van Laplace)?`, html: opgave(P.t), sleutel: P.t, rapport: `${P.u}: waarom niet berekenen`,
+          antw: zinKeuze('De mogelijke uitkomsten zijn niet even waarschijnlijk: je moet de kans schatten met een relatieve frequentie.', ['Er zijn te veel mogelijke uitkomsten.', 'Er zijn maar twee uitkomsten, dus is de kans altijd 1/2.', 'Een kans kan je enkel bij een dobbelsteen berekenen.']),
+          uitleg: ['\\text{de uitkomsten zijn niet even waarschijnlijk}', '\\text{herhaal het experiment heel vaak en gebruik de relatieve frequentie}'] };
+      }
+    } },
     ongelijk: { naam: 'Ongelijke vakken', gen() {
       const S = kies([[[2, 1, 1], 4], [[1, 1, 2], 4], [[3, 1], 4], [[2, 2, 1, 1], 6], [[4, 2, 2], 8], [[2, 1, 1, 4], 8], [[3, 3, 2], 8]]);
       const namen = schud(['ster', 'hart', 'maan', 'zon', 'boom']).slice(0, S[0].length), i = rnd(0, S[0].length - 1);
@@ -929,8 +931,8 @@ const D9 = {
         uitleg: [`\\text{gunstig: } ${vr[1]} \\qquad \\#U = ${N}`, `P = ${frS(vr[1], N)} = ${tg(W.rond(vr[1] / N * 100, 6))}\\,\\%`] };
     } },
   },
-  oefenMix: [['een', 2], ['knikkers', 2], ['kaarten', 1], ['rad', 1], ['ongelijk', 1], ['venn', 1]],
-  test: [['een', 2], ['knikkers', 2], ['kaarten', 2], ['rad', 1], ['ongelijk', 1], ['venn', 2]], testSchudden: true,
+  oefenMix: [['een', 2], ['knikkers', 2], ['kaarten', 1], ['rad', 1], ['ongelijk', 1], ['laplace', 1], ['venn', 1]],
+  test: [['een', 2], ['knikkers', 2], ['kaarten', 2], ['rad', 1], ['ongelijk', 1], ['laplace', 1], ['venn', 1]], testSchudden: true,
 };
 
 // ---- 10. Twee dobbelstenen ------------------------------------------------------------------------

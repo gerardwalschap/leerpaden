@@ -144,9 +144,8 @@ const rekenblad = (titel, data, rijen, extra = {}) => ({ soort: 'rekenblad', tit
 const rijGem = (n) => ({ label: 'gemiddelde', func: ['GEMIDDELDE', 'AVERAGE'], bereik: `A2:A${n + 1}`, formule: `=GEMIDDELDE(A2:A${n + 1})` });
 const rijStdev = (n) => ({ label: 'standaardafwijking', func: ['STDEV.S'], bereik: `A2:A${n + 1}`, formule: `=STDEV.S(A2:A${n + 1})` });
 const RB_UITLEG = `<div class="kader eig"><div class="kader-titel">Het rekenblad in het leerpad</div>
-      <p>Bij sommige vragen krijg je een <b>rekenblad</b> dat werkt zoals Excel. De gegevens staan al in kolom A (in A1 staat de titel). In kolom C typ je een formule die met <b>=</b> begint.
+      <p>Bij sommige vragen krijg je een <b>rekenblad</b>. De gegevens staan al in kolom A (in A1 staat de titel). In kolom C typ je een formule die met <b>=</b> begint.
       Onder de cel zie je meteen de uitkomst. De website kijkt je formule na.</p>
-      <p class="klein">Tussen de argumenten zet je een puntkomma (;), decimalen schrijf je met een komma. De Engelse namen (AVERAGE, NORM.DIST, TRUE, met komma's en punten) werken ook.
-      Dezelfde formules gebruik je in Excel.</p></div>`;
+      <p class="klein">Tussen de argumenten zet je een puntkomma (;), decimalen schrijf je met een komma. De Engelse namen (AVERAGE, NORM.DIST, TRUE, met komma's en punten) werken ook.</p></div>`;
 
 const mix = (D, s, naam) => ({ naam: naam || D.soorten[s].naam, gen() { const v = D.soorten[s].gen(); return { ...v, soort: 'D' + D.nr + s, opdracht: v.opdracht || D.soorten[s].opdracht || D.opdracht }; } });

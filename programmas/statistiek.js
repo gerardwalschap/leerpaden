@@ -146,10 +146,9 @@ const rekenblad = (titel, data, rijen, extra = {}) => ({ soort: 'rekenblad', tit
 const rijGem = (n) => ({ label: 'gemiddelde', func: ['GEMIDDELDE', 'AVERAGE'], bereik: `A2:A${n + 1}`, formule: `=GEMIDDELDE(A2:A${n + 1})` });
 const rijStdev = (n) => ({ label: 'standaardafwijking', func: ['STDEV.S'], bereik: `A2:A${n + 1}`, formule: `=STDEV.S(A2:A${n + 1})` });
 const RB_UITLEG = `<div class="kader eig"><div class="kader-titel">Het rekenblad in het leerpad</div>
-      <p>Bij sommige vragen krijg je een <b>rekenblad</b> dat werkt zoals Excel. De gegevens staan al in kolom A (in A1 staat de titel). In kolom C typ je een formule die met <b>=</b> begint.
+      <p>Bij sommige vragen krijg je een <b>rekenblad</b>. De gegevens staan al in kolom A (in A1 staat de titel). In kolom C typ je een formule die met <b>=</b> begint.
       Onder de cel zie je meteen de uitkomst. De website kijkt je formule na.</p>
-      <p class="klein">Tussen de argumenten zet je een puntkomma (;), decimalen schrijf je met een komma. De Engelse namen (AVERAGE, NORM.DIST, TRUE, met komma's en punten) werken ook.
-      Dezelfde formules gebruik je in Excel.</p></div>`;
+      <p class="klein">Tussen de argumenten zet je een puntkomma (;), decimalen schrijf je met een komma. De Engelse namen (AVERAGE, NORM.DIST, TRUE, met komma's en punten) werken ook.</p></div>`;
 
 const mix = (D, s, naam) => ({ naam: naam || D.soorten[s].naam, gen() { const v = D.soorten[s].gen(); return { ...v, soort: 'D' + D.nr + s, opdracht: v.opdracht || D.soorten[s].opdracht || D.opdracht }; } });
 // ===================================================================
@@ -356,8 +355,7 @@ const D4 = {
     <div class="kader def"><div class="kader-titel">Het histogram</div>
       <p>Bij gegroepeerde gegevens teken je een <b>histogram</b>: de staven raken elkaar, want de klassen sluiten op elkaar aan.</p>
       ${histogram([150, 160, 170, 180, 190], [2, 8, 10, 4], { xn: 'lengte (cm)', waarden: true, breed: 300, hoog: 150 })}
-      <p class="klein"><b>Met het rekenblad in het leerpad:</b> vul onder het rekenblad het begin van de eerste klasse en de klassenbreedte in en klik op <b>Maak histogram</b>.<br>
-      <b>In Excel:</b> selecteer de gegevens › Invoegen › Grafiek › Statistisch › Histogram. Rechtermuisklik op de horizontale as › As opmaken › breedte van de klasse.</p></div>`,
+      <p class="klein"><b>Met het rekenblad in het leerpad:</b> de gegevens staan in kolom A. Vul onder het rekenblad het begin van de eerste klasse en de klassenbreedte in en klik op <b>Maak histogram</b>.</p></div>`,
   voorbeelden: [
     { tex: '\\text{Klassen } [0;\\,10[,\\ [10;\\,20[,\\ [20;\\,30[,\\ \\ldots \\text{ In welke klasse hoort 30? En 29,9?}', stappen: ['30 \\in [30;\\, 40[ \\quad (\\text{30 hoort niet meer bij } [20;\\, 30[)', '29{,}9 \\in [20;\\, 30['] },
     { tex: '\\text{20 leerlingen, 5 in de klasse } [10;\\,20[. \\text{ Relatieve frequentie?}', stappen: ['20 \\text{ is } 100\\,\\%', '20 : 4 = 5 \\text{, dus } 100\\,\\% : 4 = 25\\,\\%'] },
@@ -436,8 +434,8 @@ const D5 = {
   theorie: `<div class="kader def"><div class="kader-titel">Gemiddelde en standaardafwijking</div>
       <ul><li>Het (rekenkundig) <b>gemiddelde</b> $\\bar{x}$ is de som van alle gegevens gedeeld door het aantal gegevens.</li>
       <li>De <b>standaardafwijking</b> $s$ geeft aan hoe ver de gegevens gemiddeld van het gemiddelde liggen.<br><b>kleine $s$</b>: de gegevens liggen dicht bij elkaar &nbsp;·&nbsp; <b>grote $s$</b>: de gegevens liggen ver uit elkaar.</li></ul>
-      <p>De formule voor $s$ hoef je niet te kennen: je laat Excel (of je rekenmachine) rekenen. Rond af op 1 decimaal.</p></div>
-    <div class="kader eig"><div class="kader-titel">De formules (rekenblad in het leerpad of Excel)</div>
+      <p>De formule voor $s$ hoef je niet te kennen: je laat het rekenblad rekenen. Rond af op 1 decimaal.</p></div>
+    <div class="kader eig"><div class="kader-titel">De formules in het rekenblad</div>
       ${htmlTabel([['', 'Nederlands', 'Engels'], ['gemiddelde', '<code>=GEMIDDELDE(A2:A25)</code>', '<code>=AVERAGE(A2:A25)</code>'], ['standaardafwijking', '<code>=STDEV.S(A2:A25)</code>', '<code>=STDEV.S(A2:A25)</code>']])}
       <p class="klein">De gegevens staan in A2 tot en met A25 (in A1 staat de titel). Lengte van de 24 leerlingen: $\\bar{x} \\approx 170{,}8$ cm en $s \\approx 8{,}1$ cm.
       Let op: <b>STDEV.S</b>, niet STDEV.P. Rond pas op het einde af op 1 decimaal.</p></div>
@@ -455,7 +453,7 @@ const D5 = {
       return { soort: 'gemiddelde', opdracht: 'Bereken het gemiddelde. Rond af op 1 decimaal.', html: opgave(Q.zin) + gegevensTabel(Q.data), sleutel: Q.data.join(), rapport: `${Q.zin} gemiddelde`,
         antw: getal(m, { dec: 1, voor: '\\bar{x} =' }), uitleg: [`\\bar{x} = \\frac{${Q.data.join(' + ')}}{${Q.n}} = \\frac{${som(Q.data)}}{${Q.n}} ${ongeveer(m)} ${tg(r1(m))}`] };
     } },
-    stdev: { naam: 'De standaardafwijking (Excel)', gen() {
+    stdev: { naam: 'De standaardafwijking', gen() {
       const Q = kleineReeks(), s = stdevS(Q.data); if (W.grensgeval(s, 1) || s === 0) return this.gen();
       return { soort: 'stdev', opdracht: 'Bereken de standaardafwijking met een formule in het rekenblad. Rond af op 1 decimaal.', html: opgave(Q.zin), sleutel: Q.data.join() + 's', rapport: `${Q.zin} standaardafwijking`,
         antw: delen(['\\text{rekenblad}', rekenblad(Q.e, Q.data, [{ ...rijStdev(Q.n), doel: s }])], ['s =', getal(s, { dec: 1 })]), uitleg: [`\\text{de gegevens staan in A2 tot en met A${Q.n + 1}}`, `\\text{=STDEV.S(A2:A${Q.n + 1})} \\approx ${tg(W.rond(s, 3))}`, `s \\approx ${tg(r1(s))}`] };
@@ -472,13 +470,14 @@ const D5 = {
       const fout = wat === 'gemiddelde' ? [`=GEMIDDELDE(A3:A${e})`, `=SOM(A2:A${e})`, `=STDEV.S(A2:A${e})`, `=GEMIDDELDE(A2:A${n})`] : [`=STDEV.S(A3:A${e})`, `=GEMIDDELDE(A2:A${e})`, `=STDEV.P(A2:A${e})`, `=STDEV.S(A2:A${n})`];
       const zin = `In cel A1 staat de titel. De ${n} gegevens staan in A2 tot en met A${e}. Met welke formule bereken je ${wat === 'gemiddelde' ? 'het' : 'de'} ${wat}?`;
       const k = uniekKeuze(`<code>${juist}</code>`, fout.map(f => `<code>${f}</code>`), kZin);
-      return { soort: 'excel', opdracht: 'Kies de juiste formule.', html: opgave(zin), sleutel: zin, rapport: `Excelformule ${wat} (${n})`, antw: k,
+      return { soort: 'excel', opdracht: 'Kies de juiste formule.', html: opgave(zin), sleutel: zin, rapport: `formule ${wat} (${n})`, antw: k,
         uitleg: [`\\text{${juist}}`, `\\text{${wat === 'gemiddelde' ? 'GEMIDDELDE (Engels: AVERAGE)' : 'STDEV.S'}, van A2 (zonder de titel) tot A${e}}`] };
     } },
     vergelijk: { naam: 'Welke s is groter?', gen() {
       const Z = zelfdeGemiddelde(), PQ = kies([true, false]), P = PQ ? Z.smal : Z.breed, Qd = PQ ? Z.breed : Z.smal;
       const sP = r1(stdevS(P)), sQ = r1(stdevS(Qd)), v = kies(['groot', 'koppel', 'tekort']);
-      const fig = stippen(P, `Klas P (gemiddelde ${Z.m})`) + stippen(Qd, `Klas Q (gemiddelde ${Z.m})`), grootQ = !PQ;
+      const hist = (d, t) => histogram(Array.from({ length: 21 }, (_, i) => i), Array.from({ length: 20 }, (_, i) => d.filter(x => x === i || (i === 19 && x === 20)).length), { xn: 'punten op 20', titel: t, elkeTweede: true, breed: 320, hoog: 120 });
+      const fig = `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px">${hist(P, `Klas P (gemiddelde ${Z.m})`)}${hist(Qd, `Klas Q (gemiddelde ${Z.m})`)}</div>`, grootQ = !PQ;
       if (v === 'groot') return { soort: 'vergelijk', opdracht: 'Beide klassen hebben hetzelfde gemiddelde. Welke klas heeft de grootste standaardafwijking?', html: fig, sleutel: P.join() + Qd.join() + v, rapport: 'grootste s (stippendiagram)',
         antw: keuze(kT(['klas P', 'klas Q']), grootQ ? 1 : 0), uitleg: [`\\text{in klas ${grootQ ? 'Q' : 'P'} liggen de punten veel verder uit elkaar}`] };
       if (v === 'koppel') { const lo = Math.min(sP, sQ), hi = Math.max(sP, sQ); if (lo === hi) return this.gen();
@@ -547,9 +546,7 @@ const D6 = {
     <div class="kader eig"><div class="kader-titel">x̄ en s veranderen</div>
       ${kromme([{ m: 20, s: 2, label: 'A' }, { m: 30, s: 2, label: 'B', kleur: ORANJE }, { m: 20, s: 4, label: 'C', kleur: GROEN }], { as: [6, 40], ticks: [10, 20, 30].map(v => ({ v })), hoog: 130 })}
       <ul><li>Groter gemiddelde (A → B): de kromme <b>schuift naar rechts</b>, zelfde vorm.</li><li>Grotere $s$ (A → C): de kromme wordt <b>breder en lager</b> (de oppervlakte blijft 100 %).</li></ul></div>
-    <div class="kader"><div class="kader-titel">Past het normale model?</div>
-      <p>Is het histogram ongeveer <b>klokvormig en symmetrisch</b> rond het gemiddelde? Dan mag je de normale verdeling met $\\bar{x}$ en $s$ uit de gegevens als model gebruiken.
-      <b>Niet</b> bij een scheef histogram (lange staart naar één kant) of bij twee toppen.</p></div>`,
+`,
   voorbeelden: [
     { html: `${opgave('Lees het gemiddelde en de standaardafwijking af. De buigpunten zijn aangeduid.')}${kromme([{ m: 50, s: 4 }], { buig: true, ticks: [38, 42, 46, 50, 54, 58, 62].map(v => ({ v })) })}`,
       stappen: ['\\text{top bij 50: } \\bar{x} = 50', '\\text{buigpunten bij 46 en 54: } s = 54 - 50 = 4', 'N(50;\\, 4)'] },
@@ -585,7 +582,7 @@ const D6 = {
       ]);
       return { soort: 'verander', opdracht: V[0], sleutel: V[0], rapport: V[0], antw: zinKeuze(V[1], V[2]), uitleg: [`\\text{${V[1]}}`] };
     } },
-    model: { naam: 'Past het normale model?', gen() {
+    model: { naam: 'Past het normale model?', verborgen: true, gen() {
       const [vorm, t, g0, w] = kies(MODELCTX), k = 10, f = VORMEN[vorm](k), gr = Array.from({ length: k + 1 }, (_, i) => g0 + i * w);
       const ok = vorm === 'normaal';
       const juist = ok ? 'Ja: het histogram is klokvormig en ongeveer symmetrisch rond het gemiddelde.' : vorm === 'scheef' ? 'Nee: het histogram is scheef, met een lange staart naar rechts.' : 'Nee: het histogram heeft twee toppen. Het gemiddelde ligt waar bijna geen gegevens zijn.';
@@ -594,8 +591,8 @@ const D6 = {
         uitleg: ['\\text{normaal model: klokvormig en symmetrisch rond het gemiddelde}', `\\text{${ok ? 'dat is hier zo' : vorm === 'scheef' ? 'hier scheef (lange staart rechts)' : 'hier twee toppen'}}`] };
     } },
   },
-  oefenMix: [['aflezen', 2], ['koppel', 2], ['verander', 2], ['model', 1]],
-  test: [['aflezen', 3], ['koppel', 3], ['verander', 2], ['model', 2]], testSchudden: true,
+  oefenMix: [['aflezen', 2], ['koppel', 2], ['verander', 2]],
+  test: [['aflezen', 4], ['koppel', 4], ['verander', 2]], testSchudden: true,
 };
 
 // ---- 7. De 68-95-99,7-regel -------------------------------------------------------------------------------
@@ -622,7 +619,7 @@ function regelUitleg(ka, kb) {
 }
 const schets = (C, kleur) => kromme([{ m: C.m, s: C.s }], { ticks: [-3, -2, -1, 0, 1, 2, 3].map(k => ({ v: C.m + k * C.s, l: k === 0 ? 'x̄' : `x̄ ${k < 0 ? '−' : '+'} ${Math.abs(k) === 1 ? '' : Math.abs(k)}s` })), kleur, hoog: 150 });
 const D7 = {
-  nr: 7, titel: 'De 68-95-99,7-regel', kort: 'Percentages tussen x̄ ± s, x̄ ± 2s en x̄ ± 3s.', rekenmachine: true,
+  nr: 7, titel: 'De 68-95-99,7-regel en het normale model', kort: 'Percentages tussen x̄ ± s, x̄ ± 2s en x̄ ± 3s. Past het model?', rekenmachine: true,
   theorie: `<div class="kader def"><div class="kader-titel">De 68-95-99,7-regel</div>
       <p>De oppervlakte onder de kromme stelt het percentage van de gegevens voor. De totale oppervlakte is 100 %. Bij elke normale verdeling geldt:</p>
       <ul><li>ongeveer <b>68 %</b> ligt tussen $\\bar{x} - s$ en $\\bar{x} + s$;</li><li>ongeveer <b>95 %</b> ligt tussen $\\bar{x} - 2s$ en $\\bar{x} + 2s$;</li><li>ongeveer <b>99,7 %</b> ligt tussen $\\bar{x} - 3s$ en $\\bar{x} + 3s$.</li></ul>
@@ -630,6 +627,9 @@ const D7 = {
         procenten: [{ x: -0.5, y: 0.12, t: '34 %' }, { x: 0.5, y: 0.12, t: '34 %' }, { x: -1.5, y: 0.04, t: '13,5 %' }, { x: 1.5, y: 0.04, t: '13,5 %' }, { x: -2.5, t: '2,35 %' }, { x: 2.5, t: '2,35 %' }, { x: -3.3, y: 0.06, t: '0,15 %' }, { x: 3.3, y: 0.06, t: '0,15 %' }] })}
       <p>Gebruik de <b>symmetrie</b>: tussen $\\bar{x}$ en $\\bar{x} + s$ ligt $68\\,\\% : 2 = 34\\,\\%$. Tussen $\\bar{x} + s$ en $\\bar{x} + 2s$ ligt $(95\\,\\% - 68\\,\\%) : 2 = 13{,}5\\,\\%$.
       Links (en rechts) van $\\bar{x}$ ligt 50 %. Kies je lukraak een element, dan is het percentage ook de <b>kans</b>.</p></div>
+    <div class="kader"><div class="kader-titel">Past het normale model?</div>
+      <p>Is het histogram ongeveer <b>klokvormig en symmetrisch</b> rond het gemiddelde? Dan mag je de normale verdeling met $\\bar{x}$ en $s$ uit de gegevens als model gebruiken.
+      <b>Niet</b> bij een scheef histogram (lange staart naar één kant) of bij twee toppen.</p></div>
     <div class="kader eig"><div class="kader-titel">Werkwijze</div>
       <ol><li>Maak een schets en zet $\\bar{x} - 3s$ tot en met $\\bar{x} + 3s$ op de as (met de waarden).</li><li>Kleur het gevraagde gebied.</li><li>Tel de percentages van de stukken op.</li></ol></div>`,
   voorbeelden: [
@@ -637,6 +637,7 @@ const D7 = {
       stappen: ['\\text{68\\,\\% ligt tussen } 92{,}5 - 2{,}5 = 90 \\text{ ml en } 92{,}5 + 2{,}5 = 95 \\text{ ml}', '\\text{minder dan 90 ml: } 50\\,\\% - 34\\,\\% = 16\\,\\%', '\\text{overlopen: } 100 = \\bar{x} + 3s \\text{, dus } 0{,}15\\,\\%', '\\text{tussen 87,5 en 95 ml: } 13{,}5\\,\\% + 34\\,\\% + 34\\,\\% = 81{,}5\\,\\%'] },
   ],
   soorten: {
+    model: mix(D6, 'model'),
     procent: { naam: 'Percentage met de regel', gen() {
       const C = normCtx(), Q = regelVraag(C), p = regelPct(Q.ka, Q.kb);
       return { soort: 'procent', opdracht: `Hoeveel procent van de ${C.wie} ${C.v(Q.r)}? Maak eerst een schets.`, html: opgave(C.zin) + schets(C), sleutel: C.zin + Q.r, rapport: `${C.t}: ${Q.r}`,
@@ -663,8 +664,8 @@ const D7 = {
       }
     } },
   },
-  oefenMix: [['procent', 3], ['kans', 1], ['grenzen', 1], ['aantal', 1]],
-  test: [['grenzen', 2], ['procent', 4], ['kans', 2], ['aantal', 2]], testSchudden: false,
+  oefenMix: [['procent', 3], ['kans', 1], ['grenzen', 1], ['aantal', 1], ['model', 1]],
+  test: [['grenzen', 2], ['procent', 3], ['model', 2], ['kans', 1], ['aantal', 2]], testSchudden: false,
 };
 
 // ---- 8. Kansen met Excel --------------------------------------------------------------------------------------
@@ -686,13 +687,13 @@ function excelVraag() {
   }
 }
 const D8 = {
-  nr: 8, titel: 'Kansen met het rekenblad (Excel)', kort: 'P(X < a) = NORM.VERD.N(a; x̄; s; WAAR) in het rekenblad of in Excel.', rekenmachine: true,
-  theorie: `<div class="kader def"><div class="kader-titel">Kansen met Excel</div>
-      <p>Valt een grens niet op $\\bar{x} \\pm s$, $\\bar{x} \\pm 2s$ of $\\bar{x} \\pm 3s$, dan laat je Excel de oppervlakte berekenen. $P(X < a)$ is de oppervlakte <b>links</b> van $a$:</p>
+  nr: 8, titel: 'Kansen met het rekenblad', kort: 'P(X < a) = NORM.VERD.N(a; x̄; s; WAAR) in het rekenblad.', rekenmachine: true,
+  theorie: `<div class="kader def"><div class="kader-titel">Kansen met het rekenblad</div>
+      <p>Valt een grens niet op $\\bar{x} \\pm s$, $\\bar{x} \\pm 2s$ of $\\bar{x} \\pm 3s$, dan laat je het rekenblad de oppervlakte berekenen. $P(X < a)$ is de oppervlakte <b>links</b> van $a$:</p>
       <p class="midden"><code>=NORM.VERD.N(a; x̄; s; WAAR)</code> &nbsp;&nbsp; Engelstalig: <code>=NORM.DIST(a, x̄, s, TRUE)</code></p>
       <ul><li><b>rechts</b> van $a$: <code>=1 − NORM.VERD.N(a; x̄; s; WAAR)</code></li><li><b>tussen</b> $a$ en $b$: <code>=NORM.VERD.N(b; …) − NORM.VERD.N(a; …)</code></li></ul>
-      <p class="klein">Het rekenblad (of Excel) geeft een kommagetal (bv. 0,733). Antwoord in procent op 0,1 % nauwkeurig: 73,3 %.</p></div>
-    <div class="kader eig"><div class="kader-titel">De formules (rekenblad in het leerpad of Excel)</div>
+      <p class="klein">Het rekenblad geeft een kommagetal (bv. 0,733). Antwoord in procent op 0,1 % nauwkeurig: 73,3 %.</p></div>
+    <div class="kader eig"><div class="kader-titel">De formules in het rekenblad</div>
       ${htmlTabel([['', 'Nederlands', 'Engels'], ['links van a', '<code>=NORM.VERD.N(a; x̄; s; WAAR)</code>', '<code>=NORM.DIST(a, x̄, s, TRUE)</code>'],
         ['rechts van a', '<code>=1-NORM.VERD.N(a; x̄; s; WAAR)</code>', '<code>=1-NORM.DIST(a, x̄, s, TRUE)</code>'], ['tussen a en b', '<code>=NORM.VERD.N(b; x̄; s; WAAR)-NORM.VERD.N(a; x̄; s; WAAR)</code>', '<code>=NORM.DIST(b, …)-NORM.DIST(a, …)</code>']])}
       <p class="klein">Vul voor x̄ en s de getallen in, bv. <code>=NORM.VERD.N(165; 160,4; 7,4; WAAR)</code>. In een rekenblad met gegevens mag je ook naar de cellen met het gemiddelde en de standaardafwijking verwijzen, bv. <code>=NORM.VERD.N(140; C2; C3; WAAR)</code>.</p></div>
@@ -731,7 +732,7 @@ const D8 = {
     formule: { naam: 'De juiste formule', gen() {
       const Q = excelVraag(), C = Q.C, a = Q.a, b = Q.b;
       const alle = [`=${xl(a, C)}`, `=1 − ${xl(a, C)}`, `=${xl(b, C)} − ${xl(a, C)}`, `=NORM.VERD.N(${tekst(C.m)}; ${tekst(a)}; ${tekst(C.s)}; WAAR)`, `=1 − ${xl(b, C)}`];
-      return { soort: 'formule', opdracht: `Met welke Excelformule bereken je de kans dat een lukraak gekozen ${C.een} ${C.b(Q.r)}?`, html: opgave(C.zin), sleutel: C.zin + Q.r + 'f', rapport: `${C.t}: formule ${Q.r}`,
+      return { soort: 'formule', opdracht: `Met welke formule bereken je de kans dat een lukraak gekozen ${C.een} ${C.b(Q.r)}?`, html: opgave(C.zin), sleutel: C.zin + Q.r + 'f', rapport: `${C.t}: formule ${Q.r}`,
         antw: uniekKeuze(`<code>${Q.formule}</code>`, alle.map(f => `<code>${f}</code>`), kZin), uitleg: [Q.v === 'links' ? '\\text{links van } a \\text{: NORM.VERD.N(a; x̄; s; WAAR)}' : Q.v === 'rechts' ? '\\text{rechts van } a \\text{: 1 − NORM.VERD.N(a; …)}' : '\\text{tussen } a \\text{ en } b \\text{: NORM.VERD.N(b; …) − NORM.VERD.N(a; …)}', `\\text{${Q.formule}}`] };
     } },
     schat: { naam: 'Schatten met de schets', gen() {
@@ -739,8 +740,8 @@ const D8 = {
       const p = 100 * Q.p, gr = [0.15, 2.5, 16, 50, 84, 97.5, 99.85], lab = ['minder dan 0,15 %', 'tussen 0,15 % en 2,5 %', 'tussen 2,5 % en 16 %', 'tussen 16 % en 50 %', 'tussen 50 % en 84 %', 'tussen 84 % en 97,5 %', 'tussen 97,5 % en 99,85 %', 'meer dan 99,85 %'];
       const i = gr.findIndex(g => p < g), j = i === -1 ? 7 : i;
       const kz = uniekKeuze(lab[j], [j - 1, j + 1, j - 2, j + 2, j - 3, j + 3].filter(x => x >= 0 && x <= 7).map(x => lab[x]), kT);
-      return { soort: 'schat', opdracht: `Zonder Excel: hoeveel procent van de ${C.wie} ${C.v(Q.r)}? Kies met een schets.`, html: opgave(C.zin) + schets(C), sleutel: C.zin + Q.r + 's', rapport: `${C.t}: schatting ${Q.r}`,
-        antw: kz, uitleg: [`${[-3, -2, -1, 0, 1, 2, 3].map(k => tg(W.rond(C.m + k * C.s, 6))).join(' \\quad ')}`, `\\text{${tekst(Q.a)} ligt tussen twee van die grenzen: ${lab[j]}}`, `\\text{(met Excel: } ${tg(W.rond(p, 1))}\\,\\%\\text{)}`] };
+      return { soort: 'schat', opdracht: `Zonder rekenblad: hoeveel procent van de ${C.wie} ${C.v(Q.r)}? Kies met een schets.`, html: opgave(C.zin) + schets(C), sleutel: C.zin + Q.r + 's', rapport: `${C.t}: schatting ${Q.r}`,
+        antw: kz, uitleg: [`${[-3, -2, -1, 0, 1, 2, 3].map(k => tg(W.rond(C.m + k * C.s, 6))).join(' \\quad ')}`, `\\text{${tekst(Q.a)} ligt tussen twee van die grenzen: ${lab[j]}}`, `\\text{(met het rekenblad: } ${tg(W.rond(p, 1))}\\,\\%\\text{)}`] };
     } },
   },
   oefenMix: [['bereken', 3], ['formule', 1], ['schat', 1], ['model', 1]],
@@ -751,7 +752,7 @@ const D8 = {
 const D9 = {
   nr: 9, titel: 'Eindtest statistiek', kort: 'Alles door elkaar.', rekenmachine: true,
   theorie: `<div class="kader"><div class="kader-titel">Alles samen</div><p>In deze eindtest komt alles van statistiek door elkaar: steekproeven, gegevens verwerken en de normale verdeling.
-      Herhaal gerust de theorie van een vorig deel. Je mag het rekenblad, Excel en je rekenmachine gebruiken.</p></div>`,
+      Herhaal gerust de theorie van een vorig deel. Je mag het rekenblad en je rekenmachine gebruiken.</p></div>`,
   voorbeelden: [],
   soorten: { pp: mix(D1, 'populatie'), gd: mix(D2, 'goed'), bs: mix(D3, 'besluit'), rl: mix(D4, 'rel'), hi: mix(D4, 'histo'), sd: mix(D5, 'stdev'), vg: mix(D5, 'vergelijk'), kp: mix(D6, 'koppel'), rg: mix(D7, 'procent'), xl: mix(D8, 'bereken') },
   oefenMix: [['pp', 1], ['gd', 1], ['bs', 1], ['rl', 1], ['hi', 1], ['sd', 1], ['vg', 1], ['kp', 1], ['rg', 1], ['xl', 1]],
@@ -761,10 +762,10 @@ const D9 = {
 Leerpaden.registreer({
   code: 'statistiek', titel: 'Statistiek', ondertitel: 'Statistiek · 7VJHO', klas: '7VJHO', drempel: 70,
   intro: `<p>Je leert wanneer een steekproef een goed beeld geeft van de populatie, hoe je gegevens samenvat in een frequentietabel, een histogram, een gemiddelde en een standaardafwijking,
-    en hoe je met de normale verdeling kansen bepaalt: met de 68-95-99,7-regel en met Excel.
+    en hoe je met de normale verdeling kansen bepaalt: met de 68-95-99,7-regel en met het rekenblad.
     Lees de theorie, oefen zoveel je wil en maak dan de test. Haal je <b>7 op 10</b>, dan gaat het volgende deel open.</p>
     <p class="klein"><b>Afspraken:</b> procenten, gemiddelden en standaardafwijkingen rond je af op <b>1 decimaal</b> (komt het exact uit, dan schrijf je het gewoon zo).
-    Procenten bereken je met een verhoudingstabel. Formules typ je in het <b>rekenblad</b> in het leerpad (het werkt zoals Excel); je mag ook je rekenmachine gebruiken.</p>`,
+    Procenten bereken je met een verhoudingstabel. Formules typ je in het <b>rekenblad</b> in het leerpad; je mag ook je rekenmachine gebruiken.</p>`,
   groepen: [{ titel: 'A · Steekproeven', delen: [1, 2, 3] }, { titel: 'B · Gegevens verwerken', delen: [4, 5] }, { titel: 'C · De normale verdeling', delen: [6, 7, 8] }, { titel: 'D · Eindtest', delen: [9] }],
   delen: [D1, D2, D3, D4, D5, D6, D7, D8, D9],
 });
