@@ -305,3 +305,8 @@ De map `test/` mag blijven staan: daar kan je later een nieuwe versie eerst uitp
 ### 4o. Functieleer: breuken als antwoord (nov 2026)
 - Toenamegetal a, nulwaarde en "a aflezen" kunnen een breuk zijn (bv. −1/3). Die vragen krijgen nu de formule-editor en het juiste antwoord wordt als breuk getoond i.p.v. −0,333333.
 - Aangepast rechtstreeks in `programmas/functieleer.js` (de bron-map van functieleer is verouderd: niet herbouwen met bouw.sh).
+
+### 4p. Functieleer: nieuw deel 8 "Vergelijkingen en ongelijkheden grafisch oplossen" (nov 2026)
+- Dekt BV3_06.07. Soorten: vergelijking f(x) = c, ongelijkheid f(x) < c, twee rechten f(x) = g(x) en f(x) > g(x); antwoord als V = {…} of halfrechte (verzameling).
+- De oude delen 8, 9 en 10 zijn nu 9, 10 en 11 (eindtest). De eindtest bevat één ongelijkheid uit deel 8 (in plaats van functiewaarde berekenen).
+- Hoort bij PWP 2.8 en Werkbundel 2.8 in OneDrive (mappen 2.8 → 2.11 hernummerd).

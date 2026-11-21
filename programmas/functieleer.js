@@ -663,10 +663,89 @@ const D7 = {
   test: [['a', 1], ['methode1', 2], ['methode2', 3], ['grafiek', 2], ['tabel', 1], ['herken', 1]], testSchudden: true,
 };
 
-// ---- 8. Differentiecoëfficiënt en hellingshoek ----------------------------------------------
-const graden = (r) => r * 180 / Math.PI;
+// ---- 8. Vergelijkingen en ongelijkheden grafisch oplossen ----------------------------------
+const TEKENS = { '<': ['<', 'onder', false, 'kleiner dan'], '>': ['>', 'boven', false, 'groter dan'], '<=': ['\\leq', 'onder of op', true, 'kleiner dan of gelijk aan'], '>=': ['\\geq', 'boven of op', true, 'groter dan of gelijk aan'] };
+function rechteDoor(x0, y0, aKeuzes) { // a (Q) en b (geheel) zodat de rechte door (x0, y0) gaat en b binnen de figuur valt
+  for (;;) {
+    const a = kies(aKeuzes), b = Q(y0 * a.n - a.t * x0, a.n);
+    if (b.n === 1 && Math.abs(b.v) <= 6) return { a, b };
+  }
+}
+const A_KEUZES = [Q(1), Q(2), Q(-1), Q(-2), Q(1, 2), Q(-1, 2), Q(3), Q(-3)];
+const metVgl = (tex, fig) => `<div style="text-align:center;font-size:1.15em;margin-bottom:6px">${W.tex('\\displaystyle ' + tex)}</div>` + fig;
+const rTex = (L, n = 'f') => linTex(L.a, L.b, n);
+const exprTex = (L) => linTex(L.a, L.b, null);
+// oplossing van  f(x) teken g(x)  met snijpunt in x0, verschil = f − g heeft richting d (d > 0: f − g stijgt)
+function ivOpl(x0, teken, d) {
+  const [, , incl] = TEKENS[teken], groter = teken[0] === '>';
+  const rechts = (d > 0) === groter;
+  return rechts ? { a: x0, ai: incl, b: Infinity, bi: false } : { a: -Infinity, ai: false, b: x0, bi: incl };
+}
 const D8 = {
-  nr: 8, titel: 'Differentiecoëfficiënt en hellingshoek', kort: 'dq = Δy : Δx · a = tan α en α = tan⁻¹ a.', rekenmachine: true,
+  nr: 8, titel: 'Vergelijkingen en ongelijkheden grafisch oplossen', kort: 'Zoek het snijpunt: daar zijn beide leden even hoog.', rekenmachine: false,
+  theorie: `<div class="kader def"><div class="kader-titel">Een vergelijking grafisch oplossen</div>
+      <p>$\\tfrac12 x + 1 = 3$: waar heeft de grafiek van $f(x) = \\tfrac12 x + 1$ een <b>hoogte van 3</b>?</p>
+      <ol><li>Teken de grafiek van het linkerlid: $f(x) = \\tfrac12 x + 1$.</li><li>Teken de rechte van het rechterlid: de horizontale rechte $y = 3$.</li>
+      <li>Zoek het snijpunt van de twee rechten: $(4, 3)$.</li><li>De <b>x-waarde</b> van het snijpunt is de oplossing: $V = \\{4\\}$.</li></ol>
+      <p class="klein">Controle: $\\tfrac12 \\cdot 4 + 1 = 3$ ✓. &nbsp; Speciaal geval $f(x) = 0$: hoogte 0 = de $x$-as. Je zoekt het snijpunt met de $x$-as, dus de nulwaarde.</p></div>
+    <div class="kader eig"><div class="kader-titel">Een ongelijkheid grafisch oplossen</div>
+      <p>$\\tfrac12 x + 1 > 3$: waar ligt de grafiek van $f$ <b>boven</b> de rechte $y = 3$? Rechts van het snijpunt $(4, 3)$, dus voor alle $x > 4$: $V = \\,]4, +\\infty[$.</p>
+      <ul><li>$f(x) > \\ldots$: de grafiek ligt <b>boven</b>, &nbsp; $f(x) < \\ldots$: de grafiek ligt <b>onder</b>.</li>
+      <li>$\\geq$ of $\\leq$: het snijpunt hoort erbij, haakje naar binnen $[\;]$. &nbsp; $>$ of $<$: het hoort er niet bij, haakje naar buiten $]\;[$.</li>
+      <li>Opgelet bij een <b>dalende</b> rechte: $-x + 2 < 0$ is <b>rechts</b> van $x = 2$. Kijk dus altijd naar de grafiek!</li></ul></div>
+    <div class="kader"><div class="kader-titel">Twee rechten</div>
+      <p>$f(x) = g(x)$: waar zijn ze even hoog? De $x$-waarde van het snijpunt. &nbsp; $f(x) > g(x)$: waar ligt $f$ boven $g$?</p>
+      <p class="klein">Vergelijking → één getal: $V = \\{2\\}$. Ongelijkheid → een halfrechte: $V = \\,]2, +\\infty[$.</p></div>
+    <div class="kader"><div class="kader-titel">Zo typ je</div><p><code>{4}</code> &nbsp; · &nbsp; <code>]4, +∞[</code> &nbsp; · &nbsp; <code>]-∞, 4]</code>. Gebruik de knoppen $-\\infty$ en $+\\infty$ onder het invulvak.</p></div>`,
+  voorbeelden: [
+    { html: metVgl('\\tfrac12 x + 1 = 3', fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: 0.5, b: 1, label: 'f' }, { a: 0, b: 3, label: 'y = 3', kleur: ORANJE }], punten: [{ x: 4, y: 3, label: '(4, 3)' }] })), tex: '\\tfrac12 x + 1 = 3', stappen: ['\\text{teken } y = 3', '\\text{snijpunt } (4, 3)', 'V = \\{4\\}'] },
+    { html: metVgl('-x + 2 < 0', fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: -1, b: 2, label: 'f' }], punten: [{ x: 2, y: 0, label: '(2, 0)', hol: true }] })), tex: '-x + 2 < 0', stappen: ['< 0: \\text{ onder de } x\\text{-as}', '\\text{de rechte daalt: onder de } x\\text{-as rechts van } x = 2', '2 \\text{ hoort er niet bij: } V = \\,]2, +\\infty['] },
+  ],
+  soorten: {
+    vgl: { naam: 'Vergelijking: f(x) = getal', gen() {
+      const x0 = rnd(-4, 4), c = kies([rnd(-5, 5), 0]), L = rechteDoor(x0, c, A_KEUZES);
+      const rechten = [{ a: L.a.v, b: L.b.v, label: 'f' }]; if (c !== 0) rechten.push({ a: 0, b: c, label: `y = ${c < 0 ? '−' + -c : c}`, kleur: ORANJE });
+      return { soort: 'vgl', opdracht: 'Los grafisch op. Gebruik de grafiek van f.', tex: `${exprTex(L)} = ${tg(c)}`, html: metVgl(`${exprTex(L)} = ${tg(c)}`, fgraf({ x: [-6, 6], y: [-6, 6], rechten })), sleutel: `v${x0},${c},${L.a.t}/${L.a.n}`,
+        antw: vzAntw([{ a: x0, ai: true, b: x0, bi: true }], 'V ='),
+        uitleg: [c === 0 ? '\\text{hoogte } 0 = \\text{ de } x\\text{-as}' : `\\text{teken de rechte } y = ${tg(c)}`, `\\text{snijpunt: } (${tg(x0)}, ${tg(c)})`, `V = \\{${tg(x0)}\\}`] };
+    } },
+    ongelijk: { naam: 'Ongelijkheid: f(x) < getal', gen() {
+      const x0 = rnd(-4, 4), c = kies([rnd(-5, 5), 0]), L = rechteDoor(x0, c, A_KEUZES), t = kies(['<', '>', '<=', '>=']), [tt, waar, incl] = TEKENS[t];
+      const rechten = [{ a: L.a.v, b: L.b.v, label: 'f' }]; if (c !== 0) rechten.push({ a: 0, b: c, label: `y = ${c < 0 ? '−' + -c : c}`, kleur: ORANJE });
+      const iv = ivOpl(x0, t, L.a.v), rechts = iv.b === Infinity;
+      return { soort: 'ongelijk', opdracht: 'Los grafisch op. Gebruik de grafiek van f.', tex: `${exprTex(L)} ${tt} ${tg(c)}`, html: metVgl(`${exprTex(L)} ${tt} ${tg(c)}`, fgraf({ x: [-6, 6], y: [-6, 6], rechten })), sleutel: `o${x0},${c},${t},${L.a.t}/${L.a.n}`,
+        antw: vzAntw([iv], 'V ='),
+        uitleg: [`\\text{waar ligt de grafiek ${waar} } ${c === 0 ? '\\text{de } x\\text{-as}' : `\\text{de rechte } y = ${tg(c)}`}?`, `\\text{snijpunt } (${tg(x0)}, ${tg(c)}) \\text{; de rechte ${L.a.v > 0 ? 'stijgt' : 'daalt'}: ${rechts ? 'rechts' : 'links'} van } x = ${tg(x0)}`,
+          `${tg(x0)} \\text{ hoort er${incl ? '' : ' niet'} bij: } V = ${vzTex([iv])}`] };
+    } },
+    twee: { naam: 'Twee rechten: f(x) = g(x)', gen() {
+      for (;;) {
+        const x0 = rnd(-3, 3), y0 = rnd(-4, 4), F = rechteDoor(x0, y0, A_KEUZES), G = rechteDoor(x0, y0, A_KEUZES);
+        if (F.a.v === G.a.v) continue;
+        return { soort: 'twee', opdracht: 'Los grafisch op met de grafieken van f en g.', tex: `${exprTex(F)} = ${exprTex(G)}`, html: metVgl(`${exprTex(F)} = ${exprTex(G)}`, fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: F.a.v, b: F.b.v, label: 'f' }, { a: G.a.v, b: G.b.v, label: 'g', kleur: ORANJE }] })),
+          sleutel: `t${x0},${y0},${F.a.t}/${F.a.n},${G.a.t}/${G.a.n}`, antw: vzAntw([{ a: x0, ai: true, b: x0, bi: true }], 'V ='),
+          uitleg: [`${rTex(F)} \\text{ en } ${rTex(G, 'g')}`, `\\text{even hoog in het snijpunt } (${tg(x0)}, ${tg(y0)})`, `\\text{enkel de } x\\text{-waarde: } V = \\{${tg(x0)}\\}`] };
+      }
+    } },
+    tweeOngelijk: { naam: 'Twee rechten: f(x) > g(x)', gen() {
+      for (;;) {
+        const x0 = rnd(-3, 3), y0 = rnd(-4, 4), F = rechteDoor(x0, y0, A_KEUZES), G = rechteDoor(x0, y0, A_KEUZES);
+        if (F.a.v === G.a.v) continue;
+        const t = kies(['<', '>', '<=', '>=']), [tt, waar, incl] = TEKENS[t], iv = ivOpl(x0, t, F.a.v - G.a.v);
+        return { soort: 'tweeOngelijk', opdracht: 'Los grafisch op met de grafieken van f en g.', tex: `${exprTex(F)} ${tt} ${exprTex(G)}`, html: metVgl(`${exprTex(F)} ${tt} ${exprTex(G)}`, fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: F.a.v, b: F.b.v, label: 'f' }, { a: G.a.v, b: G.b.v, label: 'g', kleur: ORANJE }] })),
+          sleutel: `u${x0},${y0},${t},${F.a.t}/${F.a.n},${G.a.t}/${G.a.n}`, antw: vzAntw([iv], 'V ='),
+          uitleg: [`\\text{waar ligt de grafiek van } f \\text{ ${waar} die van } g?`, `\\text{snijpunt } (${tg(x0)}, ${tg(y0)}) \\text{: ${iv.b === Infinity ? 'rechts' : 'links'} ervan}`, `${tg(x0)} \\text{ hoort er${incl ? '' : ' niet'} bij: } V = ${vzTex([iv])}`] };
+      }
+    } },
+  },
+  oefenMix: [['vgl', 1], ['ongelijk', 2], ['twee', 1], ['tweeOngelijk', 1]],
+  test: [['vgl', 2], ['ongelijk', 4], ['twee', 2], ['tweeOngelijk', 2]], testSchudden: true,
+};
+
+// ---- 9. Differentiecoëfficiënt en hellingshoek ----------------------------------------------
+const graden = (r) => r * 180 / Math.PI;
+const D9 = {
+  nr: 9, titel: 'Differentiecoëfficiënt en hellingshoek', kort: 'dq = Δy : Δx · a = tan α en α = tan⁻¹ a.', rekenmachine: true,
   theorie: `<div class="kader def"><div class="kader-titel">De differentiecoëfficiënt</div>
       <p>De differentiecoëfficiënt geeft de <b>gemiddelde verandering</b> weer in een interval $[x_A, x_B]$:</p>
       <p class="midden">$\\text{dq} = \\dfrac{y_B - y_A}{x_B - x_A}$</p>
@@ -710,7 +789,7 @@ const D8 = {
   test: [['dq', 4], ['hoek', 3], ['rico', 3]], testSchudden: true,
 };
 
-// ---- 9. Exponentiële functies ----------------------------------------------------------
+// ---- 10. Exponentiële functies ----------------------------------------------------------
 const pTekst = (p) => `${p > 0 ? '+' : '−'} ${tekst(Math.abs(p))} %`;
 const CONTEXT = [
   () => { const b = kies([500, 200, 1000, 300]); return { tekst: `Een kolonie telt ${b} bacteriën. Het aantal verdubbelt elk uur. Hoeveel bacteriën zijn er na {t} uur?`, b, g: 2, dec: 0, t: rnd(3, 8), eenh: 'bacteriën' }; },
@@ -726,8 +805,8 @@ function groeiTabel(soort) {
   if (soort === 'exp') { const [b, g] = kies([[100, 1.2], [50, 2], [80, 0.5], [1000, 1.1], [64, 1.5], [200, 0.5], [3, 3], [625, 0.8]]); return { ts, ns: ts.map(t => W.rond(b * g ** t, 4)), b, g }; }
   const b = rnd(1, 9), p = rnd(1, 3); return { ts, ns: ts.map(t => b + p * t * (t + 1) / 2 * 1), b };
 }
-const D9 = {
-  nr: 9, titel: 'Exponentiële functies', kort: 'Lineair: telkens + hetzelfde. Exponentieel: telkens × hetzelfde.', rekenmachine: true,
+const D10 = {
+  nr: 10, titel: 'Exponentiële functies', kort: 'Lineair: telkens + hetzelfde. Exponentieel: telkens × hetzelfde.', rekenmachine: true,
   theorie: `<div class="kader def"><div class="kader-titel">Lineaire of exponentiële groei?</div>
       <p><b>Lineaire groei:</b> bij een gelijke toename van $t$ hoort telkens een gelijke toename of afname van $N(t)$: we tellen telkens hetzelfde getal op. De grafiek is een rechte.</p>
       <p><b>Exponentiële groei:</b> bij een gelijke toename van $t$ wordt $N(t)$ telkens met eenzelfde factor vermenigvuldigd. De grafiek is een kromme die steeds sneller stijgt.</p>
@@ -784,21 +863,21 @@ const D9 = {
   test: [['herken', 2], ['procent', 2], ['model', 1], ['bereken', 3], ['tabelmodel', 1], ['grafiek', 1]], testSchudden: true,
 };
 
-const D10 = {
-  nr: 10, titel: 'Eindtest functieleer', kort: 'Alles door elkaar.', rekenmachine: true,
+const D11 = {
+  nr: 11, titel: 'Eindtest functieleer', kort: 'Alles door elkaar.', rekenmachine: true,
   theorie: `<div class="kader"><div class="kader-titel">Alles samen</div><p>In deze eindtest komt alles van functieleer door elkaar. Herhaal gerust de theorie van een vorig deel. Je mag je rekenmachine gebruiken.</p></div>`,
   voorbeelden: [],
-  soorten: { gr: mix(D1, 'grafiek'), fw: mix(D2, 'bereken'), db: mix(D3, 'lees'), tk: mix(D4, 'tekentabel'), vl: mix(D4, 'verloop'), so: mix(D5, 'soort'), nw: mix(D6, 'nulwaarde'), m2: mix(D7, 'methode2'), gf: mix(D7, 'grafiek'), dq: mix(D8, 'dq'), hk: mix(D8, 'hoek'), ex: mix(D9, 'bereken'), pr: mix(D9, 'procent') },
-  oefenMix: [['gr', 1], ['fw', 1], ['db', 1], ['tk', 1], ['vl', 1], ['so', 1], ['nw', 1], ['m2', 1], ['gf', 1], ['dq', 1], ['hk', 1], ['ex', 1], ['pr', 1]],
-  test: [['gr', 1], ['fw', 1], ['db', 1], ['vl', 1], ['nw', 1], ['m2', 1], ['gf', 1], ['dq', 1], ['hk', 1], ['ex', 1]], testSchudden: false,
+  soorten: { gr: mix(D1, 'grafiek'), fw: mix(D2, 'bereken'), db: mix(D3, 'lees'), tk: mix(D4, 'tekentabel'), vl: mix(D4, 'verloop'), so: mix(D5, 'soort'), nw: mix(D6, 'nulwaarde'), m2: mix(D7, 'methode2'), gf: mix(D7, 'grafiek'), go: mix(D8, 'ongelijk'), dq: mix(D9, 'dq'), hk: mix(D9, 'hoek'), ex: mix(D10, 'bereken'), pr: mix(D10, 'procent') },
+  oefenMix: [['gr', 1], ['fw', 1], ['db', 1], ['tk', 1], ['vl', 1], ['so', 1], ['nw', 1], ['m2', 1], ['gf', 1], ['go', 1], ['dq', 1], ['hk', 1], ['ex', 1], ['pr', 1]],
+  test: [['gr', 1], ['db', 1], ['vl', 1], ['nw', 1], ['m2', 1], ['gf', 1], ['go', 1], ['dq', 1], ['hk', 1], ['ex', 1]], testSchudden: false,
 };
 
 Leerpaden.registreer({
   code: 'functieleer', titel: 'Functieleer', ondertitel: 'Functieleer · 7VJHO', klas: '7VJHO', drempel: 70,
   intro: `<p>Je leert wat een functie is, hoe je functiewaarden berekent en afleest, domein en bereik bepaalt, en een grafiek samenvat in een tekentabel en een verloopschema.
-    Daarna werk je met eerstegraadsfuncties $f(x) = ax + b$: voorschriften opstellen, differentiecoëfficiënt en hellingshoek. Tot slot vergelijk je lineaire en exponentiële groei.
+    Daarna werk je met eerstegraadsfuncties $f(x) = ax + b$: voorschriften opstellen, vergelijkingen en ongelijkheden grafisch oplossen, differentiecoëfficiënt en hellingshoek. Tot slot vergelijk je lineaire en exponentiële groei.
     Lees de theorie, oefen zoveel je wil en maak dan de test. Haal je <b>7 op 10</b>, dan gaat het volgende deel open.</p>`,
-  groepen: [{ titel: 'A · Wat is een functie?', delen: [1, 2, 3, 4] }, { titel: 'B · Eerstegraadsfuncties', delen: [5, 6, 7, 8] }, { titel: 'C · Exponentiële functies', delen: [9] }, { titel: 'D · Eindtest', delen: [10] }],
-  delen: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10],
+  groepen: [{ titel: 'A · Wat is een functie?', delen: [1, 2, 3, 4] }, { titel: 'B · Eerstegraadsfuncties', delen: [5, 6, 7, 8, 9] }, { titel: 'C · Exponentiële functies', delen: [10] }, { titel: 'D · Eindtest', delen: [11] }],
+  delen: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11],
 });
 })();
