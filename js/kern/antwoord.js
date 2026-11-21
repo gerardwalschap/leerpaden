@@ -209,6 +209,7 @@ const Antwoord = (() => {
     if (a.soort === 'V' || a.soort === 'Vmeer') return { invoer: '', speciaal: null };
     if (a.soort === 'teken') return { punten: a.rechten.map(() => []), actief: 0 };
     if (a.soort === 'vector') return VEC.leeg(a);
+    if (a.soort === 'rekenblad') return RB.leeg(a);
     if (a.soort === 'wt') return LG.wtLeeg(a);
     if (a.soort === 'schakeling') return LG.bouwLeeg(a);
     if (a.soort === 'combi') return { p: '', q: '' };
@@ -281,6 +282,7 @@ const Antwoord = (() => {
         <div class="tk-svg" id="${id}-svg">${tekenSVG(a, w, uit)}</div></div>`;
     }
     if (a.soort === 'vector') return VEC.html(id, a, w, uit);
+    if (a.soort === 'rekenblad') return RB.html(id, a, w, uit);
     if (a.soort === 'wt') return LG.wtHTML(id, a, w, uit, T);
     if (a.soort === 'schakeling') return LG.bouwHTML(id, a, w, uit);
     if (a.soort === 'combi') {
@@ -431,6 +433,7 @@ const Antwoord = (() => {
         return;
       }
       if (a.soort === 'vector') { VEC.koppel(id, a, w, opts); return; }
+      if (a.soort === 'rekenblad') { RB.koppel(id, a, w, opts); return; }
       if (a.soort === 'wt') { LG.wtKoppel(id, a, w, opts); return; }
       if (a.soort === 'schakeling') { LG.bouwKoppel(id, a, w, opts); return; }
       if (a.soort === 'vakjes') { a.velden.forEach((_, i) => { const el = document.getElementById(`${id}-${i}`); if (el) velden.push({ el, zet: (v) => { w.vakjes[i] = v; }, a }); }); return; }
@@ -488,6 +491,7 @@ const Antwoord = (() => {
     if (a.soort === 'delen') return a.delen.forEach((d, i) => lees(`${id}-d${i}`, d.antw, w.delen[i]));
     if (a.soort === 'vakjes') return a.velden.forEach((_, i) => { const el = document.getElementById(`${id}-${i}`); if (el) w.vakjes[i] = el.value; });
     if (a.soort === 'teken' || a.soort === 'wt' || a.soort === 'schakeling' || a.soort === 'vector') return;
+    if (a.soort === 'rekenblad') { (a.rijen || []).forEach((_, i) => { const el = document.getElementById(`${id}-c${i}`); if (el) w.cellen[i] = el.value; }); return; }
     if (a.soort === 'combi') { ['p', 'q'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) w[k] = el.value; }); return; }
     if (a.soort === 'vgl') { ['L', 'R'].forEach(k => { const el = document.getElementById(`${id}-${k}`); if (el) w[k] = waarde(el); }); return; }
     if (a.soort === 'combistap') {
@@ -505,6 +509,7 @@ const Antwoord = (() => {
     if (a.soort === 'V' || a.soort === 'Vmeer') return !!w.speciaal || !!String(w.invoer || '').trim();
     if (a.soort === 'teken') return a.parabool ? w.punten[0].length >= (a.parabool.n || 5) : w.punten.every(ps => ps.length === 2);
     if (a.soort === 'vector') return VEC.ingevuld(a, w);
+    if (a.soort === 'rekenblad') return RB.ingevuld(a, w);
     if (a.soort === 'wt') return LG.wtIngevuld(a, w);
     if (a.soort === 'schakeling') return LG.bouwIngevuld(a, w);
     if (a.soort === 'combi') return !!String(w.p || '').trim() && !!String(w.q || '').trim();
@@ -578,6 +583,7 @@ const Antwoord = (() => {
       case 'breuk': return nakijkBreuk(a, w.invoer);
       case 'teken': return nakijkTeken(a, w);
       case 'vector': return VEC.nakijk(a, w);
+      case 'rekenblad': return RB.nakijk(a, w);
       case 'wt': return LG.wtNakijk(a, w);
       case 'schakeling': return LG.bouwNakijk(a, w);
       case 'combi': return nakijkCombi(a, w);
@@ -669,6 +675,7 @@ const Antwoord = (() => {
     if (a.soort === 'keuze') { const o = a.opties.find(x => String(x.k) === String(a.juist)); return o ? (o.html ? o.l : T(o.l)) : '?'; }
     if (a.soort === 'delen') return a.delen.map(d => `${d.html ? d.label : T(d.label)} ${juistHTML(d.antw)}`).join(' &nbsp;·&nbsp; ');
     if (a.soort === 'vector') return VEC.juistHTML(a);
+    if (a.soort === 'rekenblad') return RB.juistHTML(a);
     if (a.soort === 'schakeling' && a.boom !== undefined) return `${T(a.tex)}<div class="lg-figuur" style="max-width:420px;margin:4px auto">${LG.vastSVG(a, a.boom)}</div>`;
     return T(juistTex(a));
   }
@@ -676,6 +683,7 @@ const Antwoord = (() => {
     if (a.soort === 'keuze') { const o = a.opties.find(x => String(x.k) === String(a.juist)); return o ? (o.tekst || W.platteTekst(o.l)) : '?'; }
     if (a.soort === 'delen') return a.delen.map(d => `${W.platteTekst(d.label)} ${juistTekst(d.antw)}`).join(' · ');
     if (a.soort === 'vector') return VEC.juistTekst(a);
+    if (a.soort === 'rekenblad') return RB.juistTekst(a);
     return W.platteTekst(juistTex(a));
   }
 
@@ -700,6 +708,7 @@ const Antwoord = (() => {
     if (a.soort === 'wt') return { tekst: w.cel.map(c => c.map(x => x || '·').join('')).join(' | '), tex: LG.wtTex(a, true, w) };
     if (a.soort === 'schakeling') return { tekst: `${a.uitgang} = ${LG.functieVan(a, w)}`, tex: null };
     if (a.soort === 'vector') return VEC.gegeven(a, w);
+    if (a.soort === 'rekenblad') return RB.gegeven(a, w);
     if (a.soort === 'teken') return { tekst: w.punten.map((ps, i) => `${a.parabool ? 'punten' : 'rechte ' + (i + 1)}: ${ps.map(p => `(${p[0]}, ${p[1]})`).join(' ') || '—'}`).join(' · '), tex: null };
     if (a.soort === 'combi') return { tekst: `vgl. 1 · ${w.p || '…'} en vgl. 2 · ${w.q || '…'}`, tex: null };
     if (a.soort === 'vgl') {

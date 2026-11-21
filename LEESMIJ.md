@@ -227,6 +227,31 @@ In de catalogus is hoofdstuk 3 van 7VJHO opgesplitst: **3. Telproblemen en kansr
 > zijn niet meer gelijk aan hun programmabestand (die programma's werden rechtstreeks aangepast). Het script voegt alle mappen opnieuw samen
 > en zou die vier dus terugzetten naar een oudere versie. Upload daarom enkel `programmas/telproblemen-kansen.js` (dat is al samengevoegd).
 
+## 4m. Het leerpad Statistiek (7VJHO, wiskunde)
+
+9 delen volgens de cursus *3.2 Statistiek* en de PWP's en werkbladen van de drie submappen, slaagdrempel **70%**, telkens een test van **10 vragen**.
+De oefeningen zijn andere situaties en andere getallen dan in de werkbladen. Formules typen de leerlingen in het rekenblad in het leerpad (zie 4n); Excel is niet nodig.
+
+* **A · Steekproeven** (3.2.1, delen 1–3): populatie en steekproef · een goede steekproef (aselect, groot genoeg, non-respons) · besluiten over de populatie.
+* **B · Gegevens verwerken** (3.2.2, delen 4–5): frequentietabel en histogram (absolute en relatieve frequentie, klassen) · gemiddelde en standaardafwijking (Excel: GEMIDDELDE, STDEV.S; wat zegt s?).
+* **C · De normale verdeling** (3.2.3, delen 6–8): de normale kromme (top, buigpunten, x̄ en s veranderen, past het model?) · de 68-95-99,7-regel · kansen met het rekenblad (NORM.VERD.N).
+* **D · Eindtest** (9).
+
+Procenten, gemiddelden en standaardafwijkingen op 1 decimaal; procenten in de uitleg altijd met een verhoudingstabel.
+Histogrammen, stippendiagrammen en normale krommen tekent de website zelf. Bij Excelvragen worden enkel grenzen gekozen waarbij
+afronden op 3 decimalen (zoals in de cursus: 0,903 − 0,080) en exact rekenen hetzelfde percentage op 0,1 % geven.
+
+## 4n. Het rekenblad (een klein "Excel" in het leerpad) — november 2026
+
+Nieuwe antwoordsoort `rekenblad` (rekenkern `js/kern/rekenblad.js`, opmaak in `css/platform.css`). Gegevens staan in kolom A (A1 = titel),
+in kolom C typt de leerling formules zoals in Excel. De website rekent ze uit (de uitkomst verschijnt meteen onder de cel) en kijkt de formule na,
+met gerichte tips (verkeerd bereik, STDEV.P in plaats van STDEV.S, 1 − vergeten bij "meer dan", gemiddelde en s omgewisseld, ONWAAR i.p.v. WAAR, komma i.p.v. puntkomma …).
+
+* Functies: GEMIDDELDE, STDEV.S, NORM.VERD.N, SOM, AANTAL, MIN, MAX, WORTEL, AFRONDEN (ook de Engelse namen AVERAGE, NORM.DIST, SUM, … met komma's en decimale punten), WAAR/ONWAAR, + − · / ^ en haakjes. Een cel mag naar een andere cel verwijzen (bv. `=NORM.VERD.N(140; C2; C3; WAAR)`).
+* Met `histogram: true` staat onder het rekenblad een knop **Maak histogram** (begin en klassenbreedte invullen).
+* Zonder `rijen` is het rekenblad enkel een hulpmiddel (wordt niet nagekeken). In het testverslag staan de formules van de leerling.
+* Gebruikt in het leerpad Statistiek: deel 4 (histogram met het rekenblad), deel 5 (standaardafwijking, x̄ en s van een grote reeks), deel 8 (kansen met NORM.VERD.N en de nieuwe oefening *Van gegevens naar model*, zoals werkbladoefening 8).
+
 ## 4l. Formule-editor in donkere modus (november 2026)
 
 Stond de computer van een leerling in donkere modus, dan werd het vakje van een breuk (of ander deel van de formule) waarin je typt donkergrijs,

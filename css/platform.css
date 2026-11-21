@@ -87,3 +87,22 @@ table.wt td.wt-uit, table.wt th.wt-uit { background: #fff7f0; }
 .vfig { display: flex; justify-content: center; margin: 6px 0; }
 .vfig svg { max-width: 460px; width: 100%; height: auto; }
 .keuzes.groot .keuze svg { max-width: 240px; }
+
+/* ---- rekenblad (klein "Excel" in het leerpad) ---- */
+.rekenblad { margin: 6px 0; text-align: left; }
+.rb-wrap { overflow: auto; border: 1px solid #b9c3d0; border-radius: 6px; background: #fff; max-width: 100%; }
+table.rb { border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 14px; min-width: 420px; width: 100%; }
+table.rb th { background: #eef1f5; color: #555; font-weight: normal; border: 1px solid #d5dbe3; padding: 2px 6px; position: sticky; top: 0; z-index: 1; }
+table.rb tr th:first-child { position: sticky; left: 0; width: 32px; text-align: center; }
+table.rb td { border: 1px solid #e1e6ed; padding: 3px 6px; vertical-align: top; color: #1f2733; }
+table.rb td.rb-a { text-align: right; min-width: 70px; }
+table.rb.rb-smal { min-width: 0; }
+table.rb td.rb-b { min-width: 120px; color: #1c4e8a; }
+table.rb td.rb-c { min-width: 240px; }
+input.rb-cel { width: 100%; box-sizing: border-box; font-family: Consolas, "Courier New", monospace; font-size: 14px; padding: 4px 6px; border: 1.5px solid #cfd6e0; border-radius: 4px; background: #fffdf5; }
+input.rb-cel:focus { border-color: #e8772e; outline: none; box-shadow: 0 0 0 2px rgba(232,119,46,.18); }
+.rb-uit { font-size: 13px; color: #2e7d4f; min-height: 16px; padding-top: 2px; }
+.rb-fout { color: #c0392b; }
+.rb-histo { margin-top: 8px; padding: 8px; border: 1px dashed #b9c3d0; border-radius: 6px; background: #fbfcfe; }
+input.rb-klein { width: 70px; padding: 3px 6px; border: 1px solid #cfd6e0; border-radius: 4px; }
+.rekenblad code, .opgave code, .kader code { font-family: Consolas, "Courier New", monospace; background: #f3f5f8; padding: 0 3px; border-radius: 3px; }
