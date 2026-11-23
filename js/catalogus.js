@@ -93,7 +93,7 @@ window.CATALOGUS = {
         { nr: 0, titel: 'Instaptoets', sub: 'Eerste schooldag · niveau bepalen in getallenleer (ℕ, ℤ, ℚ, ℝ) · beginner of gevorderd',
           leerpaden: ['instaptoets-7vjho'] },
         { nr: 1, titel: 'Getallenleer', sub: 'Rekenen in ℕ, ℤ, ℚ en ℝ',
-          leerpaden: ['getallenleer-n', 'getallenleer-z', 'getallenleer-q', 'reele-getallen'] },
+          leerpaden: ['getallenleer-n', 'getallenleer-n-plus', 'getallenleer-z', 'getallenleer-q', 'reele-getallen'] },
         { nr: 2, titel: 'Functieleer', sub: 'Functies · Domein en bereik · ax + b · Exponentiële functies',
           leerpaden: ['functieleer'] },
         { nr: 3, titel: 'Telproblemen en kansrekenen', sub: 'Boomdiagram · Product-, som- en complementregel · Venndiagram · Wet van Laplace · Kansboom',
