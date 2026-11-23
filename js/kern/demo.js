@@ -138,6 +138,11 @@ const Demo = (() => {
         if (!p_aan) db.inschrijvingen = db.inschrijvingen.filter(i => !(i.ll === id && i.prog === p_programma));
       });
     },
+    lk_backup(db, { p_token }) {
+      leerkracht(db, p_token);
+      const { sessies, ...rest } = db; void sessies;
+      return { soort: 'leerpaden-backup', versie: 1, gemaakt: new Date().toISOString(), demo: true, ...JSON.parse(JSON.stringify(rest)) };
+    },
     lk_alle_leerlingen(db, { p_token }) {
       leerkracht(db, p_token);
       return db.leerlingen.slice().sort((a, b) => (a.klas + a.naam + a.voornaam).localeCompare(b.klas + b.naam + b.voornaam))

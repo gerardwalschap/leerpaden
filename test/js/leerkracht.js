@@ -493,6 +493,7 @@
         <button class="licht" data-a="bulk" data-aan="0" ${sel.length ? '' : 'disabled'}>Ontkoppelen</button>
         <button class="licht" data-a="bulkreset" ${sel.length ? '' : 'disabled'}>Nieuwe wachtwoorden + inlogbrieven</button>
         <button class="licht" data-a="allecsv">Lijst (Excel)</button>
+        <button class="licht" data-a="backup" title="Alle accounts, koppelingen en resultaten van alle leerpaden in één bestand">💾 Backup databank</button>
       </div>
       <div class="kaart tabelwrap"><table class="lijst alle-ll">
         <tr><th><input type="checkbox" id="allesel" aria-label="alles selecteren" ${ll.length && ll.every(l => S.selectie.has(l.id)) ? 'checked' : ''}></th><th></th><th>Leerling</th><th>Klas</th><th>Gebruikersnaam</th><th>Gekoppelde leerpaden</th><th>Laatst actief</th></tr>
@@ -930,6 +931,19 @@
               ...KLAAR().map(d => info(st, d.nr).ingediend.map(t => `${t.score}/${t.max}`).join(' | ')), datum(l.laatst_actief)];
           });
           return download(`Overzicht_${bestandsnaam(S.P.titel)}_${S.klas ? bestandsnaam(S.klas) + '_' : ''}${vandaag()}.csv`, csv([kop, ...rijen]), 'text/csv;charset=utf-8');
+        }
+        if (a === 'backup') {
+          el.disabled = true; el.textContent = 'Backup wordt gemaakt…';
+          try {
+            const b = await roep('lk_backup', {});
+            const tekst = JSON.stringify(b);
+            download(`Backup_leerpaden_${vandaag()}.json`, tekst, 'application/json');
+            S.melding = `Backup gedownload: ${(b.leerlingen || []).length} accounts, ${(b.testen || []).length} testen, ${(b.oefeningen || []).length} oefeningen (${Math.max(1, Math.round(tekst.length / 1024))} kB). Bewaar het bestand in je OneDrive-map <i>Backups leerpaden</i>.`;
+          } catch (e) {
+            if (/lk_backup|function|404|PGRST202/i.test(e.message || '')) return modaal('Backup nog niet ingesteld', '<p>Voer eerst eenmalig <code>supabase/update-backup.sql</code> uit in Supabase → SQL Editor. Daarna werkt deze knop.</p>', [['OK', 1]]);
+            throw e;
+          }
+          return render();
         }
         if (a === 'allecsv') {
           const progs = Leerpaden.lijst;
