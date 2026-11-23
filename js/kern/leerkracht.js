@@ -621,7 +621,7 @@
 
   // ---------- afdrukcentrum: puntenlijsten en syntheses over klassen en leerpaden heen
   const LOGO = new URL((location.pathname.includes('/test/') ? '../' : '') + 'img/logo-deresonant.png', location.href).href;
-  const AFD = () => (S.afd ||= { klassen: new Set(), progs: new Set(), geslaagdKol: false, enkelGemaakt: true, soort: null, data: null, bezig: '' });
+  const AFD = () => (S.afd ||= { klassen: new Set(), progs: new Set(), geslaagdKol: false, enkelGemaakt: true, totaal: false, totaalOp: 50, soort: null, data: null, bezig: '' });
   const afdKlassen = () => klassenVan(S.alle || []);
   const afdLeerlingen = () => (S.alle || []).filter(l => AFD().klassen.has(l.klas));
   function afdProgs() { // leerpaden met minstens één gekoppelde leerling in de gekozen klassen
@@ -650,13 +650,13 @@
     }
     return uit;
   }
-  // Totaalscore op 50 (enkel 7VJHO): alle pogingen van alle getoonde leerpaden samen.
+  // Totaalscore (optie in het afdrukcentrum, op een zelfgekozen aantal punten): alle pogingen van alle getoonde leerpaden samen.
   // Elke poging telt mee (op 5); een deel zonder poging telt als één test met 0 (dus een leerpad niet gemaakt = 0).
   // Leerpaden waaraan de leerling niet gekoppeld is, tellen niet mee.
-  const TOTAAL_OP = 50;
   const komma1 = (x) => String(Math.round(10 * x) / 10).replace('.', ',');
   function totaalTabel(k, tot, data, rij) {
-    if (!/^7VJHO/i.test(String(k).replace(/\s+/g, '')) || !tot.size) return '';
+    const A = AFD(), TOTAAL_OP = A.totaalOp;
+    if (!A.totaal || !tot.size) return '';
     const progs = data.map(x => x.P).filter(P => [...tot.values()].some(x => x.lp[P.code]));
     if (!progs.length) return '';
     const rijen = [...tot.values()].sort((a, b) => a.naam.localeCompare(b.naam)).map(x => {
@@ -756,7 +756,8 @@
       <div class="afd-blok"><h2>3. Afdrukken</h2>
         <div class="chips" style="margin-bottom:10px">
           <label class="chip"><input type="checkbox" id="afdgemaakt" ${A.enkelGemaakt ? 'checked' : ''}> enkel delen met afgelegde testen</label>
-          <label class="chip"><input type="checkbox" id="afdgesl" ${A.geslaagdKol ? 'checked' : ''}> kolom "geslaagde delen"</label></div>
+          <label class="chip ${A.totaal ? 'aan' : ''}"><input type="checkbox" id="afdtot" ${A.totaal ? 'checked' : ''}> totaalscore op
+            <input type="number" id="afdtotop" min="1" max="1000" step="1" value="${A.totaalOp}" style="width:64px;padding:2px 6px;margin:0 4px" aria-label="totaalscore op hoeveel punten"> punten</label></div>
         <div class="werkbalk"><button data-a="afdpunten" ${kies ? '' : 'disabled'}>📋 Puntenlijst</button><button data-a="afdsynth" ${kies ? '' : 'disabled'}>📝 Synthese</button>
           ${A.bezig ? `<span class="klein">${esc(A.bezig)}</span>` : ''}</div></div>
       ${A.soort && A.data ? `<div class="werkbalk"><h2 class="vul" style="margin:0">${A.soort === 'punten' ? 'Puntenlijst' : 'Synthese'}</h2>
@@ -795,6 +796,9 @@
     app.querySelectorAll('input.afp').forEach(c => c.onchange = () => { c.checked ? A.progs.add(c.value) : A.progs.delete(c.value); A.data = null; render(); });
     const g = document.getElementById('afdgemaakt'); if (g) g.onchange = () => { A.enkelGemaakt = g.checked; render(); };
     const k = document.getElementById('afdgesl'); if (k) k.onchange = () => { A.geslaagdKol = k.checked; render(); };
+    const tt = document.getElementById('afdtot'); if (tt) tt.onchange = () => { A.totaal = tt.checked; render(); };
+    const to = document.getElementById('afdtotop');
+    if (to) { to.onclick = (e) => e.stopPropagation(); to.onchange = () => { const v = Math.round(+String(to.value).replace(',', '.')); if (v >= 1 && v <= 1000) { A.totaalOp = v; A.totaal = true; } render(); }; }
   }
 
   // Inlogbrieven: per leerling één A4 met de login én de handleiding.
