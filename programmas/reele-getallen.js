@@ -1123,6 +1123,45 @@ const term = (c, x = 'x', eerste = false) => { // c·x als TeX met teken
 };
 const cst = (c) => c === 0 ? '' : c < 0 ? ` - ${-c}` : ` + ${c}`;
 const nz = (a, b) => { let x; do { x = rnd(a, b); } while (x === 0); return x; };
+// ---- uitdagend: exacte oplossingen (ook breuken) en V = ∅, stap voor stap in beide leden
+const fr9 = (p, q) => { if (q < 0) { p = -p; q = -q; } const g = ggd(Math.abs(p), q) || 1; return { p: p / g, q: q / g }; };
+const frTex = ({ p, q }) => q === 1 ? `${p}` : `${p < 0 ? '-' : ''}\\frac{${Math.abs(p)}}{${q}}`;
+const frH = (f) => f.p < 0 ? `\\left(${frTex(f)}\\right)` : frTex(f);
+const V9 = (f) => ({ soort: 'V', waarde: f.p / f.q, exact: true, tex: frTex(f), metSpeciaal: 'leeg' });
+const Vg = (x) => V9(fr9(x, 1));
+const V9leeg = () => ({ soort: 'V', speciaal: 'leeg', metSpeciaal: 'leeg' });
+const xs = (k) => k === 1 ? 'x' : `${k}x`;
+// a·x + b (a = 0 → enkel b; nul = true → 0x + b)
+const lin9 = (a, b, nul = false) => a === 0 ? (nul ? `0x${cst(b)}` : `${b}`) : `${term(a, 'x', true)}${cst(b)}`;
+// − (a·x + b) uitgewerkt, met teken ervoor
+const minLin = (a, b) => `${a === 0 ? '' : ' ' + term(-a, 'x', false)}${cst(-b)}`;
+const tekenOp = (c) => c < 0 ? '+' : '-';
+// Los A·x + B = C·x + D op, telkens dezelfde bewerking in beide leden.
+// Zet de lijnen in L; proef(f) geeft eventueel een proeflijn. Geeft het antwoord terug.
+function losOp(A, B, C, D, L, proef = null) {
+  if (C !== 0) {
+    L.push(`${lin9(A, B)} ${tekenOp(C)} ${xs(Math.abs(C))} = ${lin9(C, D)} ${tekenOp(C)} ${xs(Math.abs(C))}`);
+    A -= C; C = 0;
+    L.push(`${lin9(A, B, true)} = ${D}`);
+  }
+  if (B !== 0) {
+    L.push(`${lin9(A, B, true)} ${tekenOp(B)} ${Math.abs(B)} = ${D} ${tekenOp(B)} ${Math.abs(B)}`);
+    D -= B; B = 0;
+    L.push(`${A === 0 ? '0x' : term(A, 'x', true)} = ${D}`);
+  }
+  if (A === 0) {
+    L.push(`\\text{Geen enkel getal maal 0 geeft } ${D}\\text{: er is geen oplossing.}`);
+    L.push('V = \\varnothing');
+    return V9leeg();
+  }
+  if (A !== 1) L.push(`\\frac{${term(A, 'x', true)}}{${A}} = \\frac{${D}}{${A}}`);
+  const f = fr9(D, A);
+  L.push(`x = ${frTex(f)}`);
+  if (proef) L.push(proef(f));
+  L.push(f.q === 1 ? `V = \\{${frTex(f)}\\}` : `V = \\left\\{${frTex(f)}\\right\\}`);
+  return V9(f);
+}
+const klein = (f, q = 6, m = 20) => f.q <= q && Math.abs(f.p / f.q) <= m;
 const DEEL9 = {
   nr: 9, titel: 'Vergelijkingen', kort: 'Haakjes, noemers, evenredigheden en wortels.',
   rekenmachine: null,
@@ -1158,8 +1197,26 @@ const DEEL9 = {
       <p>Werk de wortel weg door <b>beide leden te kwadrateren</b>. Maak zeker de proef.</p>
       <p>$\\sqrt{x + 5} = 3 \\;\\Leftrightarrow\\; x + 5 = 9 \\;\\Leftrightarrow\\; x = 4$ &nbsp; <span class="klein">proef: $\\sqrt{4 + 5} = \\sqrt{9} = 3$ ✓</span></p>
     </div>
+    <div class="kader">
+      <div class="kader-titel">Minteken voor de haakjes</div>
+      <p>Een minteken voor de haakjes verandert het teken van <b>elke</b> term tussen de haakjes.</p>
+      <p>$-(2x - 3) = -2x + 3 \\qquad 5 - 2(x + 4) = 5 - 2x - 8$</p>
+    </div>
+    <div class="kader">
+      <div class="kader-titel">Een tweeterm in de teller</div>
+      <p>Zet de teller tussen haakjes als je met de noemer vermenigvuldigt, zeker als er een minteken voor de breuk staat.</p>
+      <p>$\\dfrac{x + 1}{3} - \\dfrac{x - 2}{4} = 1 \\;\\Leftrightarrow\\; 4(x + 1) - 3(x - 2) = 12$ &nbsp; <span class="klein">(beide leden maal 12)</span></p>
+    </div>
+    <div class="kader eig">
+      <div class="kader-titel">Geen oplossing: $V = \\varnothing$</div>
+      <p>Soms is er <b>geen enkel getal</b> dat voldoet. Dan is de oplossingenverzameling leeg: $V = \\varnothing$.</p>
+      <ul><li>De $x$ valt weg en je krijgt iets dat nooit klopt: $2(x + 3) = 2x + 1 \\;\\Leftrightarrow\\; 2x + 6 = 2x + 1 \\;\\Leftrightarrow\\; 0x = -5$. Geen enkel getal maal 0 geeft $-5$.</li>
+        <li>Een vierkantswortel is <b>nooit negatief</b>: $\\sqrt{x + 3} + 7 = 5 \\;\\Leftrightarrow\\; \\sqrt{x + 3} = -2$. Dat kan niet.</li></ul>
+    </div>
     <div class="kader"><div class="kader-titel">Zo typ je je antwoord</div>
-      <p>Typ in het vakje tussen de accolades enkel de oplossing, bv. $V = \\{\\,\\boxed{-3}\\,\\}$: typ <code>-3</code>. Een breuk typ je als <code>5/2</code>.</p></div>`,
+      <p>Typ in het vakje tussen de accolades enkel de oplossing, bv. $V = \\{\\,\\boxed{-3}\\,\\}$: typ <code>-3</code>.</p>
+      <p>Is de oplossing geen geheel getal? Geef dan de <b>exacte</b> oplossing als vereenvoudigde breuk: typ <code>7/3</code> of <code>-5/2</code> (geen afgerond kommagetal).</p>
+      <p>Is er geen oplossing? Klik dan op de knop $V = \\varnothing$.</p></div>`,
   voorbeelden: [
     { tex: '3x - 4 = 11', stappen: ['3x = 11 + 4 = 15', 'x = 5', '\\text{proef: } 3 \\cdot 5 - 4 = 11 \\;✓', 'V = \\{5\\}'] },
     { tex: '5x + 2 = 2x - 7', stappen: ['5x - 2x = -7 - 2', '3x = -9', 'x = -3', 'V = \\{-3\\}'] },
@@ -1167,6 +1224,10 @@ const DEEL9 = {
     { tex: '\\dfrac{x}{2} + \\dfrac{x}{4} = 6', stappen: ['\\text{beide leden maal 4: } 2x + x = 24', '3x = 24', 'x = 8', 'V = \\{8\\}'] },
     { tex: '\\dfrac{3}{x + 1} = \\dfrac{6}{x + 4}', stappen: ['3(x + 4) = 6(x + 1)', '3x + 12 = 6x + 6', '-3x = -6 \\;\\Leftrightarrow\\; x = 2', 'V = \\{2\\}'] },
     { tex: '\\sqrt{2x + 7} = 5', stappen: ['\\text{kwadrateren: } 2x + 7 = 25', '2x = 18 \\;\\Leftrightarrow\\; x = 9', '\\text{proef: } \\sqrt{2 \\cdot 9 + 7} = \\sqrt{25} = 5 \\;✓', 'V = \\{9\\}'] },
+    { tex: '3(2x - 1) - (x + 4) = 2(x - 5)', stappen: ['\\text{haakjes wegwerken: } 6x - 3 - x - 4 = 2x - 10', '5x - 7 = 2x - 10', '5x - 7 - 2x = 2x - 10 - 2x', '3x - 7 = -10', '3x - 7 + 7 = -10 + 7', '3x = -3', '\\frac{3x}{3} = \\frac{-3}{3}', 'x = -1', 'V = \\{-1\\}'] },
+    { tex: '\\dfrac{x + 1}{3} - \\dfrac{x - 2}{4} = 1', stappen: ['\\text{beide leden maal 12: } 4(x + 1) - 3(x - 2) = 12', '4x + 4 - 3x + 6 = 12', 'x + 10 = 12', 'x + 10 - 10 = 12 - 10', 'x = 2', 'V = \\{2\\}'] },
+    { tex: '4x + 1 = x + 8', stappen: ['4x + 1 - x = x + 8 - x', '3x + 1 = 8', '3x + 1 - 1 = 8 - 1', '3x = 7', '\\frac{3x}{3} = \\frac{7}{3}', 'x = \\frac{7}{3}', 'V = \\left\\{\\frac{7}{3}\\right\\}'] },
+    { tex: '\\sqrt{x + 3} + 7 = 5', stappen: ['\\sqrt{x + 3} + 7 - 7 = 5 - 7', '\\sqrt{x + 3} = -2', '\\text{Een vierkantswortel is nooit negatief: er is geen oplossing.}', 'V = \\varnothing'] },
   ],
   soorten: {
     lineair: { naam: 'Eenvoudige vergelijkingen', gen() {
@@ -1175,7 +1236,7 @@ const DEEL9 = {
       if (vorm === 'ax+b') { const a = nz(2, 9) * (Math.random() < 0.2 ? -1 : 1), b = nz(-20, 20); tex = `${term(a, 'x', true)}${cst(b)} = ${a * x + b}`; stap = [`${term(a, 'x', true)} = ${a * x + b} ${b < 0 ? '+' : '-'} ${Math.abs(b)} = ${a * x}`]; }
       else if (vorm === 'b-ax') { const a = rnd(2, 9), b = nz(1, 20); tex = `${b} - ${a}x = ${b - a * x}`; stap = [`-${a}x = ${b - a * x} - ${b} = ${-a * x}`]; }
       else { let a, c; do { a = rnd(2, 9); c = rnd(1, 8); } while (a === c); const b = nz(-12, 12), d = (a - c) * x + b; tex = `${term(a, 'x', true)}${cst(b)} = ${term(c, 'x', true)}${cst(d)}`; stap = [`${a}x - ${c === 1 ? '' : c}x = ${d}${b < 0 ? ` + ${-b}` : ` - ${b}`}`, `${a - c}x = ${d - b}`]; }
-      return { soort: 'lineair', tex, antw: V(x), uitleg: [...stap, `x = ${x}`, `V = \\{${x}\\}`] };
+      return { soort: 'lineair', tex, antw: Vg(x), uitleg: [...stap, `x = ${x}`, `V = \\{${x}\\}`] };
     } },
     haakjes: { naam: 'Eerst de haakjes weg', gen() {
       const x = nz(-8, 10), vorm = kies(['a(x+b)+c', 'a(x+b)=cx+d', 'a(bx+c)-dx']);
@@ -1183,7 +1244,7 @@ const DEEL9 = {
       if (vorm === 'a(x+b)+c') { const a = rnd(2, 6), b = nz(-6, 6), c = nz(-9, 9); tex = `${a}(x${cst(b)})${cst(c)} = ${a * (x + b) + c}`; stap = [`${a}x${cst(a * b)}${cst(c)} = ${a * (x + b) + c}`, `${a}x = ${a * x}`]; }
       else if (vorm === 'a(x+b)=cx+d') { let a, c; do { a = rnd(2, 6); c = rnd(1, 7); } while (a === c); const b = nz(-6, 6), d = a * (x + b) - c * x; tex = `${a}(x${cst(b)}) = ${term(c, 'x', true)}${cst(d)}`; stap = [`${a}x${cst(a * b)} = ${term(c, 'x', true)}${cst(d)}`, `${a - c}x = ${(a - c) * x}`]; }
       else { const a = rnd(2, 5), b = rnd(2, 4), c = nz(-5, 5); let d; do { d = rnd(1, 9); } while (d === a * b); const e = a * (b * x + c) - d * x; tex = `${a}(${b}x${cst(c)}) - ${d === 1 ? '' : d}x = ${e}`; stap = [`${a * b}x${cst(a * c)} - ${d === 1 ? '' : d}x = ${e}`, `${a * b - d}x = ${(a * b - d) * x}`]; }
-      return { soort: 'haakjes', opdracht: 'Los op. Werk eerst de haakjes weg.', tex, antw: V(x), uitleg: [...stap, `x = ${x}`, `V = \\{${x}\\}`] };
+      return { soort: 'haakjes', opdracht: 'Los op. Werk eerst de haakjes weg.', tex, antw: Vg(x), uitleg: [...stap, `x = ${x}`, `V = \\{${x}\\}`] };
     } },
     noemer: { naam: 'Eerst de noemer weg', gen() {
       const vorm = kies(['x/a+b', 'bx/a-c', 'x/a+x/b']);
@@ -1191,19 +1252,19 @@ const DEEL9 = {
       if (vorm === 'x/a+b') { const a = rnd(2, 9), k = nz(-6, 8), b = nz(-9, 9); x = a * k; const r = k + b; tex = `\\dfrac{x}{${a}}${cst(b)} = ${r}`; stap = [`\\text{beide leden maal ${a}: } x${cst(a * b)} = ${a * r}`]; }
       else if (vorm === 'bx/a-c') { let a, b; do { a = rnd(2, 7); b = rnd(2, 7); } while (ggd(a, b) > 1); const k = nz(-5, 6), c = nz(-9, 9); x = a * k; const r = b * k - c; tex = `\\dfrac{${b}x}{${a}}${cst(-c)} = ${r}`; stap = [`\\text{beide leden maal ${a}: } ${b}x${cst(-a * c)} = ${a * r}`, `${b}x = ${a * r + a * c}`]; }
       else { let a, b; do { a = rnd(2, 6); b = rnd(2, 6); } while (a === b); const L = kgv(a, b), k = nz(-4, 5); x = L * k; const r = x / a + x / b; tex = `\\dfrac{x}{${a}} + \\dfrac{x}{${b}} = ${r}`; stap = [`\\text{beide leden maal ${L}: } ${L / a}x + ${L / b}x = ${L * r}`, `${L / a + L / b}x = ${L * r}`]; }
-      return { soort: 'noemer', opdracht: 'Los op. Werk eerst de noemer weg.', tex, antw: V(x), uitleg: [...stap, `x = ${x}`, `V = \\{${x}\\}`] };
+      return { soort: 'noemer', opdracht: 'Los op. Werk eerst de noemer weg.', tex, antw: Vg(x), uitleg: [...stap, `x = ${x}`, `V = \\{${x}\\}`] };
     } },
     evenredigheid: { naam: 'Evenredigheden', gen() {
       for (;;) {
         if (Math.random() < 0.5) { // a/x = b/c
           const x = rnd(1, 12), b = rnd(2, 12), c = rnd(2, 12); const a = b * x / c; if (!Number.isInteger(a) || a < 1 || a > 40) continue;
-          return { soort: 'evenredigheid', opdracht: 'Los de evenredigheid op.', tex: `\\dfrac{${a}}{x} = \\dfrac{${b}}{${c}}`, antw: V(x), uitleg: [`${a} \\cdot ${c} = ${b} \\cdot x`, `${a * c} = ${b}x`, `x = ${x}`, `V = \\{${x}\\}`] };
+          return { soort: 'evenredigheid', opdracht: 'Los de evenredigheid op.', tex: `\\dfrac{${a}}{x} = \\dfrac{${b}}{${c}}`, antw: Vg(x), uitleg: [`${a} \\cdot ${c} = ${b} \\cdot x`, `${a * c} = ${b}x`, `x = ${x}`, `V = \\{${x}\\}`] };
         }
         const a = rnd(2, 9), b = rnd(2, 9); if (a === b) continue;
         const p = nz(-5, 5), q = nz(-5, 5); if (p === q) continue;
         const x = (b * p - a * q) / (a - b); if (!Number.isInteger(x) || x + p === 0 || x + q === 0 || Math.abs(x) > 20) continue;
         const tex = `\\dfrac{${a}}{x${cst(p)}} = \\dfrac{${b}}{x${cst(q)}}`;
-        return { soort: 'evenredigheid', opdracht: 'Los de evenredigheid op.', tex, antw: V(x),
+        return { soort: 'evenredigheid', opdracht: 'Los de evenredigheid op.', tex, antw: Vg(x),
           uitleg: [`${a}(x${cst(q)}) = ${b}(x${cst(p)})`, `${a}x${cst(a * q)} = ${b}x${cst(b * p)}`, `${term(a - b, 'x', true)} = ${b * p - a * q}`, `x = ${x}`, `V = \\{${x}\\}`] };
       }
     } },
@@ -1212,13 +1273,126 @@ const DEEL9 = {
         const c = rnd(2, 9), a = nz(-4, 5), x = nz(-8, 12), b = c * c - a * x;
         if (Math.abs(b) > 60) continue;
         const binnen = `${term(a, 'x', true)}${cst(b)}`;
-        return { soort: 'wortel', opdracht: 'Los op. Werk eerst de wortel weg door beide leden te kwadrateren. Maak de proef.', tex: `\\sqrt{${binnen}} = ${c}`, antw: V(x),
+        return { soort: 'wortel', opdracht: 'Los op. Werk eerst de wortel weg door beide leden te kwadrateren. Maak de proef.', tex: `\\sqrt{${binnen}} = ${c}`, antw: Vg(x),
           uitleg: [`\\text{kwadrateren: } ${binnen} = ${c * c}`, `${term(a, 'x', true)} = ${c * c - b}`, `x = ${x}`, `\\text{proef: } \\sqrt{${a === 1 ? '' : a === -1 ? '-' : a + ' \\cdot '}${h(x)}${cst(b)}} = \\sqrt{${c * c}} = ${c} \\;✓`, `V = \\{${x}\\}`] };
       }
     } },
+    lineairU: { naam: '★ Uitdagend: x in beide leden', gen() {
+      for (;;) {
+        const a = nz(-9, 9), c = nz(-9, 9); if (a === c) continue;
+        const b = nz(-15, 15), d = nz(-15, 15), f = fr9(d - b, a - c);
+        if (!klein(f, 9, 15) || (f.q === 1 && Math.random() < 0.7)) continue;
+        const L = [], antw = losOp(a, b, c, d, L);
+        return { soort: 'lineairU', tex: `${lin9(a, b)} = ${lin9(c, d)}`, antw, uitleg: L };
+      }
+    } },
+    haakjesU: { naam: '★ Uitdagend: minteken voor de haakjes, haakjes in beide leden', gen() {
+      const leeg = Math.random() < 0.25;
+      for (;;) {
+        let tex, uit, A, B, C, D;
+        if (Math.random() < 0.5) { // a(bx + c) − (dx + e) = f(x + g)
+          const a = rnd(2, 5), b = rnd(1, 4), c = nz(-6, 6), d = rnd(1, 6), e = nz(-8, 8), f = rnd(2, 5), g = nz(-6, 6);
+          tex = `${a}(${lin9(b, c)}) - (${lin9(d, e)}) = ${f}(x${cst(g)})`;
+          uit = `${lin9(a * b, a * c)}${minLin(d, e)} = ${lin9(f, f * g)}`;
+          A = a * b - d; B = a * c - e; C = f; D = f * g;
+        } else { // −a(x + b) + c = d − (ex + f)
+          const a = rnd(2, 6), b = nz(-6, 6), c = nz(-9, 9), d = nz(-9, 9), e = rnd(1, 6), f = nz(-8, 8);
+          tex = `-${a}(x${cst(b)})${cst(c)} = ${d} - (${lin9(e, f)})`;
+          uit = `${lin9(-a, -a * b)}${cst(c)} = ${d}${minLin(e, f)}`;
+          A = -a; B = -a * b + c; C = -e; D = d - f;
+        }
+        if (leeg ? (A !== C || B === D) : (A === C || !klein(fr9(D - B, A - C)))) continue;
+        const L = [`\\text{haakjes wegwerken: } ${uit}`, `${lin9(A, B)} = ${lin9(C, D)}`];
+        const antw = losOp(A, B, C, D, L);
+        return { soort: 'haakjesU', opdracht: 'Los op. Werk eerst de haakjes weg.', tex, antw, uitleg: L };
+      }
+    } },
+    noemerU: { naam: '★ Uitdagend: tweetermen in de teller', gen() {
+      if (Math.random() < 0.2) { // (x + p)/a = x/a + r  → V = ∅
+        const a = rnd(2, 8), r = nz(-5, 5); let p; do { p = nz(-9, 9); } while (p === a * r);
+        const L = [`\\text{beide leden maal ${a}: } x${cst(p)} = x${cst(a * r)}`];
+        const antw = losOp(1, p, 1, a * r, L);
+        return { soort: 'noemerU', opdracht: 'Los op. Werk eerst de noemer weg.', tex: `\\dfrac{${lin9(1, p)}}{${a}} = \\dfrac{x}{${a}}${cst(r)}`, antw, uitleg: L };
+      }
+      for (;;) {
+        const a = rnd(2, 6), b = rnd(2, 6); if (a === b) continue;
+        const m1 = rnd(1, 3), m2 = rnd(1, 3), p = nz(-6, 6), q = nz(-6, 6), r = rnd(-4, 6), s = Math.random() < 0.6 ? -1 : 1;
+        const Lk = kgv(a, b), k1 = Lk / a, k2 = Lk / b;
+        const A = k1 * m1 + s * k2 * m2, B = k1 * p + s * k2 * q, D = Lk * r;
+        if (A === 0 || !klein(fr9(D - B, A))) continue;
+        const f1 = k1 === 1 ? lin9(m1, p) : `${k1}(${lin9(m1, p)})`;
+        const f2 = k2 === 1 ? (s < 0 ? `(${lin9(m2, q)})` : lin9(m2, q)) : `${k2}(${lin9(m2, q)})`;
+        const uit = `${lin9(k1 * m1, k1 * p)}${s < 0 ? minLin(k2 * m2, k2 * q) : ` + ${xs(k2 * m2)}${cst(k2 * q)}`}`;
+        const L = [`\\text{beide leden maal ${Lk}: } ${f1} ${s < 0 ? '-' : '+'} ${f2} = ${D}`, `${uit} = ${D}`, `${lin9(A, B)} = ${D}`];
+        const antw = losOp(A, B, 0, D, L);
+        return { soort: 'noemerU', opdracht: 'Los op. Werk eerst de noemer weg.', tex: `\\dfrac{${lin9(m1, p)}}{${a}} ${s < 0 ? '-' : '+'} \\dfrac{${lin9(m2, q)}}{${b}} = ${r}`, antw, uitleg: L };
+      }
+    } },
+    evenredigheidU: { naam: '★ Uitdagend: evenredigheden met tweetermen', gen() {
+      const leeg = Math.random() < 0.15;
+      for (;;) {
+        if (leeg || Math.random() < 0.6) { // (ax + p)/b = (cx + q)/d
+          const a = nz(-4, 5), c = nz(-4, 5), b = rnd(2, 9), d = rnd(2, 9), p = nz(-9, 9), q = nz(-9, 9);
+          if (b === d) continue;
+          const A = d * a, B = d * p, C = b * c, D = b * q;
+          if (leeg ? (A !== C || B === D) : (A === C || !klein(fr9(D - B, A - C)))) continue;
+          const L = [`\\text{uitersten = middelsten: } ${d}(${lin9(a, p)}) = ${b}(${lin9(c, q)})`, `${lin9(A, B)} = ${lin9(C, D)}`];
+          const antw = losOp(A, B, C, D, L);
+          return { soort: 'evenredigheidU', opdracht: 'Los de evenredigheid op.', tex: `\\dfrac{${lin9(a, p)}}{${b}} = \\dfrac{${lin9(c, q)}}{${d}}`, antw, uitleg: L };
+        }
+        // a/(x + p) = b/(cx + q)
+        const a = rnd(2, 9), b = rnd(2, 9), c = rnd(2, 4), p = nz(-6, 6), q = nz(-6, 6);
+        const A = a * c, B = a * q, C = b, D = b * p;
+        if (A === C) continue;
+        const f = fr9(D - B, A - C), x = f.p / f.q;
+        if (!klein(f) || Math.abs(x + p) < 1e-9 || Math.abs(c * x + q) < 1e-9) continue;
+        const L = [`\\text{uitersten = middelsten: } ${a}(${lin9(c, q)}) = ${b}(x${cst(p)})`, `${lin9(A, B)} = ${lin9(C, D)}`];
+        const antw = losOp(A, B, C, D, L);
+        return { soort: 'evenredigheidU', opdracht: 'Los de evenredigheid op.', tex: `\\dfrac{${a}}{x${cst(p)}} = \\dfrac{${b}}{${lin9(c, q)}}`, antw, uitleg: L };
+      }
+    } },
+    wortelU: { naam: '★ Uitdagend: eerst de wortel alleen zetten', gen() {
+      const opdr = 'Los op. Zet de wortel alleen, kwadrateer beide leden en maak de proef.';
+      const vorm = W.gewogen([['plus', 2], ['maal', 1], ['breuk', 1]]);
+      for (;;) {
+        if (vorm === 'breuk') { // √((x + p)/a) = k
+          const a = rnd(2, 6), p = nz(-9, 9), k = rnd(1, 5), x = a * k * k - p;
+          const L = [`\\text{kwadrateren: } \\dfrac{${lin9(1, p)}}{${a}} = ${k * k}`, `\\text{beide leden maal ${a}: } ${lin9(1, p)} = ${a * k * k}`];
+          const antw = losOp(1, p, 0, a * k * k, L, () => `\\text{proef: } \\sqrt{\\dfrac{${h(x)}${cst(p)}}{${a}}} = \\sqrt{${k * k}} = ${k} \\;✓`);
+          return { soort: 'wortelU', opdracht: opdr, tex: `\\sqrt{\\dfrac{${lin9(1, p)}}{${a}}} = ${k}`, antw, uitleg: L };
+        }
+        const a = nz(-4, 5), b = nz(-12, 12), binnen = lin9(a, b);
+        const W2 = `\\sqrt{${binnen}}`;
+        const negatief = Math.random() < 0.35;
+        const k = negatief ? -rnd(1, 6) : rnd(1, 7);
+        const f = fr9(k * k - b, a);
+        if (!negatief && !klein(f, 5, 25)) continue;
+        const L = [];
+        let tex;
+        if (vorm === 'plus') { // √(ax + b) + c = d
+          const c = nz(-9, 9), d = k + c;
+          tex = `${W2}${cst(c)} = ${d}`;
+          L.push(`${W2}${cst(c)} ${tekenOp(c)} ${Math.abs(c)} = ${d} ${tekenOp(c)} ${Math.abs(c)}`, `${W2} = ${k}`);
+        } else { // m·√(ax + b) = n
+          const m = rnd(2, 5), n = m * k;
+          tex = `${m}${W2} = ${n}`;
+          L.push(`\\frac{${m}${W2}}{${m}} = \\frac{${n}}{${m}}`, `${W2} = ${k}`);
+        }
+        if (negatief) {
+          L.push(`\\text{Een vierkantswortel is nooit negatief: er is geen oplossing.}`, 'V = \\varnothing');
+          return { soort: 'wortelU', opdracht: opdr, tex, antw: V9leeg(), uitleg: L };
+        }
+        L.push(`\\text{kwadrateren: } ${binnen} = ${k * k}`);
+        const antw = losOp(a, b, 0, k * k, L, (g) => `\\text{proef: } \\sqrt{${a === 1 ? '' : a === -1 ? '-' : a + ' \\cdot '}${frH(g)}${cst(b)}} = \\sqrt{${k * k}} = ${k} \\;✓`);
+        return { soort: 'wortelU', opdracht: opdr, tex, antw, uitleg: L };
+      }
+    } },
   },
-  oefenMix: [['lineair', 3], ['haakjes', 2], ['noemer', 2], ['evenredigheid', 2], ['wortel', 2]],
-  test: [['lineair', 3], ['haakjes', 2], ['noemer', 2], ['evenredigheid', 1], ['wortel', 2]],
+  oefenMix: [['lineair', 2], ['haakjes', 2], ['noemer', 2], ['evenredigheid', 1], ['wortel', 2],
+             ['lineairU', 2], ['haakjesU', 3], ['noemerU', 3], ['evenredigheidU', 2], ['wortelU', 3]],
+  // 12 vragen: 3 basis (25 %) en 9 uitdagend (75 %)
+  test: [['lineair', 1], ['haakjes', 1], ['wortel', 1],
+         ['lineairU', 2], ['haakjesU', 2], ['noemerU', 2], ['evenredigheidU', 1], ['wortelU', 2]],
 };
 
 // ===================================================================

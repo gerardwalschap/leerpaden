@@ -7,7 +7,8 @@
 //   ongelijkheid {a, ai, b, bi}                                 −2 ≤ x < 5
 //   vakjes       {sjabloon:[{tex}|{veld, sub?, sup?, breed?}], velden:[{expr, vormen?}]}
 //   delen        {delen:[{label, antw}]}                        meerdere antwoorden bij één vraag
-//   V            {waarde, dec?, speciaal?: 'leeg'|'R', metSpeciaal?}  oplossingenverzameling V = {…}, V = ∅ of V = ℝ
+//   V            {waarde, dec?, speciaal?: 'leeg'|'R', metSpeciaal?: true|'leeg', exact?, tex?}  oplossingenverzameling V = {…}, V = ∅ of V = ℝ
+//                metSpeciaal 'leeg' = enkel de knop V = ∅; exact = breuk of geheel getal, geen afgerond kommagetal
 //   veelterm     {expr, vorm?: 'uitgewerkt'|'ontbonden', voor?, tex?}  veeltermen (veeltermkern VT)
 //   Vmeer        {waarden:[…], tex?:[…], dec?, leeg?: true}    V = {x₁ ; x₂} (volgorde vrij) of V = ∅
 //   complex      {re, im, tex, dec?, exact?, vorm?: 'vrij'}       complex getal a + bi (rekenkern CX)
@@ -273,7 +274,7 @@ const Antwoord = (() => {
       return `<div class="antwoordrij vrij"><span class="is">${T('V = \\{')}</span>
           <input type="text" class="veld${sp ? ' uitgeschakeld' : ''}" id="${id}" value="${esc(sp ? '' : w.invoer)}" placeholder="${sp ? '' : 'oplossing'}" autocomplete="off" autocapitalize="none" spellcheck="false" inputmode="text" ${dis}>
           <span class="is">${T('\\}')}</span>
-          ${a.metSpeciaal ? `<span class="of">of</span><button type="button" class="keuze vsp ${sp === 'leeg' ? 'aan' : ''}" data-vid="${id}" data-s="leeg" ${dis}>${T('V = \\varnothing')}</button><button type="button" class="keuze vsp ${sp === 'R' ? 'aan' : ''}" data-vid="${id}" data-s="R" ${dis}>${T('V = \\mathbb{R}')}</button>` : ''}
+          ${a.metSpeciaal ? `<span class="of">of</span><button type="button" class="keuze vsp ${sp === 'leeg' ? 'aan' : ''}" data-vid="${id}" data-s="leeg" ${dis}>${T('V = \\varnothing')}</button>${a.metSpeciaal === 'leeg' ? '' : `<button type="button" class="keuze vsp ${sp === 'R' ? 'aan' : ''}" data-vid="${id}" data-s="R" ${dis}>${T('V = \\mathbb{R}')}</button>`}` : ''}
           ${a.dec > 0 && !uit ? `<span class="afrond" title="Een breuk mag ook (bv. -1/3).">geen mooi getal? rond af op ${a.dec} ${a.dec === 1 ? 'decimaal' : 'decimalen'}</span>` : ''}</div>`;
     }
     if (a.soort === 'teken') {
@@ -540,12 +541,20 @@ const Antwoord = (() => {
   function nakijkV(a, w) {
     if (w.speciaal) return { status: a.speciaal === w.speciaal ? 'juist' : 'fout' };
     const inv = zonderV(w.invoer);
-    if (!inv.trim()) return { status: 'leeg', bericht: a.metSpeciaal ? 'Vul de oplossing in, of kies V = ∅ of V = ℝ.' : 'Vul de oplossing in.' };
-    if (/[∅øØ]|leeg|^\s*R\s*$|ℝ/i.test(inv)) return { status: 'ongeldig', bericht: a.metSpeciaal ? 'Klik op de knop V = ∅ of V = ℝ.' : 'Typ één getal.' };
+    const knop = a.metSpeciaal === 'leeg' ? 'V = ∅' : 'V = ∅ of V = ℝ';
+    if (!inv.trim()) return { status: 'leeg', bericht: a.metSpeciaal ? `Vul de oplossing in, of kies ${knop}.` : 'Vul de oplossing in.' };
+    if (/[∅øØ]|leeg|^\s*R\s*$|ℝ/i.test(inv)) return { status: 'ongeldig', bericht: a.metSpeciaal ? `Klik op de knop ${knop}.` : 'Typ één getal.' };
     const g = Invoer.getal(inv);
     if (!g.ok) return { status: 'ongeldig', bericht: g.fout };
     if (a.speciaal) return { status: 'fout' };
-    if (Math.abs(g.waarde - a.waarde) < 1e-9) return { status: 'juist' };
+    if (Math.abs(g.waarde - a.waarde) < 1e-9) {
+      // exact: true = een breuk moet vereenvoudigd zijn
+      const mb = a.exact && String(inv).replace(/[−–—]/g, '-').replace(/\s+/g, '').match(/^-?(\d+)\/-?(\d+)$/);
+      if (mb && ggdB(+mb[1], +mb[2]) > 1) return { status: 'vorm', bericht: 'Vereenvoudig de breuk nog.' };
+      return { status: 'juist' };
+    }
+    // exact: true = geen afgerond kommagetal, enkel een geheel getal of een breuk
+    if (a.exact) return g.decimalen > 0 && Math.abs(g.waarde - a.waarde) < 0.01 ? { status: 'vorm', bericht: 'Geef de exacte oplossing: een breuk (bv. 7/3), geen afgerond kommagetal.' } : { status: 'fout' };
     return nakijkGetal({ waarde: a.waarde, dec: a.dec ?? 2 }, inv);
   }
   // V = {x₁ ; x₂}: elke oplossing exact (ook als breuk) of juist afgerond op a.dec decimalen, volgorde vrij
@@ -639,7 +648,7 @@ const Antwoord = (() => {
     const g = (x, d) => d !== undefined && d !== null ? W.texGetal(x, d, Math.abs(W.rond(x, d) - x) > 1e-9) : W.texGetal(x);
     switch (a.soort) {
       case 'getal': return (a.tex ? a.tex : a.vast && a.dec != null ? W.texGetal(a.waarde, a.dec, true) : g(a.waarde, a.dec)) + (a.na ? '\\ ' + a.na : '');
-      case 'V': return a.speciaal === 'leeg' ? 'V = \\varnothing' : a.speciaal === 'R' ? 'V = \\mathbb{R}' : `V = \\{${g(a.waarde, a.dec ?? 2)}\\}`;
+      case 'V': return a.speciaal === 'leeg' ? 'V = \\varnothing' : a.speciaal === 'R' ? 'V = \\mathbb{R}' : `V = \\{${a.tex || g(a.waarde, a.dec ?? 2)}\\}`;
       case 'expr': return a.tex || E.texVan(a.expr);
       case 'complex': return a.tex || CX.texAbi(a.re, a.im);
       case 'breuk': return (a.voor ? a.voor + ' ' : '') + breukTex(a.t, a.n);
