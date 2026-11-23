@@ -650,16 +650,41 @@
     }
     return uit;
   }
+  // Totaalscore op 50 (enkel 7VJHO): alle pogingen van alle getoonde leerpaden samen.
+  // Elke poging telt mee (op 5); een deel zonder poging telt als één test met 0 (dus een leerpad niet gemaakt = 0).
+  // Leerpaden waaraan de leerling niet gekoppeld is, tellen niet mee.
+  const TOTAAL_OP = 50;
+  const komma1 = (x) => String(Math.round(10 * x) / 10).replace('.', ',');
+  function totaalTabel(k, tot, data, rij) {
+    if (!/^7VJHO/i.test(String(k).replace(/\s+/g, '')) || !tot.size) return '';
+    const progs = data.map(x => x.P).filter(P => [...tot.values()].some(x => x.lp[P.code]));
+    if (!progs.length) return '';
+    const rijen = [...tot.values()].sort((a, b) => a.naam.localeCompare(b.naam)).map(x => {
+      const S_ = progs.reduce((a, P) => a + (x.lp[P.code] ? x.lp[P.code].s : 0), 0), M = progs.reduce((a, P) => a + (x.lp[P.code] ? x.lp[P.code].m : 0), 0);
+      return rij([x.naam, ...progs.map(P => ({ k: 'sc', t: x.lp[P.code] ? `${komma1(x.lp[P.code].s)}/${x.lp[P.code].m}` : '—' })),
+        { k: 'sc', t: M ? `<b>${komma1(TOTAAL_OP * S_ / M)}</b>` : '—' }]);
+    }).join('');
+    return `<div class="blok"><div class="lpkop">Totaalscore <span class="klein">· alle pogingen van alle leerpaden samen, herrekend naar ${TOTAAL_OP}</span></div>
+      <table>${rij(['Leerling', ...progs.map(P => ({ k: 'sc', t: esc(P.titel) })), { k: 'sc', t: `Totaal /${TOTAAL_OP}` }], true)}${rijen}</table>
+      <p class="klein">Per leerpad: behaalde punten / maximum (elke poging telt op ${OP}; een deel zonder poging telt als 0/${OP}). — = niet gekoppeld aan dat leerpad, telt niet mee.</p></div>`;
+  }
   function puntenHTML(data, metStijl) {
     const A = AFD(), rij = (c, th) => `<tr>${c.map(x => typeof x === 'object' ? `<${th ? 'th' : 'td'} class="${x.k}">${x.t}</${th ? 'th' : 'td'}>` : `<${th ? 'th' : 'td'}>${x}</${th ? 'th' : 'td'}>`).join('')}</tr>`;
     const klassen = [...A.klassen].sort();
     const blokken = klassen.map((k, ki) => {
+      const tot = new Map(); // 7VJHO: per leerling { naam, per leerpad { s, m } }
       const tabellen = data.map(({ P, drempel, leerlingen }) => {
         const ll = leerlingen.filter(l => l.klas === k);
         if (!ll.length) return '';
         let delen = klaarDelen(P);
         if (A.enkelGemaakt) delen = delen.filter(d => ll.some(l => ingediendVan(l.status, d.nr).length));
         if (!delen.length) return `<div class="blok"><div class="lpkop">${esc(P.titel)}</div><p class="klein">Nog geen testen afgelegd.</p></div>`;
+        // totaalscore: elke poging telt (op 5); een deel zonder poging telt als één test met 0
+        ll.forEach(l => {
+          const x = tot.get(l.id) || { naam: `${esc(l.naam)} ${esc(l.voornaam)}`, lp: {} }; let sc = 0, mx = 0;
+          delen.forEach(d => { const ts = ingediendVan(l.status, d.nr); mx += OP * Math.max(1, ts.length); ts.forEach(t => { sc += OP * t.score / t.max; }); });
+          x.lp[P.code] = { s: sc, m: mx }; tot.set(l.id, x);
+        });
         // elke afgelegde test (elke poging) krijgt een eigen kolom, in volgorde van indienen
         const kol = delen.flatMap(d => { const n = Math.max(...ll.map(l => ingediendVan(l.status, d.nr).length), 1); return Array.from({ length: n }, (_, i) => ({ d, i, n })); });
         const cel = (l, c) => { const t = ingediendVan(l.status, c.d.nr)[c.i]; return t ? `<span class="${t.geslaagd ? '' : 'r'}">${op5(t)}</span>` : ''; };
@@ -669,7 +694,7 @@
             ...(A.geslaagdKol ? [{ k: 'sc', t: `${l.status.geslaagd.length}/${klaarDelen(P).length}` }] : [])])).join('')}</table>
           <p class="klein">${delen.map(d => `D${d.nr} = ${esc(d.titel)}`).join(' · ')}</p></div>`;
       }).join('');
-      return `<div class="${ki ? 'nieuwe-pagina' : ''}">${afdKop(`Puntenlijst ${esc(k)}`, `alle afgelegde testen, herrekend naar ${OP} punten · (1), (2), … = 1ste, 2de poging · rood = niet geslaagd`)}${tabellen || '<p>Geen gegevens.</p>'}</div>`;
+      return `<div class="${ki ? 'nieuwe-pagina' : ''}">${afdKop(`Puntenlijst ${esc(k)}`, `alle afgelegde testen, herrekend naar ${OP} punten · (1), (2), … = 1ste, 2de poging · rood = niet geslaagd`)}${tabellen || '<p>Geen gegevens.</p>'}${totaalTabel(k, tot, data, rij)}</div>`;
     }).join('');
     return `<div class="rapport" style="width:1010px">${RAPPORTSTIJL + AFDSTIJL}${blokken}</div>`;
   }
