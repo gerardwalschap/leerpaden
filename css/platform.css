@@ -115,3 +115,20 @@ input.rb-klein { width: 70px; padding: 3px 6px; border: 1px solid #cfd6e0; borde
 .instap-kop:first-child { margin-top: 0; }
 .instap-tabel td.sc, .instap-tabel th.sc { text-align: center; white-space: nowrap; }
 .niv-telling { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0 14px; }
+
+/* Alle leerlingen: gekoppelde leerpaden als labels i.p.v. één kolom per leerpad */
+table.alle-ll td { vertical-align: top; }
+.lpchips { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.lpchip { display: inline-flex; align-items: center; gap: 2px; font-size: 12.5px; background: var(--blauw-licht); color: var(--blauw); border: 1px solid #c9d8ec; border-radius: 99px; padding: 2px 4px 2px 10px; white-space: nowrap; }
+.lpchip.aan { background: var(--blauw); color: #fff; border-color: var(--blauw); }
+.lpchip button { background: transparent; border: 0; color: inherit; padding: 0 6px; font-size: 15px; line-height: 1; border-radius: 99px; cursor: pointer; opacity: .65; }
+.lpchip button:hover { opacity: 1; background: rgba(0,0,0,.08); }
+button.lpplus { font-size: 12.5px; padding: 2px 10px; border-radius: 99px; background: transparent; color: var(--blauw); border: 1px dashed var(--blauw); }
+button.lpplus:hover { background: var(--blauw-licht); }
+button.icoon-knop { padding: 4px 8px; line-height: 1; }
+.lpkeuzes { max-height: 60vh; overflow-y: auto; margin: 8px 0; }
+.lpgroep { margin: 8px 0 12px; }
+.lpgroep-titel { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--grijs); margin-bottom: 4px; }
+.lpkeuze { display: flex; align-items: center; gap: 8px; padding: 4px 2px; cursor: pointer; font-size: 14px; }
+.lpkeuze input { width: 17px; height: 17px; }
+.lpkeuzes details summary { cursor: pointer; color: var(--blauw); font-size: 14px; margin: 6px 0; }

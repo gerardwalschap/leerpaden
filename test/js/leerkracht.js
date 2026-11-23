@@ -7,7 +7,7 @@
     token: API.sessie.get('lk-token'), view: 'login',
     dbProgs: [], prog: API.sessie.get('lk-prog'), P: null,
     data: null, detail: null, alle: null, nieuw: null, fout: '', melding: '',
-    klas: API.sessie.get('lk-klas') || '', zoek: '', selectie: new Set(),
+    klas: API.sessie.get('lk-klas') || '', zoek: '', selectie: new Set(), lpFilter: '',
     boomKlas: API.sessie.get('lk-boomklas') || null, boomVak: API.sessie.get('lk-boomvak') || null,
   };
   const KLAAR = () => S.P.delen.filter(d => d.klaar);
@@ -456,30 +456,53 @@
       </div>`;
   }
 
+  // Leerpaden gegroepeerd per vak (volgens de catalogus), eventueel eerst de vakken van één klas.
+  function lpGroepen(klasnaam) {
+    const C = Catalogus.C, kl = klasnaamKlas(klasnaam), gezien = new Set(), groepen = [];
+    const vakken = Object.keys(C.vakken).sort((x, y) => (kl && kl.vakken.includes(y) ? 1 : 0) - (kl && kl.vakken.includes(x) ? 1 : 0));
+    for (const vak of vakken) {
+      const V = C.vakken[vak], codes = [];
+      for (const h of V.hoofdstukken) for (const c of (h.leerpaden || [])) if (!gezien.has(c) && Leerpaden.vind(c)) { gezien.add(c); codes.push(c); }
+      if (codes.length) groepen.push({ titel: `${V.naam} · ${Catalogus.klassenMetVak(vak).join(' · ')}`, eigen: !!(kl && kl.vakken.includes(vak)), codes });
+    }
+    const rest = Leerpaden.lijst.map(p => p.code).filter(c => !gezien.has(c));
+    if (rest.length) groepen.push({ titel: 'Overige leerpaden', eigen: false, codes: rest });
+    return groepen;
+  }
+  const klasnaamKlas = (k) => (k && typeof Catalogus !== 'undefined') ? Catalogus.klasVan(k) : null;
+  const filterAlle = (lijst) => filter(lijst).filter(l => !S.lpFilter || (S.lpFilter === '-' ? !l.programmas.length : l.programmas.includes(S.lpFilter)));
+  const lpOpties = (gekozen, metGeen) => lpGroepen(S.klas).map(g => `<optgroup label="${esc(g.titel)}">${g.codes.map(c => `<option value="${esc(c)}" ${c === gekozen ? 'selected' : ''}>${esc(progTitel(c))}</option>`).join('')}</optgroup>`).join('')
+    + (metGeen ? `<option value="-" ${gekozen === '-' ? 'selected' : ''}>— aan geen enkel leerpad gekoppeld —</option>` : '');
+
   function vAlle() {
-    const alle = S.alle, ll = filter(alle), progs = Leerpaden.lijst;
+    const alle = S.alle, ll = filterAlle(alle);
     const sel = [...S.selectie].filter(id => alle.some(l => l.id === id));
+    const chips = (l) => {
+      const volg = lpGroepen(l.klas).flatMap(g => g.codes);
+      return l.programmas.slice().sort((x, y) => volg.indexOf(x) - volg.indexOf(y)).map(c => `<span class="lpchip${c === S.lpFilter ? ' aan' : ''}">${esc(progTitel(c))}<button type="button" data-a="ontkoppel" data-id="${l.id}" data-code="${esc(c)}" title="Ontkoppelen (resultaten blijven bewaard)" aria-label="${esc(progTitel(c))} ontkoppelen">×</button></span>`).join('');
+    };
     return `<div class="werkbalk"><h1 class="vul" style="margin:0">Alle leerlingen <span class="klein">(${alle.length} accounts)</span></h1>
         <button data-a="toevoegen">+ Nieuwe leerlingen</button></div>
-      <p class="klein">Eén account per leerling, voor alle leerpaden. Vink een leerpad aan om de leerling eraan te koppelen. Ontkoppelen wist geen resultaten: koppel je later opnieuw, dan staat alles er nog.</p>
-      ${alle.length ? filterbalk(alle) : '<div class="kaart"><p>Nog geen accounts.</p></div>'}
+      <p class="klein">Eén account per leerling, voor alle leerpaden. Bij elke leerling zie je de leerpaden waaraan hij gekoppeld is. Klik op <b>+ leerpad</b> om te koppelen, op <b>×</b> om te ontkoppelen. Ontkoppelen wist geen resultaten: koppel je later opnieuw, dan staat alles er nog.</p>
+      ${alle.length ? `<div class="filters">${filterbalk(alle).replace(/^<div class="filters">|<\/div>\s*$/g, '')}
+        <select id="lpfilter" aria-label="Leerpad"><option value="">Alle leerpaden</option>${lpOpties(S.lpFilter, true)}</select></div>` : '<div class="kaart"><p>Nog geen accounts.</p></div>'}
       ${alle.length ? `<div class="werkbalk bulk">
         <span class="klein">${sel.length} geselecteerd</span>
-        <select id="bulkprog">${progs.map(p => `<option value="${esc(p.code)}" ${p.code === S.prog ? 'selected' : ''}>${esc(p.titel)}</option>`).join('')}</select>
+        <select id="bulkprog">${lpOpties(S.lpFilter && S.lpFilter !== '-' ? S.lpFilter : S.prog)}</select>
         <button class="licht" data-a="bulk" data-aan="1" ${sel.length ? '' : 'disabled'}>Koppelen</button>
         <button class="licht" data-a="bulk" data-aan="0" ${sel.length ? '' : 'disabled'}>Ontkoppelen</button>
         <button class="licht" data-a="bulkreset" ${sel.length ? '' : 'disabled'}>Nieuwe wachtwoorden + inlogbrieven</button>
         <button class="licht" data-a="allecsv">Lijst (Excel)</button>
       </div>
-      <div class="kaart tabelwrap"><table class="lijst">
-        <tr><th><input type="checkbox" id="allesel" aria-label="alles selecteren" ${ll.length && ll.every(l => S.selectie.has(l.id)) ? 'checked' : ''}></th><th>Leerling</th><th>Klas</th><th>Gebruikersnaam</th>${progs.map(p => `<th class="midden">${esc(p.titel)}</th>`).join('')}<th>Laatst actief</th><th></th></tr>
-        ${ll.map(l => `<tr>
+      <div class="kaart tabelwrap"><table class="lijst alle-ll">
+        <tr><th><input type="checkbox" id="allesel" aria-label="alles selecteren" ${ll.length && ll.every(l => S.selectie.has(l.id)) ? 'checked' : ''}></th><th></th><th>Leerling</th><th>Klas</th><th>Gebruikersnaam</th><th>Gekoppelde leerpaden</th><th>Laatst actief</th></tr>
+        ${ll.length ? ll.map(l => `<tr>
           <td><input type="checkbox" class="sel" data-id="${l.id}" ${S.selectie.has(l.id) ? 'checked' : ''} aria-label="selecteer"></td>
+          <td><button class="licht klein-knop rood-knop icoon-knop" data-a="verwijderrij" data-id="${l.id}" title="Leerling verwijderen uit de databank" aria-label="${esc(l.voornaam)} ${esc(l.naam)} verwijderen">🗑</button></td>
           <td><b>${esc(l.naam)} ${esc(l.voornaam)}</b>${l.actief ? '' : ' <span class="etiket grijs">gedeactiveerd</span>'}</td>
           <td>${esc(l.klas)}</td><td class="klein">${esc(l.gebruikersnaam)}</td>
-          ${progs.map(p => `<td class="midden"><input type="checkbox" class="insch" data-id="${l.id}" data-code="${esc(p.code)}" ${l.programmas.includes(p.code) ? 'checked' : ''} aria-label="${esc(p.titel)}"></td>`).join('')}
-          <td class="klein">${datum(l.laatst_actief)}</td>
-          <td><button class="licht klein-knop rood-knop" data-a="verwijderrij" data-id="${l.id}" title="Leerling verwijderen uit de databank" aria-label="${esc(l.voornaam)} ${esc(l.naam)} verwijderen">🗑 Verwijderen</button></td></tr>`).join('')}
+          <td><div class="lpchips">${chips(l)}<button type="button" class="lpplus" data-a="lpplus" data-id="${l.id}">+ leerpad</button></div></td>
+          <td class="klein">${datum(l.laatst_actief)}</td></tr>`).join('') : `<tr><td colspan="7" class="klein">Geen leerlingen voor deze filter.</td></tr>`}
       </table></div>` : ''}`;
   }
 
@@ -837,7 +860,9 @@
     // Alle leerlingen: selectie en inschrijvingen
     app.querySelectorAll('input.sel').forEach(c => c.onchange = () => { c.checked ? S.selectie.add(c.dataset.id) : S.selectie.delete(c.dataset.id); render(); });
     const as = document.getElementById('allesel');
-    if (as) as.onchange = () => { filter(S.alle).forEach(l => as.checked ? S.selectie.add(l.id) : S.selectie.delete(l.id)); render(); };
+    if (as) as.onchange = () => { filterAlle(S.alle).forEach(l => as.checked ? S.selectie.add(l.id) : S.selectie.delete(l.id)); render(); };
+    const lf = document.getElementById('lpfilter');
+    if (lf) lf.onchange = () => { S.lpFilter = lf.value; render(); };
     app.querySelectorAll('input.insch').forEach(c => c.onchange = async () => {
       c.disabled = true;
       try {
@@ -909,7 +934,7 @@
         if (a === 'allecsv') {
           const progs = Leerpaden.lijst;
           return download(`Accounts_${vandaag()}.csv`, csv([['Klas', 'Naam', 'Voornaam', 'Gebruikersnaam', 'Actief', ...progs.map(p => p.titel), 'Laatst actief'],
-            ...filter(S.alle).map(l => [l.klas, l.naam, l.voornaam, l.gebruikersnaam, l.actief ? 'ja' : 'nee', ...progs.map(p => l.programmas.includes(p.code) ? 'ja' : ''), datum(l.laatst_actief)])]), 'text/csv;charset=utf-8');
+            ...filterAlle(S.alle).map(l => [l.klas, l.naam, l.voornaam, l.gebruikersnaam, l.actief ? 'ja' : 'nee', ...progs.map(p => l.programmas.includes(p.code) ? 'ja' : ''), datum(l.laatst_actief)])]), 'text/csv;charset=utf-8');
         }
         if (a === 'maak') {
           const lijst = leesNamen();
@@ -921,6 +946,28 @@
         }
         if (a === 'kaartjes') { const rv = el.dataset.rv === '1', t = el.textContent; el.disabled = true; el.textContent = 'Bezig…'; try { await maakPDF(kaartjesHTML(S.nieuw.lijst, S.nieuw.code, rv), `Inlogbrieven_${rv ? 'recto-verso_' : ''}${vandaag()}.pdf`); } finally { el.disabled = false; el.textContent = t; } return; }
         if (a === 'nieuwcsv') return download(`Logins_${vandaag()}.csv`, csv([['Klas', 'Naam', 'Voornaam', 'Gebruikersnaam', 'Wachtwoord'], ...S.nieuw.lijst.map(n => [n.klas, n.naam, n.voornaam, n.gebruikersnaam, n.wachtwoord])]), 'text/csv;charset=utf-8');
+        if (a === 'ontkoppel') {
+          const l = S.alle.find(x => x.id === el.dataset.id), code = el.dataset.code; if (!l) return;
+          await roep('lk_inschrijven', { p_ids: [l.id], p_programma: code, p_aan: false });
+          l.programmas = l.programmas.filter(x => x !== code);
+          S.melding = `${esc(l.voornaam)} ${esc(l.naam)} is ontkoppeld van ${esc(progTitel(code))} (resultaten blijven bewaard).`; return render();
+        }
+        if (a === 'lpplus') {
+          const l = S.alle.find(x => x.id === el.dataset.id); if (!l) return;
+          const groepen = lpGroepen(l.klas), heeft = new Set(l.programmas);
+          const blok = (g) => `<div class="lpgroep"><div class="lpgroep-titel">${esc(g.titel)}</div>${g.codes.map(c => `<label class="lpkeuze"><input type="checkbox" value="${esc(c)}" ${heeft.has(c) ? 'checked' : ''}> ${esc(progTitel(c))}</label>`).join('')}</div>`;
+          const eigen = groepen.filter(g => g.eigen), andere = groepen.filter(g => !g.eigen);
+          const keuze = await modaal(`Leerpaden van ${esc(l.voornaam)} ${esc(l.naam)}`, `<p class="klein">${esc(l.klas)} · vink aan om te koppelen, uit om te ontkoppelen (resultaten blijven bewaard).</p>
+            <div class="lpkeuzes">${eigen.map(blok).join('')}
+            ${andere.length ? (eigen.length ? `<details ${andere.some(g => g.codes.some(c => heeft.has(c))) ? 'open' : ''}><summary>Leerpaden van andere klassen</summary>${andere.map(blok).join('')}</details>` : andere.map(blok).join('')) : ''}</div>`,
+            [['Annuleren', null, 'licht'], ['Opslaan', (m) => [...m.querySelectorAll('.lpkeuzes input')].filter(i => i.checked).map(i => i.value)]]);
+          if (!keuze) return;
+          const nieuw = new Set(keuze), aan = keuze.filter(c => !heeft.has(c)), uit = l.programmas.filter(c => !nieuw.has(c));
+          for (const c of aan) await roep('lk_inschrijven', { p_ids: [l.id], p_programma: c, p_aan: true });
+          for (const c of uit) await roep('lk_inschrijven', { p_ids: [l.id], p_programma: c, p_aan: false });
+          if (aan.length || uit.length) { await laadAlle(); S.melding = `${esc(l.voornaam)} ${esc(l.naam)}: ${[aan.length ? `gekoppeld aan ${aan.map(c => esc(progTitel(c))).join(', ')}` : '', uit.length ? `ontkoppeld van ${uit.map(c => esc(progTitel(c))).join(', ')}` : ''].filter(Boolean).join(' · ')}.`; }
+          return render();
+        }
         if (a === 'bulk') {
           const ids = [...S.selectie].filter(id => S.alle.some(l => l.id === id)), code = document.getElementById('bulkprog').value, aan = el.dataset.aan === '1';
           await roep('lk_inschrijven', { p_ids: ids, p_programma: code, p_aan: aan });
