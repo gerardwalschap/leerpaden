@@ -1391,8 +1391,8 @@ const DEEL9 = {
   oefenMix: [['lineair', 2], ['haakjes', 2], ['noemer', 2], ['evenredigheid', 1], ['wortel', 2],
              ['lineairU', 2], ['haakjesU', 3], ['noemerU', 3], ['evenredigheidU', 2], ['wortelU', 3]],
   // 12 vragen: 3 basis (25 %) en 9 uitdagend (75 %)
-  test: [['lineair', 1], ['haakjes', 1], ['wortel', 1],
-         ['lineairU', 2], ['haakjesU', 2], ['noemerU', 2], ['evenredigheidU', 1], ['wortelU', 2]],
+  test: [['lineair', 1], ['wortel', 1],
+         ['lineairU', 1], ['haakjesU', 2], ['noemerU', 2], ['evenredigheidU', 1], ['wortelU', 2]], // 10 vragen, 80 % uitdagend
 };
 
 // ===================================================================
@@ -1530,7 +1530,7 @@ const DEEL10 = {
   },
   oefenMix: [['omvormen', 2], ['somU', 3], ['breukU', 3], ['wortelU', 3]],
   // 12 vragen: 3 basis (25 %) en 9 uitdagend (75 %)
-  test: [['omvormen', 3], ['somU', 3], ['breukU', 3], ['wortelU', 3]],
+  test: [['omvormen', 2], ['somU', 3], ['breukU', 3], ['wortelU', 2]], // 10 vragen, 80 % uitdagend
 };
 
 // ===================================================================
