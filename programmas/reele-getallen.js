@@ -1398,44 +1398,110 @@ const DEEL9 = {
 // ===================================================================
 //  DEEL 10 — Omvormen van formules
 // ===================================================================
-const FORMULES = [
-  { f: 'v = \\dfrac{s}{t}', vars: ['v', 's', 't'], doelen: { s: ['v*t', 'v \\cdot t'], t: ['s/v', '\\dfrac{s}{v}'] } },
-  { f: 'P = \\dfrac{F}{A}', vars: ['P', 'F', 'A'], doelen: { F: ['P*A', 'P \\cdot A'], A: ['F/P', '\\dfrac{F}{P}'] } },
-  { f: '\\rho = \\dfrac{m}{V}', vars: ['ρ', 'm', 'V'], doelen: { m: ['ρ*V', '\\rho \\cdot V'], V: ['m/ρ', '\\dfrac{m}{\\rho}'] } },
-  { f: 'O = 4z', vars: ['O', 'z'], doelen: { z: ['O/4', '\\dfrac{O}{4}'] } },
-  { f: 'A = z^2', vars: ['A', 'z'], doelen: { z: ['√A', '\\sqrt{A}'] } },
-  { f: 'V = z^3', vars: ['V', 'z'], doelen: { z: ['∛V', '\\sqrt[3]{V}'] } },
-  { f: 'O = 2b + 2l', vars: ['O', 'b', 'l'], doelen: { l: ['(O-2b)/2', '\\dfrac{O - 2b}{2}'], b: ['(O-2l)/2', '\\dfrac{O - 2l}{2}'] } },
-  { f: 'A = \\dfrac{b \\cdot h}{2}', vars: ['A', 'b', 'h'], doelen: { h: ['2A/b', '\\dfrac{2A}{b}'], b: ['2A/h', '\\dfrac{2A}{h}'] } },
-  { f: 'O = 2 \\cdot r \\cdot \\pi', vars: ['O', 'r'], doelen: { r: ['O/(2π)', '\\dfrac{O}{2\\pi}'] } },
-  { f: 'A = r^2 \\cdot \\pi', vars: ['A', 'r'], doelen: { r: ['√(A/π)', '\\sqrt{\\dfrac{A}{\\pi}}'] } },
-  { f: 'F = m \\cdot g', vars: ['F', 'm', 'g'], doelen: { m: ['F/g', '\\dfrac{F}{g}'], g: ['F/m', '\\dfrac{F}{m}'] } },
+// Elke opgave: één formule + één gevraagde grootheid. sleutel = de formule, zodat een formule
+// maar één keer in een test voorkomt. De uitleg toont de stappen: telkens dezelfde bewerking in beide leden.
+const OF = (f, vars, doel, expr, tex, stappen) => ({ f, vars, doel, expr, tex, stappen });
+const bl = (s) => `\\quad \\text{(beide leden ${s})}`;
+const wis = '\\quad \\text{(leden verwisselen)}';
+
+// ---- basis (25 %): één of twee eenvoudige stappen
+const OF_BASIS = [
+  OF('v = \\dfrac{s}{t}', ['v', 's', 't'], 's', 'v*t', 'v \\cdot t', [`v \\cdot t = s ${bl('maal } t\\text{')}`, `s = v \\cdot t ${wis}`]),
+  OF('v = \\dfrac{s}{t}', ['v', 's', 't'], 't', 's/v', '\\dfrac{s}{v}', [`v \\cdot t = s ${bl('maal } t\\text{')}`, `t = \\dfrac{s}{v} ${bl('delen door } v\\text{')}`]),
+  OF('P = \\dfrac{F}{A}', ['P', 'F', 'A'], 'F', 'P*A', 'P \\cdot A', [`P \\cdot A = F ${bl('maal } A\\text{')}`, `F = P \\cdot A ${wis}`]),
+  OF('P = \\dfrac{F}{A}', ['P', 'F', 'A'], 'A', 'F/P', '\\dfrac{F}{P}', [`P \\cdot A = F ${bl('maal } A\\text{')}`, `A = \\dfrac{F}{P} ${bl('delen door } P\\text{')}`]),
+  OF('\\rho = \\dfrac{m}{V}', ['ρ', 'm', 'V'], 'm', 'ρ*V', '\\rho \\cdot V', [`\\rho \\cdot V = m ${bl('maal } V\\text{')}`, `m = \\rho \\cdot V ${wis}`]),
+  OF('\\rho = \\dfrac{m}{V}', ['ρ', 'm', 'V'], 'V', 'm/ρ', '\\dfrac{m}{\\rho}', [`\\rho \\cdot V = m ${bl('maal } V\\text{')}`, `V = \\dfrac{m}{\\rho} ${bl('delen door } \\rho\\text{')}`]),
+  OF('O = 4z', ['O', 'z'], 'z', 'O/4', '\\dfrac{O}{4}', [`4z = O ${wis}`, `z = \\dfrac{O}{4} ${bl('delen door 4')}`]),
+  OF('A = z^2', ['A', 'z'], 'z', '√A', '\\sqrt{A}', [`z^2 = A ${wis}`, `z = \\sqrt{A} \\quad \\text{(vierkantswortel nemen)}`]),
+  OF('V = z^3', ['V', 'z'], 'z', '∛V', '\\sqrt[3]{V}', [`z^3 = V ${wis}`, `z = \\sqrt[3]{V} \\quad \\text{(derdemachtswortel nemen)}`]),
+  OF('F = m \\cdot g', ['F', 'm', 'g'], 'm', 'F/g', '\\dfrac{F}{g}', [`m \\cdot g = F ${wis}`, `m = \\dfrac{F}{g} ${bl('delen door } g\\text{')}`]),
+  OF('F = m \\cdot g', ['F', 'm', 'g'], 'g', 'F/m', '\\dfrac{F}{m}', [`m \\cdot g = F ${wis}`, `g = \\dfrac{F}{m} ${bl('delen door } m\\text{')}`]),
+  OF('O = 2 \\cdot r \\cdot \\pi', ['O', 'r'], 'r', 'O/(2π)', '\\dfrac{O}{2\\pi}', [`2 \\cdot r \\cdot \\pi = O ${wis}`, `r = \\dfrac{O}{2\\pi} ${bl('delen door } 2\\pi\\text{')}`]),
 ];
+
+// ---- uitdagend (75 %) — A: de grootheid staat in een som of tussen haakjes
+const OF_SOM = [
+  OF('O = 2b + 2l', ['O', 'b', 'l'], 'l', '(O-2b)/2', '\\dfrac{O - 2b}{2}', [`2b + 2l = O ${wis}`, `2l = O - 2b ${bl('min } 2b\\text{')}`, `l = \\dfrac{O - 2b}{2} ${bl('delen door 2')}`]),
+  OF('O = 2(l + b)', ['O', 'l', 'b'], 'l', 'O/2-b', '\\dfrac{O}{2} - b', [`2(l + b) = O ${wis}`, `l + b = \\dfrac{O}{2} ${bl('delen door 2')}`, `l = \\dfrac{O}{2} - b ${bl('min } b\\text{')}`]),
+  OF('A = \\dfrac{(B + b) \\cdot h}{2}', ['A', 'B', 'b', 'h'], 'b', '2A/h-B', '\\dfrac{2A}{h} - B', [`2A = (B + b) \\cdot h ${bl('maal 2')}`, `\\dfrac{2A}{h} = B + b ${bl('delen door } h\\text{')}`, `\\dfrac{2A}{h} - B = b ${bl('min } B\\text{')}`, `b = \\dfrac{2A}{h} - B ${wis}`]),
+  OF('A = \\dfrac{(B + b) \\cdot h}{2}', ['A', 'B', 'b', 'h'], 'h', '2A/(B+b)', '\\dfrac{2A}{B + b}', [`2A = (B + b) \\cdot h ${bl('maal 2')}`, `\\dfrac{2A}{B + b} = h ${bl('delen door } (B + b)\\text{')}`, `h = \\dfrac{2A}{B + b} ${wis}`]),
+  OF('F = 1{,}8 \\cdot C + 32', ['F', 'C'], 'C', '(F-32)/1.8', '\\dfrac{F - 32}{1{,}8}', [`1{,}8 \\cdot C + 32 = F ${wis}`, `1{,}8 \\cdot C = F - 32 ${bl('min 32')}`, `C = \\dfrac{F - 32}{1{,}8} ${bl('delen door 1,8')}`]),
+  OF('y = a \\cdot x + b', ['y', 'a', 'x', 'b'], 'x', '(y-b)/a', '\\dfrac{y - b}{a}', [`a \\cdot x + b = y ${wis}`, `a \\cdot x = y - b ${bl('min } b\\text{')}`, `x = \\dfrac{y - b}{a} ${bl('delen door } a\\text{')}`]),
+  OF('y = a \\cdot x + b', ['y', 'a', 'x', 'b'], 'a', '(y-b)/x', '\\dfrac{y - b}{x}', [`a \\cdot x + b = y ${wis}`, `a \\cdot x = y - b ${bl('min } b\\text{')}`, `a = \\dfrac{y - b}{x} ${bl('delen door } x\\text{')}`]),
+  OF('g = \\dfrac{a + b}{2}', ['g', 'a', 'b'], 'b', '2g-a', '2g - a', [`2g = a + b ${bl('maal 2')}`, `2g - a = b ${bl('min } a\\text{')}`, `b = 2g - a ${wis}`]),
+  OF('K = k + k \\cdot i \\cdot n', ['K', 'k', 'i', 'n'], 'n', '(K-k)/(k*i)', '\\dfrac{K - k}{k \\cdot i}', [`k + k \\cdot i \\cdot n = K ${wis}`, `k \\cdot i \\cdot n = K - k ${bl('min } k\\text{')}`, `n = \\dfrac{K - k}{k \\cdot i} ${bl('delen door } k \\cdot i\\text{')}`]),
+  OF('K = k + k \\cdot i \\cdot n', ['K', 'k', 'i', 'n'], 'i', '(K-k)/(k*n)', '\\dfrac{K - k}{k \\cdot n}', [`k + k \\cdot i \\cdot n = K ${wis}`, `k \\cdot i \\cdot n = K - k ${bl('min } k\\text{')}`, `i = \\dfrac{K - k}{k \\cdot n} ${bl('delen door } k \\cdot n\\text{')}`]),
+  OF('O = 2\\pi r^2 + 2\\pi r h', ['O', 'r', 'h'], 'h', '(O-2πr²)/(2πr)', '\\dfrac{O - 2\\pi r^2}{2\\pi r}', [`2\\pi r^2 + 2\\pi r h = O ${wis}`, `2\\pi r h = O - 2\\pi r^2 ${bl('min } 2\\pi r^2\\text{')}`, `h = \\dfrac{O - 2\\pi r^2}{2\\pi r} ${bl('delen door } 2\\pi r\\text{')}`]),
+];
+
+// ---- uitdagend — B: breuken en producten (de grootheid in de noemer, of samen met andere factoren)
+const OF_BREUK = [
+  OF('A = \\dfrac{b \\cdot h}{2}', ['A', 'b', 'h'], 'h', '2A/b', '\\dfrac{2A}{b}', [`2A = b \\cdot h ${bl('maal 2')}`, `\\dfrac{2A}{b} = h ${bl('delen door } b\\text{')}`, `h = \\dfrac{2A}{b} ${wis}`]),
+  OF('V = \\dfrac{G \\cdot h}{3}', ['V', 'G', 'h'], 'G', '3V/h', '\\dfrac{3V}{h}', [`3V = G \\cdot h ${bl('maal 3')}`, `\\dfrac{3V}{h} = G ${bl('delen door } h\\text{')}`, `G = \\dfrac{3V}{h} ${wis}`]),
+  OF('V = \\pi \\cdot r^2 \\cdot h', ['V', 'r', 'h'], 'h', 'V/(πr²)', '\\dfrac{V}{\\pi r^2}', [`\\pi \\cdot r^2 \\cdot h = V ${wis}`, `h = \\dfrac{V}{\\pi r^2} ${bl('delen door } \\pi r^2\\text{')}`]),
+  OF('V = \\dfrac{\\pi \\cdot r^2 \\cdot h}{3}', ['V', 'r', 'h'], 'h', '3V/(πr²)', '\\dfrac{3V}{\\pi r^2}', [`3V = \\pi \\cdot r^2 \\cdot h ${bl('maal 3')}`, `\\dfrac{3V}{\\pi r^2} = h ${bl('delen door } \\pi r^2\\text{')}`, `h = \\dfrac{3V}{\\pi r^2} ${wis}`]),
+  OF('E = \\dfrac{m \\cdot v^2}{2}', ['E', 'm', 'v'], 'm', '2E/v²', '\\dfrac{2E}{v^2}', [`2E = m \\cdot v^2 ${bl('maal 2')}`, `\\dfrac{2E}{v^2} = m ${bl('delen door } v^2\\text{')}`, `m = \\dfrac{2E}{v^2} ${wis}`]),
+  OF('P = I^2 \\cdot R', ['P', 'I', 'R'], 'R', 'P/I²', '\\dfrac{P}{I^2}', [`I^2 \\cdot R = P ${wis}`, `R = \\dfrac{P}{I^2} ${bl('delen door } I^2\\text{')}`]),
+  OF('R = \\dfrac{\\rho \\cdot l}{A}', ['R', 'ρ', 'l', 'A'], 'A', 'ρ*l/R', '\\dfrac{\\rho \\cdot l}{R}', [`R \\cdot A = \\rho \\cdot l ${bl('maal } A\\text{')}`, `A = \\dfrac{\\rho \\cdot l}{R} ${bl('delen door } R\\text{')}`]),
+  OF('R = \\dfrac{\\rho \\cdot l}{A}', ['R', 'ρ', 'l', 'A'], 'l', 'R*A/ρ', '\\dfrac{R \\cdot A}{\\rho}', [`R \\cdot A = \\rho \\cdot l ${bl('maal } A\\text{')}`, `\\dfrac{R \\cdot A}{\\rho} = l ${bl('delen door } \\rho\\text{')}`, `l = \\dfrac{R \\cdot A}{\\rho} ${wis}`]),
+  OF('a = \\dfrac{v - u}{t}', ['a', 'v', 'u', 't'], 't', '(v-u)/a', '\\dfrac{v - u}{a}', [`a \\cdot t = v - u ${bl('maal } t\\text{')}`, `t = \\dfrac{v - u}{a} ${bl('delen door } a\\text{')}`]),
+  OF('a = \\dfrac{v - u}{t}', ['a', 'v', 'u', 't'], 'v', 'a*t+u', 'a \\cdot t + u', [`a \\cdot t = v - u ${bl('maal } t\\text{')}`, `a \\cdot t + u = v ${bl('plus } u\\text{')}`, `v = a \\cdot t + u ${wis}`]),
+];
+
+// ---- uitdagend — C: kwadraten en derde machten (eerst de macht alleen, dan de wortel)
+const OF_WORTEL = [
+  OF('A = r^2 \\cdot \\pi', ['A', 'r'], 'r', '√(A/π)', '\\sqrt{\\dfrac{A}{\\pi}}', [`r^2 \\cdot \\pi = A ${wis}`, `r^2 = \\dfrac{A}{\\pi} ${bl('delen door } \\pi\\text{')}`, `r = \\sqrt{\\dfrac{A}{\\pi}} \\quad \\text{(vierkantswortel nemen)}`]),
+  OF('O = 6z^2', ['O', 'z'], 'z', '√(O/6)', '\\sqrt{\\dfrac{O}{6}}', [`6z^2 = O ${wis}`, `z^2 = \\dfrac{O}{6} ${bl('delen door 6')}`, `z = \\sqrt{\\dfrac{O}{6}} \\quad \\text{(vierkantswortel nemen)}`]),
+  OF('O = 4\\pi r^2', ['O', 'r'], 'r', '√(O/(4π))', '\\sqrt{\\dfrac{O}{4\\pi}}', [`4\\pi r^2 = O ${wis}`, `r^2 = \\dfrac{O}{4\\pi} ${bl('delen door } 4\\pi\\text{')}`, `r = \\sqrt{\\dfrac{O}{4\\pi}} \\quad \\text{(vierkantswortel nemen)}`]),
+  OF('V = \\pi \\cdot r^2 \\cdot h', ['V', 'r', 'h'], 'r', '√(V/(πh))', '\\sqrt{\\dfrac{V}{\\pi h}}', [`\\pi \\cdot r^2 \\cdot h = V ${wis}`, `r^2 = \\dfrac{V}{\\pi h} ${bl('delen door } \\pi h\\text{')}`, `r = \\sqrt{\\dfrac{V}{\\pi h}} \\quad \\text{(vierkantswortel nemen)}`]),
+  OF('V = \\dfrac{\\pi \\cdot r^2 \\cdot h}{3}', ['V', 'r', 'h'], 'r', '√(3V/(πh))', '\\sqrt{\\dfrac{3V}{\\pi h}}', [`3V = \\pi \\cdot r^2 \\cdot h ${bl('maal 3')}`, `\\dfrac{3V}{\\pi h} = r^2 ${bl('delen door } \\pi h\\text{')}`, `r = \\sqrt{\\dfrac{3V}{\\pi h}} \\quad \\text{(vierkantswortel nemen, leden verwisselen)}`]),
+  OF('V = \\dfrac{4}{3} \\pi r^3', ['V', 'r'], 'r', '∛(3V/(4π))', '\\sqrt[3]{\\dfrac{3V}{4\\pi}}', [`3V = 4\\pi r^3 ${bl('maal 3')}`, `\\dfrac{3V}{4\\pi} = r^3 ${bl('delen door } 4\\pi\\text{')}`, `r = \\sqrt[3]{\\dfrac{3V}{4\\pi}} \\quad \\text{(derdemachtswortel nemen, leden verwisselen)}`]),
+  OF('a^2 = b^2 + c^2', ['a', 'b', 'c'], 'b', '√(a²-c²)', '\\sqrt{a^2 - c^2}', [`b^2 + c^2 = a^2 ${wis}`, `b^2 = a^2 - c^2 ${bl('min } c^2\\text{')}`, `b = \\sqrt{a^2 - c^2} \\quad \\text{(vierkantswortel nemen)}`]),
+  OF('a^2 = b^2 + c^2', ['a', 'b', 'c'], 'c', '√(a²-b²)', '\\sqrt{a^2 - b^2}', [`b^2 + c^2 = a^2 ${wis}`, `c^2 = a^2 - b^2 ${bl('min } b^2\\text{')}`, `c = \\sqrt{a^2 - b^2} \\quad \\text{(vierkantswortel nemen)}`]),
+  OF('E = \\dfrac{m \\cdot v^2}{2}', ['E', 'm', 'v'], 'v', '√(2E/m)', '\\sqrt{\\dfrac{2E}{m}}', [`2E = m \\cdot v^2 ${bl('maal 2')}`, `\\dfrac{2E}{m} = v^2 ${bl('delen door } m\\text{')}`, `v = \\sqrt{\\dfrac{2E}{m}} \\quad \\text{(vierkantswortel nemen, leden verwisselen)}`]),
+  OF('P = I^2 \\cdot R', ['P', 'I', 'R'], 'I', '√(P/R)', '\\sqrt{\\dfrac{P}{R}}', [`I^2 \\cdot R = P ${wis}`, `I^2 = \\dfrac{P}{R} ${bl('delen door } R\\text{')}`, `I = \\sqrt{\\dfrac{P}{R}} \\quad \\text{(vierkantswortel nemen)}`]),
+];
+
+const ofSoort = (soort, lijst, opdracht = 'Vorm om naar de gevraagde grootheid.') => () => {
+  const o = kies(lijst);
+  return { soort, opdracht, tex: `${o.f} \\qquad ${o.doel === 'ρ' ? '\\rho' : o.doel} = \\,?`, sleutel: o.f,
+    antw: { soort: 'formule', expr: o.expr, doel: o.doel, vars: o.vars, tex: o.tex }, uitleg: o.stappen };
+};
+
 const DEEL10 = {
-  nr: 10, titel: 'Omvormen van formules', kort: 'Een formule omvormen naar een gevraagde grootheid, toepassingen.',
-  rekenmachine: true,
+  nr: 10, titel: 'Omvormen van formules', kort: 'Een formule omvormen naar een gevraagde grootheid.',
+  rekenmachine: false,
   opdracht: 'Vorm om naar de gevraagde grootheid.',
   theorie: `
     <div class="kader werk">
       <div class="kader-titel">Methode</div>
       <ol><li>Staat de gevraagde grootheid in het rechterlid? Verwissel dan de leden.</li>
         <li>Duid de grootheid aan waarnaar je omvormt.</li>
-        <li>Pas de regels toe van het oplossen van vergelijkingen.</li></ol>
-      <p>Voorbeeld: $F = m \\cdot g \\;\\rightarrow\\; m = \\dfrac{F}{g}$ &nbsp; <span class="klein">(beide leden delen door $g$, daarna de leden verwisselen)</span></p>
+        <li>Pas de regels toe van het oplossen van vergelijkingen: doe telkens <b>dezelfde bewerking in beide leden</b>, tot de grootheid alleen staat.</li></ol>
+      <p>Voorbeeld: $F = m \\cdot g \;\\rightarrow\; m = \\dfrac{F}{g}$ &nbsp; <span class="klein">(beide leden delen door $g$, daarna de leden verwisselen)</span></p>
     </div>
     <div class="kader">
       <div class="kader-titel">Nog enkele voorbeelden</div>
       <table class="tabel"><tr><th>formule</th><th>gevraagd</th><th>omgevormd</th></tr>
-        <tr><td>$\\rho = \\dfrac{m}{V}$</td><td>$V$</td><td>$\\rho \\cdot V = m \\;\\rightarrow\\; V = \\dfrac{m}{\\rho}$</td></tr>
-        <tr><td>$A = \\dfrac{b \\cdot h}{2}$</td><td>$b$</td><td>$2A = b \\cdot h \\;\\rightarrow\\; b = \\dfrac{2A}{h}$</td></tr>
-        <tr><td>$O = 2b + 2l$</td><td>$b$</td><td>$O - 2l = 2b \\;\\rightarrow\\; b = \\dfrac{O - 2l}{2}$</td></tr>
+        <tr><td>$\\rho = \\dfrac{m}{V}$</td><td>$V$</td><td>$\\rho \\cdot V = m \;\\rightarrow\; V = \\dfrac{m}{\\rho}$</td></tr>
+        <tr><td>$A = \\dfrac{b \\cdot h}{2}$</td><td>$b$</td><td>$2A = b \\cdot h \;\\rightarrow\; b = \\dfrac{2A}{h}$</td></tr>
+        <tr><td>$O = 2b + 2l$</td><td>$b$</td><td>$O - 2l = 2b \;\\rightarrow\; b = \\dfrac{O - 2l}{2}$</td></tr>
         <tr><td>$A = z^2$</td><td>$z$</td><td>$z = \\sqrt{A}$ &nbsp; <span class="klein">(de wortel heft het kwadraat op)</span></td></tr></table>
     </div>
     <div class="kader werk">
-      <div class="kader-titel">Toepassingen</div>
-      <p><b>Gegevens</b> – <b>gevraagd</b> – <b>formule</b> – <b>omgevormde formule</b> – <b>antwoord</b>. Rond af op 2 decimalen waar nodig.</p>
-      <p>Een vierkant heeft een oppervlakte van 30,25 cm². Hoe lang is een zijde?<br>
-        $A = z^2 \\;\\rightarrow\\; z = \\sqrt{A} = \\sqrt{30{,}25} = 5{,}5$ &nbsp; <b>Antwoord:</b> een zijde is 5,5 cm.</p>
+      <div class="kader-titel">Pittigere formules: in welke volgorde?</div>
+      <p>Werk de bewerkingen rond de gevraagde grootheid af <b>van buiten naar binnen</b>:</p>
+      <ol><li>Staat er een <b>noemer</b>? Vermenigvuldig beide leden met die noemer.</li>
+        <li>Staat er een <b>term</b> bij (+ of −)? Breng die over met de omgekeerde bewerking in beide leden.</li>
+        <li>Staat er een <b>factor</b> bij (ook een factor voor de haakjes)? Deel beide leden door die factor.</li>
+        <li>Staat de grootheid in het <b>kwadraat</b> of tot de <b>derde macht</b>? Zet die macht eerst helemaal alleen en neem dan de vierkantswortel of de derdemachtswortel.</li></ol>
+      <table class="tabel"><tr><th>formule</th><th>gevraagd</th><th>omgevormd</th></tr>
+        <tr><td>$y = a \\cdot x + b$</td><td>$x$</td><td>$a \\cdot x = y - b \;\\rightarrow\; x = \\dfrac{y - b}{a}$</td></tr>
+        <tr><td>$a = \\dfrac{v - u}{t}$</td><td>$t$</td><td>$a \\cdot t = v - u \;\\rightarrow\; t = \\dfrac{v - u}{a}$</td></tr>
+        <tr><td>$A = r^2 \\cdot \\pi$</td><td>$r$</td><td>$r^2 = \\dfrac{A}{\\pi} \;\\rightarrow\; r = \\sqrt{\\dfrac{A}{\\pi}}$</td></tr>
+        <tr><td>$a^2 = b^2 + c^2$</td><td>$b$</td><td>$b^2 = a^2 - c^2 \;\\rightarrow\; b = \\sqrt{a^2 - c^2}$</td></tr></table>
+      <p class="klein">Let op: $\\sqrt{a^2 - c^2}$ is <b>niet</b> hetzelfde als $a - c$. De wortel komt over het hele rechterlid.</p>
     </div>
     <div class="kader"><div class="kader-titel">Zo typ je je antwoord</div>
       <table class="tabel"><tr><th>wiskunde</th><th>typ</th></tr>
@@ -1443,43 +1509,28 @@ const DEEL10 = {
         <tr><td>$\\dfrac{2A}{h}$</td><td><code>2A/h</code></td></tr>
         <tr><td>$\\dfrac{O - 2l}{2}$</td><td><code>(O-2l)/2</code> &nbsp;(haakjes rond de teller!)</td></tr>
         <tr><td>$\\dfrac{O}{2\\pi}$</td><td><code>O/(2π)</code> &nbsp;(haakjes rond de noemer!)</td></tr>
-        <tr><td>$\\sqrt{\\dfrac{A}{\\pi}}$</td><td><code>√(A/π)</code></td></tr></table>
-      <p class="klein">Let op hoofdletters: $A$ en $a$, $V$ en $v$ zijn verschillende grootheden. $O$ is de letter O, geen nul. Gebruik de knoppen π en ρ.</p></div>`,
+        <tr><td>$\\dfrac{V}{\\pi r^2}$</td><td><code>V/(πr²)</code></td></tr>
+        <tr><td>$\\sqrt{\\dfrac{A}{\\pi}}$</td><td><code>√(A/π)</code></td></tr>
+        <tr><td>$\\sqrt{a^2 - c^2}$</td><td><code>√(a²-c²)</code></td></tr>
+        <tr><td>$\\dfrac{F - 32}{1{,}8}$</td><td><code>(F-32)/1,8</code></td></tr></table>
+      <p class="klein">Let op hoofdletters: $A$ en $a$, $V$ en $v$, $K$ en $k$ zijn verschillende grootheden. $O$ is de letter O, geen nul. Gebruik de knoppen π, ρ, √, ∛ en x².</p></div>`,
   voorbeelden: [
     { tex: 'F = m \\cdot g \\qquad g = \\,?', stappen: ['m \\cdot g = F \\quad \\text{(leden verwisselen)}', 'g = \\dfrac{F}{m} \\quad \\text{(beide leden delen door } m)'] },
     { tex: '\\rho = \\dfrac{m}{V} \\qquad V = \\,?', stappen: ['\\rho \\cdot V = m \\quad \\text{(beide leden maal } V)', 'V = \\dfrac{m}{\\rho} \\quad \\text{(beide leden delen door } \\rho)'] },
-    { tex: 'O = 2b + 2l \\qquad b = \\,?', stappen: ['2b + 2l = O', '2b = O - 2l', 'b = \\dfrac{O - 2l}{2}'] },
-    { tex: 'A = \\dfrac{b \\cdot h}{2} \\qquad b = \\,?', stappen: ['\\dfrac{b \\cdot h}{2} = A', 'b \\cdot h = 2A', 'b = \\dfrac{2A}{h}'] },
-    { html: 'Een kubus heeft een volume van 64 cm³. Hoe lang is een ribbe?', stappen: ['V = z^3 \\;\\rightarrow\\; z = \\sqrt[3]{V}', 'z = \\sqrt[3]{64} = 4', '\\text{Antwoord: een ribbe is 4 cm.}'] },
+    { tex: 'O = 2b + 2l \\qquad b = \\,?', stappen: ['2b + 2l = O \\quad \\text{(leden verwisselen)}', '2b = O - 2l \\quad \\text{(beide leden min } 2l)', 'b = \\dfrac{O - 2l}{2} \\quad \\text{(beide leden delen door 2)}'] },
+    { tex: 'A = \\dfrac{(B + b) \\cdot h}{2} \\qquad b = \\,?', stappen: ['2A = (B + b) \\cdot h \\quad \\text{(beide leden maal 2)}', '\\dfrac{2A}{h} = B + b \\quad \\text{(beide leden delen door } h)', '\\dfrac{2A}{h} - B = b \\quad \\text{(beide leden min } B)', 'b = \\dfrac{2A}{h} - B \\quad \\text{(leden verwisselen)}'] },
+    { tex: 'a = \\dfrac{v - u}{t} \\qquad t = \\,?', stappen: ['a \\cdot t = v - u \\quad \\text{(beide leden maal } t)', 't = \\dfrac{v - u}{a} \\quad \\text{(beide leden delen door } a)'] },
+    { tex: 'V = \\pi \\cdot r^2 \\cdot h \\qquad r = \\,?', stappen: ['\\pi \\cdot r^2 \\cdot h = V \\quad \\text{(leden verwisselen)}', 'r^2 = \\dfrac{V}{\\pi h} \\quad \\text{(beide leden delen door } \\pi h)', 'r = \\sqrt{\\dfrac{V}{\\pi h}} \\quad \\text{(vierkantswortel nemen)}'] },
   ],
   soorten: {
-    omvormen: { naam: 'Formule omvormen', gen() {
-      const f = kies(FORMULES), doel = kies(Object.keys(f.doelen)), [e, t] = f.doelen[doel];
-      return { soort: 'omvormen', opdracht: 'Vorm om naar de gevraagde grootheid.', tex: `${f.f} \\qquad ${doel === 'ρ' ? '\\rho' : doel} = \\,?`, sleutel: f.f + doel,
-        antw: { soort: 'formule', expr: e, doel, vars: f.vars, tex: t }, uitleg: [`${doel} = ${t}`] };
-    } },
-    toepassing: { naam: 'Toepassingen', gen() {
-      for (;;) {
-        const t = kies(['fiets', 'druk', 'ijzer', 'vierkant', 'cirkel', 'kubus']);
-        let zin, w, na, uit;
-        if (t === 'fiets') { const v = rnd(12, 30), s = rnd(10, 120); w = s / v; na = '\\text{u}'; zin = `Een fietser legt ${s} km af aan ${v} km/u. Hoe lang is hij onderweg (in uur)?`; uit = [`v = \\dfrac{s}{t} \\;\\rightarrow\\; t = \\dfrac{s}{v}`, `t = \\dfrac{${s}}{${v}} ${Number.isInteger(+(w * 100).toFixed(6)) ? '=' : '\\approx'} ${tg(w, 2)}`]; }
-        if (t === 'druk') { const F = rnd(1, 40) * 50, P = rnd(2, 40) * 100; w = F / P; na = '\\text{m}^2'; zin = `Een kracht van ${F} N zorgt voor een druk van ${P} Pa. Hoe groot is de oppervlakte (in m²)?`; uit = [`P = \\dfrac{F}{A} \\;\\rightarrow\\; A = \\dfrac{F}{P}`, `A = \\dfrac{${F}}{${P}} ${Number.isInteger(+(w * 100).toFixed(6)) ? '=' : '\\approx'} ${tg(w, 2)}`]; }
-        if (t === 'ijzer') { const [stof, rho] = kies([['ijzer', 7.87], ['aluminium', 2.7], ['koper', 8.96], ['goud', 19.3]]); const m = rnd(100, 2000) / 2; w = m / rho; na = '\\text{cm}^3';
-          zin = `Een blokje ${stof} heeft een massa van ${kg(m)} g. De massadichtheid van ${stof} is ${kg(rho)} g/cm³. Bereken het volume.`; uit = [`\\rho = \\dfrac{m}{V} \\;\\rightarrow\\; V = \\dfrac{m}{\\rho}`, `V = \\dfrac{${tg(m)}}{${tg(rho)}} \\approx ${tg(w, 2)}`]; }
-        if (t === 'vierkant') { const z = Math.random() < 0.5 ? rnd(11, 150) / 2 : rnd(3, 25); const A = Math.random() < 0.5 ? +(z * z).toFixed(2) : rnd(10, 400); w = Math.sqrt(A); na = '\\text{cm}';
-          zin = `Een vierkant heeft een oppervlakte van ${kg(A)} cm². Hoe lang is een zijde?`; uit = [`A = z^2 \\;\\rightarrow\\; z = \\sqrt{A}`, `z = \\sqrt{${tg(A)}} ${Number.isInteger(+(w * 100).toFixed(6)) ? '=' : '\\approx'} ${tg(w, 2)}`]; }
-        if (t === 'cirkel') { const O = rnd(10, 150); w = O / (2 * Math.PI); na = '\\text{cm}'; zin = `Een cirkel heeft een omtrek van ${O} cm. Bereken de straal.`; uit = [`O = 2 \\cdot r \\cdot \\pi \\;\\rightarrow\\; r = \\dfrac{O}{2\\pi}`, `r = \\dfrac{${O}}{2\\pi} \\approx ${tg(w, 2)}`]; }
-        if (t === 'kubus') { const z = rnd(2, 12), exact = Math.random() < 0.5; const Vv = exact ? z ** 3 : rnd(10, 1500); w = Math.cbrt(Vv); na = '\\text{cm}'; zin = `Een kubus heeft een volume van ${Vv} cm³. Hoe lang is een ribbe?`; uit = [`V = z^3 \\;\\rightarrow\\; z = \\sqrt[3]{V}`, `z = \\sqrt[3]{${Vv}} ${Number.isInteger(+w.toFixed(9)) ? '=' : '\\approx'} ${tg(w, 2)}`]; }
-        if (!Number.isInteger(+(w * 100).toFixed(6)) && !zekerRond(w, 2)) continue;
-        if (w < 0.01) continue;
-        uit.push(`\\text{Antwoord: } ${tg(w, 2)}\\ ${na}`);
-        return { soort: 'toepassing', opdracht: 'Gegevens – gevraagd – formule – omgevormde formule – antwoord. Rond af op 2 decimalen waar nodig.', html: `<div class="tekstopgave">${zin}</div>`, rapport: zin, sleutel: zin,
-          antw: getal(w, 2, { voor: '', na }), uitleg: uit };
-      }
-    } },
+    omvormen: { naam: 'Formule omvormen (basis)', gen: ofSoort('omvormen', OF_BASIS) },
+    somU: { naam: '★ Uitdagend: de grootheid in een som of tussen haakjes', gen: ofSoort('somU', OF_SOM) },
+    breukU: { naam: '★ Uitdagend: breuken en producten', gen: ofSoort('breukU', OF_BREUK) },
+    wortelU: { naam: '★ Uitdagend: kwadraten en derde machten', gen: ofSoort('wortelU', OF_WORTEL) },
   },
-  oefenMix: [['omvormen', 3], ['toepassing', 2]],
-  test: [['omvormen', 6], ['toepassing', 4]],
+  oefenMix: [['omvormen', 2], ['somU', 3], ['breukU', 3], ['wortelU', 3]],
+  // 12 vragen: 3 basis (25 %) en 9 uitdagend (75 %)
+  test: [['omvormen', 3], ['somU', 3], ['breukU', 3], ['wortelU', 3]],
 };
 
 // ===================================================================

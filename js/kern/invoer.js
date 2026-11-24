@@ -205,11 +205,15 @@ const Invoer = (() => {
         return { status: 'ongeldig', bericht: ander ? `Let op hoofdletters: ${ander} en ${l} zijn verschillende grootheden.` : `De letter ${l} komt niet voor in de formule.` };
       }
     }
-    for (let p = 0; p < 4; p++) {
+    // vergelijk in 4 willekeurige punten waar de juiste formule bestaat (bv. √(a² − c²) vraagt a > c)
+    for (let p = 0, n = 0; n < 4 && p < 200; p++) {
       const env = {}; a.vars.forEach(x => { env[x] = 1.3 + Math.random() * 6; });
       let x, y;
-      try { x = eval_(s.boom, env); y = eval_(v.boom, env); } catch (e) { return { status: 'ongeldig', bericht: e.message }; }
+      try { y = eval_(v.boom, env); } catch (e) { throw new Error('Oplossing onleesbaar: ' + a.expr); }
+      if (!isFinite(y)) continue;
+      try { x = eval_(s.boom, env); } catch (e) { return { status: 'ongeldig', bericht: e.message }; }
       if (!isFinite(x) || Math.abs(x - y) > 1e-7 * Math.max(1, Math.abs(y))) return { status: 'fout' };
+      n++;
     }
     return { status: 'juist' };
   }

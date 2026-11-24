@@ -97,7 +97,7 @@ Bij *Nu bezig met* zie je hoeveel keer een leerling de test van dat deel al niet
 | 7 | Rekenregels met logaritmen | ja |
 | 8 | De stelling van Pythagoras | ja |
 | 9 | Vergelijkingen | — |
-| 10 | Omvormen van formules | ja |
+| 10 | Omvormen van formules (test: 3 basis + 9 uitdagend) | nee |
 
 Testregels: 10 vragen met telkens nieuwe getallen, 80% nodig voor het volgende deel,
 één poging (die telt vanaf de start: herladen of sluiten geeft dezelfde vragen terug),
