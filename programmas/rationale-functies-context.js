@@ -610,7 +610,7 @@ function vraagGrens() {
     vr = `Hoeveel water moet ze toevoegen om een concentratie van ${kg(c)} mg/ml te krijgen?`; antw = getal(w, { dec: 1, voor: 'w =', na: '\\text{ ml}' });
     uit = [`\\text{Snijpunt(C, y = ${kg(c)}): } w = ${tg(w, 1)}`];
   }
-  return { soort: 'grens', opdracht: 'Gebruik GeoGebra of los op.', html: sitOpgave(S), sleutel: S.tex + vr, rapport: `${S.titel}: ${vr}`, antw, uitleg: uit };
+  return { soort: 'grens', opdracht: 'Gebruik GeoGebra of los op.', html: sitOpgave(S, p_(vr)), sleutel: S.tex + vr, rapport: `${S.titel}: ${vr}`, antw, uitleg: uit };
 }
 const D3 = {
   nr: 3, titel: 'Wiskundig domein en praktisch domein', kort: 'Voor welke waarden is het model zinvol? Losse punten of een lijn?', rekenmachine: true,
