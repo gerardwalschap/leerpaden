@@ -657,7 +657,7 @@
   function totaalTabel(k, tot, data, rij) {
     const A = AFD(), TOTAAL_OP = A.totaalOp;
     if (!A.totaal || !tot.size) return '';
-    const progs = data.map(x => x.P).filter(P => [...tot.values()].some(x => x.lp[P.code]));
+    const progs = data.map(x => x.P).filter(P => !P.buitenTotaal && [...tot.values()].some(x => x.lp[P.code])); // buitenTotaal: bv. de proeftoets telt niet mee
     if (!progs.length) return '';
     const rijen = [...tot.values()].sort((a, b) => a.naam.localeCompare(b.naam)).map(x => {
       const S_ = progs.reduce((a, P) => a + (x.lp[P.code] ? x.lp[P.code].s : 0), 0), M = progs.reduce((a, P) => a + (x.lp[P.code] ? x.lp[P.code].m : 0), 0);
@@ -666,7 +666,7 @@
     }).join('');
     return `<div class="blok"><div class="lpkop">Totaalscore <span class="klein">· alle pogingen van alle leerpaden samen, herrekend naar ${TOTAAL_OP}</span></div>
       <table>${rij(['Leerling', ...progs.map(P => ({ k: 'sc', t: esc(P.titel) })), { k: 'sc', t: `Totaal /${TOTAAL_OP}` }], true)}${rijen}</table>
-      <p class="klein">Per leerpad: behaalde punten / maximum (elke poging telt op ${OP}; een deel zonder poging telt als 0/${OP}). — = niet gekoppeld aan dat leerpad, telt niet mee.</p></div>`;
+      <p class="klein">Per leerpad: behaalde punten / maximum (elke poging telt op ${OP}; een deel zonder poging telt als 0/${OP}). — = niet gekoppeld aan dat leerpad, telt niet mee.${data.some(x => x.P.buitenTotaal) ? ` Niet in de totaalscore: ${data.filter(x => x.P.buitenTotaal).map(x => esc(x.P.titel)).join(', ')}.` : ''}</p></div>`;
   }
   function puntenHTML(data, metStijl) {
     const A = AFD(), rij = (c, th) => `<tr>${c.map(x => typeof x === 'object' ? `<${th ? 'th' : 'td'} class="${x.k}">${x.t}</${th ? 'th' : 'td'}>` : `<${th ? 'th' : 'td'}>${x}</${th ? 'th' : 'td'}>`).join('')}</tr>`;

@@ -103,7 +103,8 @@ const PROEF_DELEN = STUKKEN.map((S) => {
 
 Leerpaden.registreer({
   code: 'proeftoets-getallenleer', titel: 'Proeftoets getallenleer', ondertitel: 'Rekenen in ℕ, ℤ, ℚ en ℝ · 7VJHO', klas: '7VJHO',
-  drempel: 70,
+  drempel: 50,
+  buitenTotaal: true, // telt niet mee in de totaalscore van het afdrukcentrum
   allesOpen: true, // alle stukken staan open: in elke volgorde, over verschillende dagen
   intro: `<p>Dit is de <b>grote proeftoets</b> van getallenleer: rekenen in ℕ, ℤ, ℚ en ℝ. Je krijgt van elke soort oefening die je in de leerpaden gemaakt hebt één vraag.</p>
     <p>De proeftoets bestaat uit <b>5 stukken</b>. <b>Alle stukken staan open</b> en je mag ze <b>over verschillende dagen spreiden</b>, in de volgorde die jij wil.
