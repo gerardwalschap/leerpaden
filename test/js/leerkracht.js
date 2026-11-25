@@ -290,7 +290,7 @@
     return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> ›
       <button class="link" data-a="boom" data-niveau="klas" data-klas="${esc(kl)}">${esc(kl)}</button> ›
       <button class="link" data-a="boom" data-niveau="vak" data-klas="${esc(kl)}" data-vak="${esc(p.vak)}">${vakTitel(p.vak)}</button> ›
-      ${p.h.nr ? `Hoofdstuk ${p.h.nr}: ` : ''}${esc(p.h.titel)}</p>`;
+      ${p.h.nr && !p.h.ster ? `Hoofdstuk ${p.h.nr}: ` : ''}${esc(p.h.titel)}</p>`;
   }
   // Leerlingen (actieve accounts) van een klas, en hoeveel daarvan aan een leerpad gekoppeld zijn.
   const leerlingenVanKlas = (k) => (S.alle || []).filter(l => l.actief && Catalogus.inKlas(l.klas, k));
@@ -355,7 +355,7 @@
               <span class="etiket oranje">oud platform</span> <span class="klein">${esc(e.opm || '')}</span></div>`),
         ];
         const leeg = !regels.length;
-        return `<div class="stap hoofdstuk ${leeg ? 'dicht' : 'open'}"><div class="nr">${h.nr || '★'}</div>
+        return `<div class="stap hoofdstuk ${leeg ? 'dicht' : 'open'}"><div class="nr">${h.ster ? '★' : h.nr || '★'}</div>
           <div class="vul"><div class="titel">${esc(h.titel)}</div>${h.sub ? `<div class="sub">${esc(h.sub)}</div>` : ''}
             ${leeg ? '' : `<div class="lp-lijst">${regels.join('')}</div>`}</div>
           ${leeg ? '<span class="etiket grijs">Nog te maken</span>' : ''}</div>`;
