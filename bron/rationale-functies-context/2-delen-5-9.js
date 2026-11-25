@@ -5,15 +5,15 @@ function verhaalSit() {
   const fam = kies(['temp', 'groei', 'conc', 'wacht', 'kost']);
   const S = fam === 'temp' ? sitTemp('koffie') : fam === 'groei' ? sitGroei('vrijwilligers') : fam === 'wacht' ? sitWacht('loket') : fam === 'kost' ? sitKost('restaurant') : sitConc('geneesmiddel');
   let v, kenm;
-  if (fam === 'temp') { v = `In de leraarskamer wordt een kop koffie van ${S.T0} °C ingeschonken. De kamer is ${S.k} °C warm. De koffie koelt eerst snel af, daarna steeds trager. Na 10 minuten is de koffie ongeveer ${kg(S.f(10), 0)} °C. We volgen de koffie een uur lang.`;
+  if (fam === 'temp') { v = `In de leraarskamer schenkt iemand een kop koffie in. De koffie is ${S.T0} °C. De kamer is ${S.k} °C warm. De koffie koelt eerst snel af, daarna steeds trager. Na 10 minuten is de koffie ongeveer ${kg(S.f(10), 0)} °C. We volgen de koffie een uur lang.`;
     kenm = { as: ['\\text{horizontale asymptoot: } y =', S.k], dom: [0, 60, true, true] }; }
-  if (fam === 'groei') { v = `Een nieuw buurtproject zoekt vrijwilligers. Bij de start (week 0) zijn er nog geen vrijwilligers. De eerste weken schrijven er veel mensen in, daarna steeds minder. Na ${S.b} weken zijn er ${S.A / 2} vrijwilligers. De organisatoren verwachten dat er nooit meer dan ${S.A} vrijwilligers zullen zijn. We volgen het project 20 weken.`;
+  if (fam === 'groei') { v = `Een nieuw buurtproject zoekt vrijwilligers. Bij de start (week 0) zijn er nog geen vrijwilligers. In de eerste weken komen er veel mensen bij, daarna steeds minder. Na ${S.b} weken zijn er ${S.A / 2} vrijwilligers. Er komen er nooit meer dan ${S.A}. We volgen het project 20 weken.`;
     kenm = { as: ['\\text{horizontale asymptoot: } y =', S.A], dom: [0, 20, true, true] }; }
-  if (fam === 'conc') { v = `Een patiënt krijgt om ${S.uur} u een geneesmiddel. De concentratie in het bloed stijgt eerst snel en bereikt na ${S.tm} uur een maximum van ${S.Mx} mg/l. Daarna daalt ze geleidelijk. Volgens de apotheker wordt de concentratie nooit helemaal nul. We volgen de patiënt 24 uur.`;
+  if (fam === 'conc') { v = `Een patiënt krijgt om ${S.uur} u een geneesmiddel. De concentratie in het bloed stijgt eerst snel. Na ${S.tm} uur is ze het hoogst: ${S.Mx} mg/l. Daarna daalt ze langzaam. Volgens de apotheker wordt de concentratie nooit helemaal 0. We volgen de patiënt 24 uur.`;
     kenm = { as: ['\\text{horizontale asymptoot: } y =', 0], dom: [0, 24, true, true] }; }
-  if (fam === 'wacht') { v = `Aan het loket van het OCMW hangt de wachttijd af van de bezettingsgraad van de medewerkers. Bij een bezetting van 0 % wacht je gemiddeld ${kg(S.c / 100)} minuten. Bij 50 % is dat ${kg(S.c / 50)} minuten. Hoe dichter de bezetting bij 100 % komt, hoe sneller de wachttijd oploopt: bij 100 % zou de wachtrij eindeloos worden.`;
+  if (fam === 'wacht') { v = `Aan het loket van het OCMW hangt de wachttijd af van de bezettingsgraad van de medewerkers. Bij 0 % bezetting wacht je gemiddeld ${kg(S.c / 100)} minuten. Bij 50 % is dat ${kg(S.c / 50)} minuten. Hoe dichter de bezetting bij 100 % komt, hoe sneller de wachttijd stijgt. Bij 100 % zou de wachtrij nooit meer korter worden.`;
     kenm = { as: ['\\text{verticale asymptoot: } b =', 100], dom: [0, 100, true, false] }; }
-  if (fam === 'kost') { v = `Een sociaal restaurant heeft per maand ${S.v} euro vaste kosten (huur, energie). Per maaltijd komt daar ${S.p} euro aan ingrediënten bij. Bij 100 maaltijden per maand kost een maaltijd gemiddeld ${kg(S.f(100))} euro. Hoe meer maaltijden, hoe goedkoper per maaltijd, maar nooit goedkoper dan de ingrediënten. We bekijken 100 tot 1500 maaltijden per maand.`;
+  if (fam === 'kost') { v = `Een sociaal restaurant heeft elke maand ${S.v} euro vaste kosten (huur en energie). Elke maaltijd kost daarbovenop ${S.p} euro aan ingrediënten. Bij 100 maaltijden per maand kost een maaltijd gemiddeld ${kg(S.f(100))} euro. Hoe meer maaltijden, hoe goedkoper per maaltijd. Maar een maaltijd is nooit goedkoper dan de ingrediënten. We bekijken 100 tot 1500 maaltijden per maand.`;
     kenm = { as: ['\\text{horizontale asymptoot: } y =', S.p], dom: [100, 1500, true, true] }; }
   return { S, v, kenm };
 }
@@ -32,14 +32,14 @@ function schetsGraf(S, f, Y1, klein = true) {
 function vraagVerhaalGraf() {
   const { S, v } = verhaalSit(), F = fouteModellen(S);
   const Y1 = S.fam === 'wacht' ? top(S.c / 4) : S.fam === 'kost' ? top(S.f(100) * 1.4) : S.fam === 'conc' ? top(S.Mx * 1.8) : top(S.graf.y[1] * 1.3);
-  return { soort: 'vgraf', opdracht: 'Welke grafiek past bij het verhaal? Controleer alle gegevens.', html: opgave(v), sleutel: v,
+  return { soort: 'vgraf', opdracht: 'Controleer alle gegevens: de beginwaarde, de gegeven punten en de grenswaarde.', html: opgave(v) + vraag('Welke grafiek past bij dit verhaal?'), sleutel: v,
     rapport: `verhaal → grafiek (${S.titel})`, antw: figuren(schetsGraf(S, S.f, Y1), F.map(f => schetsGraf(S, f, Y1))),
     uitleg: [tx('Controleer de beginwaarde, de gegeven punten, stijgen of dalen en de asymptoot.'), `\\text{Een passend model: } ${S.tex}`] };
 }
 function vraagVerhaalKenm() {
   const { S, v, kenm } = verhaalSit();
   const [a, b, ai, bi] = kenm.dom;
-  return { soort: 'vkenm', opdracht: 'Noteer de asymptoot en het domein van je schets.', html: opgave(v), sleutel: v + 'k',
+  return { soort: 'vkenm', opdracht: 'Denk aan een schets bij het verhaal.', html: opgave(v) + vraag('Welke asymptoot en welk domein horen bij dit verhaal?'), sleutel: v + 'k',
     rapport: `verhaal → kenmerken (${S.titel})`, antw: delen([kenm.as[0], getal(kenm.as[1])], ['\\text{domein:}', vz([{ a, ai, b, bi }], `\\text{dom} =`)]),
     uitleg: [`${kenm.as[0]} ${kenm.as[1]}`, `\\text{dom} = ${ivTex(a, b, ai, bi)}`] };
 }
@@ -53,7 +53,7 @@ function vraagVoorschrift() {
   if (S.fam === 'wacht') { const { c } = S; goed = `\\dfrac{${c}}{100 - b}`; fout = [`\\dfrac{${c}}{100 + b}`, `\\dfrac{${c / 2}}{50 - b}`, `\\dfrac{${c}b}{100 - b}`]; }
   if (S.fam === 'kost') { const { v: vv, p } = S; goed = `\\dfrac{${vv} + ${p}n}{n}`; fout = [`\\dfrac{${p} + ${vv}n}{n}`, `\\dfrac{${vv} - ${p}n}{n}`, `\\dfrac{${vv}}{n}`]; }
   const opties = schud([goed, ...fout]);
-  return { soort: 'vvoorschrift', opdracht: 'Welk voorschrift past bij het verhaal? Controleer in GeoGebra alle gegevens.', html: opgave(v), sleutel: v + 'v',
+  return { soort: 'vvoorschrift', opdracht: 'Tip: controleer met je rekenmachine de beginwaarde, het gegeven punt en de asymptoot.', html: opgave(v) + vraag('Welk voorschrift past bij dit verhaal?'), sleutel: v + 'v',
     rapport: `verhaal → voorschrift (${S.titel})`, antw: { soort: 'keuze', opties: opties.map((t, i) => ({ k: String(i), l: `${S.fn}(${S.x}) = ${t}` })), juist: String(opties.indexOf(goed)) },
     uitleg: [`${S.fn}(${S.x}) = ${goed}`, tx('Dit voorschrift klopt met de beginwaarde, het gegeven punt en de asymptoot uit het verhaal.')] };
 }
@@ -120,7 +120,7 @@ const hGraf = (h, klein = false, extra = {}) => rgraf({ x: [h.a - 7, h.a + 7], y
 function hTex(h) { const t = h.c, n = h.d - h.c * h.a; return `f(x) = \\dfrac{${t === 1 ? '' : t === -1 ? '-' : t}x${n ? ` ${n < 0 ? '-' : '+'} ${Math.abs(n)}` : ''}}{x ${h.a < 0 ? '+' : '-'} ${Math.abs(h.a)}}`; }
 function vraagAsymp() {
   const h = hyper();
-  return { soort: 'asymp', opdracht: 'Lees de asymptoten af uit het verloopschema.', html: `<p>Van een rationale functie $f$ is het verloopschema gegeven:</p>${verloopHTML(h)}`, sleutel: `${h.a}${h.c}${h.d}`,
+  return { soort: 'asymp', opdracht: 'Lees af uit het verloopschema.', html: `<p>Van een rationale functie $f$ is het verloopschema gegeven:</p>${verloopHTML(h)}${vraag('Wat zijn de verticale en de horizontale asymptoot?')}`, sleutel: `${h.a}${h.c}${h.d}`,
     rapport: `verloopschema: asymptoten (x = ${h.a}, y = ${h.c})`, antw: delen(['\\text{verticale asymptoot: } x =', getal(h.a)], ['\\text{horizontale asymptoot: } y =', getal(h.c)]),
     uitleg: [`\\text{Bij } x = ${tg(h.a)} \\text{ gaan de functiewaarden naar } \\pm\\infty: x = ${tg(h.a)}`, `\\text{Op } \\pm\\infty \\text{ nadert } f(x) \\text{ naar } ${tg(h.c)}: y = ${tg(h.c)}`] };
 }
@@ -129,7 +129,7 @@ function vraagNulInterval() {
   const L = `]−∞ ; ${kg(h.a)}[`, R = `]${kg(h.a)} ; +∞[`;
   const juist = `Eén nulwaarde, in ${h.z < h.a ? L : R}.`;
   const tak = h.z < h.a ? 'De linkertak' : 'De rechtertak';
-  return { soort: 'nulint', opdracht: 'Hoeveel nulwaarden heeft f, en waar liggen ze?', html: `<p>Van een rationale functie $f$ is het verloopschema gegeven:</p>${verloopHTML(h)}`, sleutel: `${h.a}${h.c}${h.d}n`,
+  return { soort: 'nulint', opdracht: 'Kijk bij elke tak of hij de x-as snijdt.', html: `<p>Van een rationale functie $f$ is het verloopschema gegeven:</p>${verloopHTML(h)}${vraag('Hoeveel nulwaarden heeft f, en waar liggen ze?')}`, sleutel: `${h.a}${h.c}${h.d}n`,
     rapport: `verloopschema: nulwaarden`, antw: zinnen(juist, [`Eén nulwaarde, in ${h.z < h.a ? R : L}.`, 'Geen nulwaarden.', `Twee nulwaarden: één in ${L} en één in ${R}.`], { lijst: false }),
     uitleg: [tx(`${tak} snijdt de x-as één keer, in x = ${kg(h.z)}.`), tx('De andere tak blijft aan één kant van de x-as.')] };
 }
@@ -139,7 +139,7 @@ function vraagTeken() {
   const omgekeerd = goed.map(c => c.y === '0' ? { ...c, y: '×' } : c.y === '×' ? { ...c, y: '0' } : c);
   const zonderX = goed.map(c => c.y === '×' ? { ...c, y: '0' } : c);
   const opties = schud([goed, wissel, omgekeerd, zonderX].map((c, i) => ({ c, i })));
-  return { soort: 'teken', opdracht: 'Welk tekenschema hoort bij de grafiek?', html: figuur(hGraf(h)), sleutel: `${h.a}${h.c}${h.d}t`, rapport: 'grafiek → tekenschema',
+  return { soort: 'teken', opdracht: 'Boven de x-as: +, onder de x-as: −.', html: figuur(hGraf(h)) + vraag('Welk tekenschema hoort bij deze grafiek?'), sleutel: `${h.a}${h.c}${h.d}t`, rapport: 'grafiek → tekenschema',
     antw: { soort: 'keuze', opties: opties.map((o, k) => ({ k: String(k), l: tekenOptie(o.c), html: true, tekst: `schema ${k + 1}` })), juist: String(opties.findIndex(o => o.i === 0)) },
     uitleg: [`\\text{nulwaarde: } x = ${tg(h.z)} \\; (0), \\quad \\text{verticale asymptoot: } x = ${tg(h.a)} \\; (\\times)`, tx('Boven de x-as: +, onder de x-as: −.')] };
 }
@@ -151,12 +151,12 @@ function vraagGrafKenm() {
   const g2 = { ...h, f: (x) => h.c - h.d / (x - h.a) };                    // stijgen en dalen omgewisseld
   const a3 = h.a + kies([-2, 2]), g3 = { ...h, f: (x) => h.c + h.d / (x - a3) }; // verticale asymptoot verschoven
   const teken = (g, va, ha) => rgraf({ x: [h.a - 7, h.a + 7], y: [h.c - 7, h.c + 7], xs: 1, ys: 1, functies: [{ f: g.f }], ha: [ha], va: [va], klein: true, breed: 230, hoog: 230 });
-  return { soort: 'grafkenm', opdracht: 'Welke grafiek voldoet aan alle gegevens?', html: `<p>Een rationale functie $f$ heeft deze kenmerken:</p>${lijst}`, sleutel: `${h.a}${h.c}${h.d}g`, rapport: 'kenmerken → grafiek',
+  return { soort: 'grafkenm', opdracht: 'Controleer elk kenmerk.', html: `<p>Een rationale functie $f$ heeft deze kenmerken:</p>${lijst}${vraag('Welke grafiek past bij al deze kenmerken?')}`, sleutel: `${h.a}${h.c}${h.d}g`, rapport: 'kenmerken → grafiek',
     antw: figuren(teken(h, h.a, h.c), [teken(g1, h.a, -h.c), teken(g2, h.a, h.c), teken(g3, a3, h.c)]), uitleg: [`\\text{Bijvoorbeeld } ${hTex(h)}`, tx('Controleer telkens: asymptoten, nulwaarde, snijpunt met de y-as en stijgen/dalen.')] };
 }
 function vraagBereikH() {
   const h = hyper();
-  return { soort: 'bereikh', opdracht: 'Bepaal het bereik van f.', html: `<p>Van een rationale functie $f$ is het verloopschema gegeven:</p>${verloopHTML(h)}`, sleutel: `${h.a}${h.c}${h.d}b`,
+  return { soort: 'bereikh', opdracht: 'Lees af uit het verloopschema.', html: `<p>Van een rationale functie $f$ is het verloopschema gegeven:</p>${verloopHTML(h)}${vraag('Wat is het bereik van f?')}`, sleutel: `${h.a}${h.c}${h.d}b`,
     rapport: 'verloopschema: bereik', antw: vz(zonder(h.c), '\\text{ber } f ='), uitleg: [tx(`De ene tak neemt alle waarden boven ${kg(h.c)} aan, de andere alle waarden eronder.`), `\\text{ber } f = \\mathbb{R} \\setminus \\{${tg(h.c)}\\}`] };
 }
 function vraagKanDit() {
@@ -167,10 +167,10 @@ function vraagKanDit() {
     { g: `$f$ heeft een horizontale asymptoot $y = ${c}$ en een verticale asymptoot $x = ${a}$. $f$ is dalend op $${ivTex(-I, a, false, false)}$ en $\\lim\\limits_{x \\to ${a}^-} f(x) = -\\infty$.`, kan: true, r: `Vertrekkend van de asymptoot y = ${c} daalt de linkertak naar −∞ bij x = ${a}: dat kan.` },
     { g: `Het tekenschema van $f$ heeft een kruisje bij $x = ${a}$ en een $+$ aan beide kanten.`, kan: true, r: `Dat kan: de limiet is dan aan beide kanten +∞, zoals bij de functie 1/x² (verschoven).` },
     { g: `$f$ heeft een verticale asymptoot $x = ${a}$ en $f(${a}) = ${c}$.`, kan: false, r: `Waar een verticale asymptoot ligt, bestaat f niet: ${a} hoort niet bij het domein.` },
-    { g: `De grafiek van $f$ snijdt haar horizontale asymptoot $y = ${c}$.`, kan: true, r: 'Dat kan: een grafiek mag haar horizontale asymptoot snijden. Enkel op ±∞ nadert ze de asymptoot (zoals de concentratie C(t) die in t = 0 de asymptoot y = 0 raakt).' },
+    { g: `De grafiek van $f$ snijdt haar horizontale asymptoot $y = ${c}$.`, kan: true, r: 'Dat kan: een grafiek mag haar horizontale asymptoot snijden. De asymptoot zegt alleen wat er gebeurt als x heel groot (of heel klein) wordt. Voorbeeld: de concentratie C(t) = 30t/(t² + 9) is 0 bij t = 0, en toch is y = 0 de horizontale asymptoot.' },
   ]);
   const juist = T.kan ? 'Dit kan.' : 'Dit kan niet.';
-  return { soort: 'kandit', opdracht: 'Kan dit? Denk na voor je kiest.', html: `<p>${T.g}</p>`, sleutel: T.g, rapport: W.platteTekst(T.g.replace(/\\lim\\limits_\{([^}]*)\}/g, 'lim($1)')),
+  return { soort: 'kandit', opdracht: 'Denk na voor je kiest.', html: `<p>${T.g}</p>${vraag('Kan dit?')}`, sleutel: T.g, rapport: W.platteTekst(T.g.replace(/\\lim\\limits_\{([^}]*)\}/g, 'lim($1)')),
     antw: { soort: 'keuze', opties: [{ k: 'ja', l: '\\text{Dit kan.}' }, { k: 'nee', l: '\\text{Dit kan niet.}' }], juist: T.kan ? 'ja' : 'nee' }, uitleg: [tx(juist), tx(T.r)] };
 }
 function vraagLimiet() {
@@ -178,7 +178,7 @@ function vraagLimiet() {
   const L = kant === '-' ? (h.daalt ? -I : I) : (h.daalt ? I : -I);
   const opties = schud(['+\\infty', '-\\infty', tg(h.c), '0'].filter((v, i, a) => a.indexOf(v) === i));
   const juist = L === I ? '+\\infty' : '-\\infty';
-  return { soort: 'limiet', opdracht: 'Lees de limiet af op de grafiek.', html: `${figuur(hGraf(h))}<p class="midden">$\\lim\\limits_{x \\to ${tg(h.a)}^${kant}} f(x) = \\;?$</p>`, sleutel: `${h.a}${h.c}${h.d}${kant}`,
+  return { soort: 'limiet', opdracht: 'Lees af op de grafiek.', html: `${figuur(hGraf(h))}${vraag('Wat is deze limiet?')}<p class="midden">$\\lim\\limits_{x \\to ${tg(h.a)}^${kant}} f(x) = \\;?$</p>`, sleutel: `${h.a}${h.c}${h.d}${kant}`,
     rapport: `limiet x → ${kg(h.a)}${kant}`, antw: { soort: 'keuze', opties: opties.map((o, i) => ({ k: String(i), l: o })), juist: String(opties.indexOf(juist)) },
     uitleg: [`\\lim\\limits_{x \\to ${tg(h.a)}^${kant}} f(x) = ${juist}`, tx(kant === '-' ? 'Links van de verticale asymptoot: kijk naar de linkertak.' : 'Rechts van de verticale asymptoot: kijk naar de rechtertak.')] };
 }
@@ -260,7 +260,7 @@ const verhaalGraf = (S) => figuur(rgraf({ x: S.graf.x, y: S.graf.y, xn: `${S.x} 
 function vraagVertaal() {
   const S = kiesVerhaal(), ks = Object.keys(S.w).filter(k => S.z[k]), k = kies(ks);
   const fout = schud(ks.filter(x => x !== k && !(k === 'ha' && x === 'lim') && !(k === 'lim' && x === 'ha')).map(x => S.z[x])); if (k === 'ha' || k === 'lim') fout.unshift(S.z.haF);
-  return { soort: 'vertaal', opdracht: 'Vertaal naar de taal van de situatie.', html: `${opgave(S.verhaal)}${verhaalGraf(S)}<p class="midden">Wiskundetaal: $${S.w[k]}$</p>`, sleutel: S.titel + k + S.z[k],
+  return { soort: 'vertaal', opdracht: 'Kies de zin die past bij de situatie.', html: `${opgave(S.verhaal)}${verhaalGraf(S)}<p class="midden">In wiskundetaal: $${S.w[k]}$</p>${vraag('Wat betekent dat in de situatie?')}`, sleutel: S.titel + k + S.z[k],
     rapport: `${S.titel}: ${W.platteTekst(S.w[k])}`, antw: zinnen(S.z[k], fout), uitleg: [S.w[k], tx(S.z[k])] };
 }
 function vraagVerslag() {
@@ -268,7 +268,7 @@ function vraagVerslag() {
   const extra = S.fam === 'web' ? z.max : z.eind;
   const goed = [z.begin, z.verloop, extra, z.ha].join(' ');
   const fout = [[z.begin, z.verloop, extra, z.haF].join(' '), [z.beginF, z.verloop, extra, z.ha].join(' '), [z.begin, z.verloopF, extra, z.ha].join(' ')];
-  return { soort: 'verslag', opdracht: 'Welk verslag past bij de grafiek? In de andere verslagen staat een fout.', html: `${opgave(S.verhaal)}${verhaalGraf(S)}`, sleutel: S.titel + goed,
+  return { soort: 'verslag', opdracht: 'In de andere verslagen staat één fout.', html: `${opgave(S.verhaal)}${verhaalGraf(S)}${vraag('Welk verslag past bij de grafiek?')}`, sleutel: S.titel + goed,
     rapport: `${S.titel}: juiste verslag kiezen`, antw: zinnen(goed, fout), uitleg: [tx(goed)] };
 }
 function vraagAflezenV() {
@@ -278,7 +278,7 @@ function vraagAflezenV() {
   else if (S.fam === 'reval') { vr = 'Hoeveel meter kan de patiënt ongeveer zonder pauze wandelen na 4 weken?'; juist = S.m4; fout = [S.m4 + 150, S.m4 - 150, S.E]; na = 'm'; }
   else { vr = 'Op welke dag heeft de website de meeste bezoekers?'; juist = S.dm; fout = [S.dm + 5, S.dm * 3, 1]; na = ''; }
   const opties = schud([juist, ...fout].filter((v, i, a) => a.indexOf(v) === i));
-  return { soort: 'aflezenv', opdracht: 'Lees af op de grafiek.', html: `${opgave(S.verhaal)}${verhaalGraf(S)}<p>${vr}</p>`, sleutel: S.titel + vr + juist,
+  return { soort: 'aflezenv', opdracht: 'Lees af op de grafiek.', html: `${opgave(S.verhaal)}${verhaalGraf(S)}${vraag(vr)}`, sleutel: S.titel + vr + juist,
     rapport: `${S.titel}: ${vr}`, antw: { soort: 'keuze', opties: opties.map((v, i) => ({ k: String(i), l: `\\text{${S.fam === 'web' ? 'dag ' : 'ongeveer '}${kg(v)}${na ? ' ' + na : ''}}` })), juist: String(opties.indexOf(juist)) },
     uitleg: [tx(`Ongeveer ${kg(juist)} ${na}`)] };
 }
@@ -287,7 +287,7 @@ function vraagContexttaal() {
   const juist = kies([S.z.verloop, S.z.lim, S.z.begin]);
   const fn = S.fn;
   const fout = schud([`De functie ${fn} is stijgend op het begin en nadert dan de asymptoot.`, `De horizontale asymptoot van de grafiek is y = ${S.ha}.`, `${fn}(0) is de beginwaarde van de functie.`, `De grafiek is eerst steil en daarna vlak.`, `De nulwaarde van ${fn} ligt in ${S.x} = 0.`]).slice(0, 3);
-  return { soort: 'context', opdracht: 'Welke zin is volledig in de taal van de situatie geschreven (zonder woorden als functie, asymptoot, nulwaarde, grafiek)?', html: `${opgave(S.verhaal)}${verhaalGraf(S)}`, sleutel: S.titel + juist,
+  return { soort: 'context', opdracht: 'Wiskundewoorden zijn bv. functie, asymptoot, nulwaarde, grafiek.', html: `${opgave(S.verhaal)}${verhaalGraf(S)}${vraag('Welke zin gebruikt alleen woorden uit de situatie, en geen wiskundewoorden?')}`, sleutel: S.titel + juist,
     rapport: `${S.titel}: contexttaal`, antw: zinnen(juist, fout), uitleg: [tx(juist), tx('De andere zinnen gebruiken wiskundige vaktaal.')] };
 }
 const D8 = {
@@ -394,18 +394,18 @@ function uitspraken() {
 }
 function vraagJuistFout() {
   const { S, L } = uitspraken(), u = kies(L);
-  return { soort: 'juistfout', opdracht: 'Een leerling schreef deze zin. Is ze juist of fout?', html: `${sitOpgave(S)}<p class="midden"><i>"${u.t}"</i></p>`, sleutel: S.tex + u.t,
+  return { soort: 'juistfout', opdracht: 'Tip: controleer met het grafiekvenster.', html: `${sitOpgave(S)}<p>Een leerling schrijft:</p><p class="midden"><i>"${u.t}"</i></p>${vraag('Is die zin juist of fout?')}${sitVenster(S, { t: 'vfsm' })}`, sleutel: S.tex + u.t,
     rapport: `${S.titel}: "${u.t}"`, antw: { soort: 'keuze', opties: [{ k: 'j', l: '\\text{juist}' }, { k: 'f', l: '\\text{fout}' }], juist: u.ok ? 'j' : 'f' }, uitleg: [tx(u.ok ? 'Juist.' : 'Fout.'), tx(u.r)] };
 }
 function vraagWelkeFout() {
   const { S, L } = uitspraken(), f = kies(L.filter(u => !u.ok)), j = schud(L.filter(u => u.ok)).slice(0, 3);
   const naam = kies(['Ruben', 'Amina', 'Lotte', 'Jonas', 'Sem', 'Noor', 'Yassin', 'Elif']);
-  return { soort: 'welkefout', opdracht: `In het antwoord van ${naam} staat één fout. Welke zin is fout?`, html: sitOpgave(S), sleutel: S.tex + f.t,
+  return { soort: 'welkefout', opdracht: 'Tip: controleer met het grafiekvenster.', html: sitOpgave(S, `${vraag(`${naam} schreef vier zinnen over deze situatie. Eén zin is fout. Welke?`)}${sitVenster(S, { t: 'vfsm' })}`), sleutel: S.tex + f.t,
     rapport: `${S.titel}: fout zoeken`, antw: zinnen(f.t, j.map(u => u.t)), uitleg: [tx(`Fout: "${f.t}"`), tx(f.r)] };
 }
 function vraagVerbeter() {
   let S, u; do { const r = uitspraken(); S = r.S; u = kies(r.L.filter(x => x.c)); } while (!u);
-  return { soort: 'verbeter', opdracht: 'Deze zin van een leerling is fout. Verbeter.', html: `${sitOpgave(S)}<p class="midden"><i>"${u.t}"</i></p><p>${u.c.vraag}</p>`, sleutel: S.tex + u.t,
+  return { soort: 'verbeter', opdracht: 'Tip: controleer met het grafiekvenster.', html: `${sitOpgave(S)}<p>Een leerling schrijft deze zin. De zin is fout:</p><p class="midden"><i>"${u.t}"</i></p>${vraag(u.c.vraag)}${sitVenster(S, { t: 'vfsm' })}`, sleutel: S.tex + u.t,
     rapport: `${S.titel}: verbeter "${u.t}"`, antw: u.c.antw, uitleg: [tx(u.r)] };
 }
 const D9 = {
@@ -444,25 +444,29 @@ const D9 = {
 function vraagKoffieModel() {
   const terras = Math.random() < 0.35, k = terras ? kies([5, 8, 10, 12]) : kies([18, 20, 22]), T0 = kies([75, 80, 85, 90]), a = (T0 - k) * 10;
   const v = terras ? `Een kop koffie van ${T0} °C wordt buiten op het terras gedronken, waar het ${k} °C is.` : `Een kop koffie van ${T0} °C wordt ingeschonken in een kamer van ${k} °C.`;
-  return { soort: 'koffie', opdracht: 'Bepaal de parameters (controleer met schuifknoppen in GeoGebra).', html: `${opgave(`${v} We schrijven het model als`)}<p class="midden">$T(t) = k + \\dfrac{a}{t + 10}$</p>`, sleutel: v,
+  const pv = venster({ fs: [{ e: 'k+a/(x+10)', n: 'T' }], par: [{ n: 'k', w: 0 }, { n: 'a', w: 100 }], X: [0, 60], Y: [0, 100], a: 0, b: 60, xv: 't', xe: 'minuten', ye: '°C', xn: 't (minuten)', yn: 'temperatuur (°C)', t: 'pvf', pts: [{ x: 0, y: T0 }], buiten: false, geenDomein: true });
+  return { soort: 'koffie', opdracht: 'Tip: vul in het grafiekvenster waarden in voor k en a. Klopt de grafiek met het verhaal?', html: `${opgave(`${v} We schrijven het model als`)}<p class="midden">$T(t) = k + \\dfrac{a}{t + 10}$</p>${vraag('Welke waarden hebben k en a?')}${pv}`, sleutel: v,
     rapport: `koffie: k en a (T0 = ${T0}, omgeving ${k})`, antw: delen(['k =', getal(k)], ['a =', getal(a)]),
     uitleg: [`k \\text{ is de horizontale asymptoot: de omgevingstemperatuur, dus } k = ${k}`, `T(0) = ${k} + \\dfrac{a}{10} = ${T0} \\Rightarrow a = (${T0} - ${k}) \\cdot 10 = ${a}`] };
 }
 function vraagKostModel() {
   const S = sitKost(), vorm = Math.random() < 0.5;
-  const html = vorm ? `${opgave('Schrijf dit model in de vorm $K(n) = p + \\dfrac{v}{n}$.')}<p class="midden">$${S.tex}$</p>` : `${opgave(S.verhaal.replace(/ is$/, '') + '. Schrijf dat model in de vorm')}<p class="midden">$K(n) = p + \\dfrac{v}{n}$</p>`;
-  return { soort: 'kost', opdracht: 'Bepaal p en v.', html, sleutel: S.tex + vorm, rapport: `${S.titel}: p en v`, antw: delen(['p =', getal(S.p)], ['v =', getal(S.v)]),
+  const html = vorm ? `${opgave('Je krijgt dit model:')}<p class="midden">$${S.tex}$</p>${vraag('Schrijf het in de vorm $K(n) = p + \\dfrac{v}{n}$. Wat zijn p en v?')}`
+    : `${opgave(S.verhaal.replace(/ De formule geeft[\s\S]*$/, ''))}${vraag(`Schrijf de gemiddelde kost per ${S.per} in de vorm $K(n) = p + \\dfrac{v}{n}$. Wat zijn p en v?`)}`;
+  return { soort: 'kost', opdracht: 'Tip: splits de breuk in twee breuken met noemer n.', html, sleutel: S.tex + vorm, rapport: `${S.titel}: p en v`, antw: delen(['p =', getal(S.p)], ['v =', getal(S.v)]),
     uitleg: [`K(n) = \\dfrac{${S.v} + ${S.p}n}{n} = \\dfrac{${S.v}}{n} + \\dfrac{${S.p}n}{n} = ${S.p} + \\dfrac{${S.v}}{n}`, `p = ${S.p} \\text{ (kost per ${S.per}, de horizontale asymptoot)}, \\quad v = ${S.v} \\text{ (vaste kost)}`] };
 }
 function vraagGroeiModel() {
   const A = kies([150, 200, 240, 300, 400]), h = kies([2, 3, 4, 5, 6]), wat = kies([{ w: 'vrijwilligers', t: 'Een buurtproject zoekt vrijwilligers' }, { w: 'inschrijvingen', t: 'Een sportclub opent de inschrijvingen voor een nieuwe ploeg' }]);
-  return { soort: 'groei', opdracht: 'Bepaal a en b (controleer met schuifknoppen in GeoGebra).', html: `${opgave(`${wat.t}. Bij de start zijn er nog geen ${wat.w}. Op lange termijn nadert het aantal ${wat.w} ${A}. Na ${h} weken zijn er ${A / 2}. Het model is`)}<p class="midden">$f(w) = \\dfrac{a \\cdot w}{w + b}$</p>`,
+  const pv = venster({ fs: [{ e: 'a*x/(x+b)', n: 'f' }], par: [{ n: 'a', w: 100 }, { n: 'b', w: 1 }], X: [0, 30], Y: [0, top(A * 1.15)], a: 0, b: 30, xv: 'w', xe: 'weken', ye: wat.w, xn: 'w (weken)', yn: `aantal ${wat.w}`, t: 'pvf', pts: [{ x: 0, y: 0 }, { x: h, y: A / 2 }], buiten: false, geenDomein: true });
+  return { soort: 'groei', opdracht: 'Tip: vul in het grafiekvenster waarden in voor a en b. Gaat de grafiek door de oranje punten?', html: `${opgave(`${wat.t}. Bij de start zijn er nog geen ${wat.w}. Op lange termijn nadert het aantal ${wat.w} ${A}. Na ${h} weken zijn er ${A / 2}. Het model is`)}<p class="midden">$f(w) = \\dfrac{a \\cdot w}{w + b}$</p>${vraag('Welke waarden hebben a en b?')}${pv}`,
     sleutel: `${A}${h}${wat.w}`, rapport: `groeimodel: a en b (grens ${A}, helft na ${h})`, antw: delen(['a =', getal(A)], ['b =', getal(h)]),
     uitleg: [`\\text{Horizontale asymptoot } y = a, \\text{ dus } a = ${A}`, `f(${h}) = \\dfrac{${A} \\cdot ${h}}{${h} + b} = ${A / 2} \\Rightarrow ${h} + b = ${2 * h} \\Rightarrow b = ${h}`, tx('Na b weken is de helft van de grenswaarde bereikt.')] };
 }
 function vraagConcModel() {
   const tm = kies([2, 3, 4, 5]), Mx = kies([4, 5, 6, 8, 10]), b = tm * tm, a = 2 * Mx * tm;
-  return { soort: 'conc', opdracht: 'Bepaal a en b (zoek met schuifknoppen in GeoGebra, of gebruik de tip in de theorie).', html: `${opgave(`Een apotheker beschrijft de concentratie van een geneesmiddel (in mg/l) met het model hieronder. De concentratie moet na ${tm} uur maximaal zijn, en dat maximum moet ${Mx} mg/l bedragen.`)}<p class="midden">$C(t) = \\dfrac{a \\cdot t}{t^2 + b}$</p>`,
+  const pv = venster({ fs: [{ e: 'a*x/(x*x+b)', n: 'C' }], par: [{ n: 'a', w: 10 }, { n: 'b', w: 1 }], X: [0, 24], Y: [0, top(Mx * 1.6)], a: 0, b: 24, xv: 't', xe: 'uur', ye: 'mg/l', xn: 't (uur)', yn: 'concentratie (mg/l)', t: 'pvm', pts: [{ x: tm, y: Mx }], buiten: false, geenDomein: true });
+  return { soort: 'conc', opdracht: 'Tip: gebruik de regel in de theorie, of probeer waarden uit in het grafiekvenster.', html: `${opgave(`Een apotheker beschrijft de concentratie van een geneesmiddel (in mg/l) met het model hieronder. De concentratie moet na ${tm} uur het hoogst zijn. Dat hoogste punt moet ${Mx} mg/l zijn.`)}<p class="midden">$C(t) = \\dfrac{a \\cdot t}{t^2 + b}$</p>${vraag('Welke waarden hebben a en b?')}${pv}`,
     sleutel: `${tm}${Mx}`, rapport: `concentratiemodel: a en b (max ${Mx} na ${tm} uur)`, antw: delen(['b =', getal(b)], ['a =', getal(a)]),
     uitleg: [`\\text{Het maximum ligt bij } t = \\sqrt{b} = ${tm} \\Rightarrow b = ${b}`, `\\text{Het maximum is } \\dfrac{a}{2\\sqrt{b}} = \\dfrac{a}{${2 * tm}} = ${Mx} \\Rightarrow a = ${a}`] };
 }
@@ -476,10 +480,10 @@ function vraagRol() {
     { m: 'f(w) = \\dfrac{a \\cdot w}{w + b}', v: 'Wat betekent b in de situatie?', j: 'Na b weken is de helft van de grenswaarde bereikt.', f: ['b is de grenswaarde.', 'b is de beginwaarde.', 'Na b weken is de grenswaarde bereikt.'] },
     { m: 'K(n) = \\dfrac{600 + 25n}{n} = 25 + \\dfrac{600}{n}', v: 'In welke vorm zie je de horizontale asymptoot meteen?', j: 'In de tweede vorm: 25 + 600/n toont meteen y = 25 (de kost per deelnemer).', f: ['In de eerste vorm: daar staat 600 in de teller.', 'In geen van beide: je moet altijd GeoGebra gebruiken.', 'In de eerste vorm: de horizontale asymptoot is y = 600.'] },
   ]);
-  return { soort: 'rol', opdracht: 'Wat doet de parameter?', html: `<p class="midden">$${T.m}$</p><p>${T.v}</p>`, sleutel: T.m + T.v, rapport: `${W.platteTekst(T.m)}: ${T.v}`, antw: zinnen(T.j, T.f), uitleg: [tx(T.j)] };
+  return { soort: 'rol', opdracht: 'Kies het juiste antwoord.', html: `<p class="midden">$${T.m}$</p>${vraag(T.v)}`, sleutel: T.m + T.v, rapport: `${W.platteTekst(T.m)}: ${T.v}`, antw: zinnen(T.j, T.f), uitleg: [tx(T.j)] };
 }
 const D10 = {
-  nr: 10, titel: 'Modellen aanpassen met GeoGebra', kort: 'Parameters met een betekenis: een model op maat maken.', rekenmachine: true,
+  nr: 10, titel: 'Modellen op maat', kort: 'Parameters met een betekenis: een model op maat maken.', rekenmachine: true,
   theorie: `<div class="kader def"><div class="kader-titel">Een model op maat</div>
       <p>Tot nu toe kreeg je een kant-en-klaar voorschrift. Nu maak je zelf een model op maat, met <b>parameters</b>. Kies een vorm waarin je de betekenis van de parameters meteen ziet:</p>
       <table class="tabel"><tr><th>Model</th><th>Betekenis van de parameters</th></tr>
@@ -487,10 +491,12 @@ const D10 = {
       <tr><td>$K(n) = p + \\dfrac{v}{n}$</td><td>$p$ = kost per deelnemer (horizontale asymptoot $y = p$); $v$ = vaste kost</td></tr>
       <tr><td>$f(w) = \\dfrac{a \\cdot w}{w + b}$</td><td>$a$ = grenswaarde (horizontale asymptoot $y = a$); na $b$ weken is de helft van de grenswaarde bereikt</td></tr>
       <tr><td>$C(t) = \\dfrac{a \\cdot t}{t^2 + b}$</td><td>horizontale asymptoot altijd $y = 0$; maximum na $\\sqrt{b}$ uur; het maximum is $\\dfrac{a}{2\\sqrt{b}}$</td></tr></table></div>
-    <div class="kader eig"><div class="kader-titel">Zo werk je met schuifknoppen in GeoGebra</div>
-      <ol><li>Typ in de invoerbalk <code>a = 1</code> en druk op Enter. Klik op het bolletje vóór a: er verschijnt een schuifknop.</li>
-      <li>Via de instellingen van de schuifknop kies je het minimum, het maximum en de stapgrootte.</li>
-      <li>Typ het voorschrift met de parameter erin, bv. <code>f(x) = a*x/(x^2 + b)</code>.</li><li>Versleep de schuifknop en kijk hoe de grafiek verandert.</li></ol></div>
+    <div class="kader eig"><div class="kader-titel">Zo probeer je een model uit in het grafiekvenster</div>
+      <ol><li>In het grafiekvenster staat het model al klaar, met vakjes voor de parameters (bv. <i>a</i> en <i>b</i>).</li>
+      <li>Typ een waarde in een vakje. De grafiek verandert meteen.</li>
+      <li>De <b>oranje punten</b> zijn de gegevens uit het verhaal. Pas de parameters aan tot de grafiek door die punten gaat.</li>
+      <li>Zoek eerst de parameter die je meteen ziet (bv. de grenswaarde), en daarna de andere.</li></ol>
+      <p class="klein">In GeoGebra kan het ook met schuifknoppen: typ <code>a = 1</code>, klik op het bolletje vóór a, en typ <code>f(x) = a*x/(x^2 + b)</code>.</p></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld: de kop koffie</div>
       <p>Kamer 20 °C, koffie start bij 80 °C, model $T(t) = k + \\dfrac{a}{t + 10}$.</p>
       <p>$k = 20$ (de kamertemperatuur). $T(0) = 20 + \\dfrac{a}{10} = 80 \\Rightarrow a = 600$. Dus $T(t) = 20 + \\dfrac{600}{t + 10}$: dat is precies $T_1(t) = \\dfrac{20t + 800}{t + 10}$ (zet op gelijke noemer).</p>
@@ -521,7 +527,7 @@ const D10 = {
 const mix = (D, s, naam) => ({ naam, gen() { const v = D.soorten[s].gen(); return { ...v, soort: 'D' + D.nr + s }; } });
 const D11 = {
   nr: 11, titel: 'Eindtest rationale functies in context', kort: 'Uit elk hoofdstuk één vraag.', rekenmachine: true,
-  theorie: `<div class="kader"><div class="kader-titel">Alles samen</div><p>In deze eindtest krijg je uit elk hoofdstuk één vraag, door elkaar. Herhaal gerust de theorie van een vorig deel.</p></div>${LET_OP}${GEOGEBRA}${AFSPRAAK}`,
+  theorie: `<div class="kader"><div class="kader-titel">Alles samen</div><p>In deze eindtest krijg je uit elk hoofdstuk één vraag. Herhaal gerust de theorie van een vorig deel.</p></div>${LET_OP}${GEOGEBRA}${AFSPRAAK}`,
   voorbeelden: [],
   soorten: {
     e1: mix(D1, 'betekenis', 'Woordenlijst'), e2: mix(D2, 'wanneer', 'Aflezen en interpreteren'), e3: mix(D3, 'praktdom', 'Praktisch domein'),
@@ -538,6 +544,7 @@ for (const D of [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11]) {
     const g = s.gen;
     s.gen = () => {
       const v = { ...g() };
+      if (v.html) v.html = woorden(v.html); // moeilijke woorden krijgen een uitleg
       if (v.html && !/^<div class="tekstopgave">/.test(v.html)) v.html = `<div class="tekstopgave">${v.html}</div>`;
       if (v.uitleg && v.uitleg.length) { // uitleg als HTML: tekstregels breken af; herhaal het juiste antwoord niet
         const a = v.antw, juist = a && a.soort === 'keuze' ? (a.opties.find(o => o.k === a.juist) || {}).l : null;
@@ -550,16 +557,24 @@ for (const D of [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11]) {
   }
 }
 
+// moeilijke woorden ook in de theorie en de voorbeelden
+for (const D of [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11]) {
+  D.theorie = woorden(D.theorie);
+  for (const vb of D.voorbeelden || []) if (vb.html) vb.html = woorden(vb.html);
+}
+
 Leerpaden.registreer({
   code: 'rationale-functies-context',
   titel: 'Rationale functies in context',
   ondertitel: 'Wiskunde · 5WW / 5BCW',
   klas: '5BCW',
   drempel: 70,
+  allesOpen: true, // alle delen staan open: oefenen en testen mag in elke volgorde (enkel in dit leerpad)
   intro: `<p>Je leert wat de kenmerken van een rationale functie (domein, bereik, beginwaarde, nulwaarde, asymptoten, teken- en verloopschema) <b>betekenen in een echte situatie</b>:
-    een geneesmiddel in het bloed, de kost van een uitstap, een babyflesje in de flessenwarmer, de wachttijd aan een loket … Elk deel volgt een hoofdstuk van de werkbundel.
-    Lees de theorie, bekijk de voorbeelden, oefen zoveel je wil en maak dan de test van 10 vragen. Haal je <b>7 op 10</b>, dan gaat het volgende deel open.</p>
-    <p><b>Afronden:</b> bij elke rekenvraag staat op hoeveel decimalen je afrondt. Houd <b>GeoGebra</b> bij de hand.</p>`,
+    een geneesmiddel in het bloed, de kost van een uitstap, een babyflesje in de flessenwarmer, de wachttijd aan een loket … Elk deel volgt een hoofdstuk van de werkbundel.</p>
+    <p><b>Alle delen staan open.</b> Je kiest zelf welk deel je oefent. Lees de theorie, bekijk de voorbeelden, oefen zoveel je wil en maak dan de test van 10 vragen (je hebt <b>7 op 10</b> nodig om te slagen).</p>
+    <p><b>Grafiekvenster:</b> bij de rekenvragen staat de grafiek al klaar, met de formule erin. Je moet niets overtypen in GeoGebra.
+    <b>Moeilijke woorden</b> hebben een oranje stippellijn: raak ze aan voor de uitleg. <b>Afronden:</b> bij elke rekenvraag staat op hoeveel decimalen je afrondt.</p>`,
   groepen: [
     { titel: 'A · Kenmerken in context (hoofdstuk 0–1)', delen: [1, 2] },
     { titel: 'B · Domein en kritisch kijken (hoofdstuk 2–3)', delen: [3, 4] },
