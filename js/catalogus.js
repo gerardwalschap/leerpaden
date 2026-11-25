@@ -94,6 +94,9 @@ window.CATALOGUS = {
           leerpaden: ['instaptoets-7vjho'] },
         { nr: 1, titel: 'Getallenleer', sub: 'Rekenen in ℕ, ℤ, ℚ en ℝ',
           leerpaden: ['getallenleer-n', 'getallenleer-n-plus', 'getallenleer-z', 'getallenleer-q', 'reele-getallen'] },
+        // ster: true = blok zonder hoofdstuknummer (★); nr 1.5 = tussen getallenleer en functieleer
+        { nr: 1.5, ster: true, titel: 'Proeftoets getallenleer', sub: 'Rekenen in ℕ, ℤ, ℚ en ℝ · alle soorten oefeningen · in 5 stukken, over meerdere dagen',
+          leerpaden: ['proeftoets-getallenleer'] },
         { nr: 2, titel: 'Functieleer', sub: 'Functies · Domein en bereik · ax + b · Exponentiële functies',
           leerpaden: ['functieleer'] },
         { nr: 3, titel: 'Telproblemen en kansrekenen', sub: 'Boomdiagram · Product-, som- en complementregel · Venndiagram · Wet van Laplace · Kansboom',
