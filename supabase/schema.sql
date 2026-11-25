@@ -151,6 +151,7 @@ end $$;
 create or replace function _deel_open(p_ll uuid, p_prog text, p_deel int) returns boolean
 language sql security definer set search_path = public, extensions as $$
   select p_deel = 1
+      or p_prog = 'rationale-functies-context'   -- in dit leerpad staan alle delen open
       or exists (select 1 from testen where leerling_id = p_ll and programma = p_prog and deel = p_deel - 1 and geslaagd)
       or exists (select 1 from toegang where leerling_id = p_ll and programma = p_prog and deel = p_deel and vrijgegeven);
 $$;
