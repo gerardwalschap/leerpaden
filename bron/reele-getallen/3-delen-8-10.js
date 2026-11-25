@@ -521,6 +521,14 @@ const DEEL10 = {
   rekenmachine: false,
   opdracht: 'Vorm om naar de gevraagde grootheid.',
   theorie: `
+    <div class="kader">
+      <div class="kader-titel">🎬 Uitlegfilmpje: formules omvormen</div>
+      <video controls preload="metadata" playsinline poster="/leerpaden/media/formules-omvormen.jpg" style="width:100%;max-width:960px;display:block;margin:6px auto;border-radius:10px;background:#000">
+        <source src="/leerpaden/media/formules-omvormen.mp4" type="video/mp4">
+        Je browser kan dit filmpje niet afspelen.
+      </video>
+      <p class="klein">Bekijk eerst het filmpje. Daaronder vind je de methode en nog meer voorbeelden.</p>
+    </div>
     <div class="kader werk">
       <div class="kader-titel">Methode</div>
       <ol><li>Staat de gevraagde grootheid in het rechterlid? Verwissel dan de leden.</li>
