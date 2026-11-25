@@ -135,7 +135,7 @@
   }
   function leerpadKnop({ p, P, h }) {
     return `<button class="stap open" data-a="prog" data-code="${esc(p.code)}"><div class="nr">→</div>
-      <div><div class="titel">${esc(P.titel)}</div><div class="sub">${h ? (h.nr ? `Hoofdstuk ${h.nr}: ${esc(h.titel)}` : esc(h.titel)) : esc(P.ondertitel || '')}</div></div><span></span></button>`;
+      <div><div class="titel">${esc(P.titel)}</div><div class="sub">${h ? (h.nr && !h.ster ? `Hoofdstuk ${h.nr}: ${esc(h.titel)}` : esc(h.titel)) : esc(P.ondertitel || '')}</div></div><span></span></button>`;
   }
   function vKies() {
     const groepen = perVak();
