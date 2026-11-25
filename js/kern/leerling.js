@@ -17,7 +17,7 @@
   function info(nr) {
     const st = S.status, d = deelVan(nr);
     const geslaagd = st.geslaagd.includes(nr);
-    const open = nr === 1 || st.geslaagd.includes(nr - 1) || st.vrijgegeven.includes(nr);
+    const open = !!S.P.allesOpen || nr === 1 || st.geslaagd.includes(nr - 1) || st.vrijgegeven.includes(nr); // allesOpen: enkel leerpaden die dat zelf vragen
     const testen = st.testen.filter(t => t.deel === nr);
     const bezig = testen.find(t => t.status === 'bezig');
     const ingediend = testen.filter(t => t.status === 'ingediend');
@@ -162,7 +162,7 @@
       klasse = 'open'; klik = true;
       if (i.bezig) etiket = '<span class="etiket oranje">Test bezig</span>';
       else if (i.over <= 0) etiket = '<span class="etiket rood">Oefen verder</span>';
-      else etiket = '<span class="etiket oranje">Nu aan de beurt</span>';
+      else etiket = S.P.allesOpen && !i.ingediend.length ? '<span class="etiket oranje">Open</span>' : '<span class="etiket oranje">Nu aan de beurt</span>';
     }
     const binnen = `<div class="nr">${i.geslaagd ? '✓' : d.nr}</div>
       <div><div class="titel">Deel ${d.nr}: ${esc(d.titel)}</div><div class="sub">${esc(d.kort)}</div></div>${etiket}`;
