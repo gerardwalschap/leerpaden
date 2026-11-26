@@ -356,3 +356,13 @@ De map `test/` mag blijven staan: daar kan je later een nieuwe versie eerst uitp
 - **Formule boven een figuur**: had een vraag zowel een figuur (html) als een formule (tex), dan werd de formule niet getoond (bv. "Welke rechte hoort bij het voorschrift?"). Nieuw: `W.opgave(v)` in hulp.js toont de formule boven de figuur. Ook in stelsels (D2, D8) en tweedegraadsfuncties-ax2 (D3, D9).
 - Functieleer: "Zoek a" (deel 5) geeft een breuk i.p.v. −0,6666…; uitleg bij "eerstegraadsfunctie of niet?" (deel 7) wijst de plaats aan waar Δy/Δx verandert; minder horizontale rechten bij domein en bereik.
 - test/js/leerling.js en test/js/leerkracht.js zijn opnieuw gelijkgezet met js/kern/.
+
+## Menu voor leerlingen (js/menu.js)
+
+Na het aanmelden ziet een 7VJHO-leerling grote tegels: **1. Instaptoets · 2. Getallenleer · 3. Functieleer ·
+4. Telproblemen en kansrekenen · 5. Statistiek**. Een tegel opent knoppen (bv. Rekenen in ℕ, ℕ +, ℤ, …, ★ Proeftoets),
+en achter een knop staat het leerpad (of één groep ervan, bv. *Eerstegraadsfuncties*) met de spellen die erbij horen.
+De instaptoets start meteen. Een leerling ziet enkel tegels en knoppen waaraan je hem gekoppeld hebt.
+
+* Indeling aanpassen of een spel bij een onderwerp zetten: enkel `js/menu.js` (uitleg bovenaan dat bestand).
+* Actief op de echte site en in `test/`.
