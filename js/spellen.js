@@ -35,6 +35,15 @@ const Spellen = (() => {
         const R = S.rooms || {}, af = zalen.filter(z => R[z] && R[z].stars), sterren = zalen.reduce((a, z) => a + ((R[z] && R[z].stars) || 0), 0);
         return { tekst: `${af.length}/6 zalen · ${sterren}/18 ★${R.K && R.K.stars ? ' · kluis gekraakt 🏆' : ''}`, pct: Math.round(100 * af.length / 6) };
       } },
+    { code: 'spel-getallenshow-n', map: 'getallenshow-n', titel: 'Getallenshow ℕ', sub: 'Quizshow met 5 rubrieken over ℕ', icoon: '🎤',
+      voortgang(st) {
+        const S = lees(st, 'getallenshow-n-v1', null);
+        if (!S) return { tekst: 'nog niet gestart', pct: 0 };
+        const stats = Object.values(S.stats || {}).filter(x => x && x.n), n = stats.reduce((a, x) => a + x.n, 0), j = stats.reduce((a, x) => a + x.ok, 0);
+        if (!n) return { tekst: 'nog geen vraag beantwoord', pct: 0 };
+        return { tekst: `${S.shows || 0} show${S.shows === 1 ? '' : 's'} · record ${S.best || 0} punten · ${stats.length}/5 rubrieken · ${n} vragen, ${procent(j, n)}% juist`,
+          pct: Math.round(100 * stats.length / 5) };
+      } },
     { code: 'spel-expeditie-z', map: 'expeditie-z', titel: 'Expeditie ℤ', sub: 'Verken eiland ℤ · 12 zones', icoon: '🏝️',
       voortgang(st) {
         const S = lees(st, 'expeditie-z-v1', null);
@@ -43,7 +52,7 @@ const Spellen = (() => {
         const af = ids.filter(i => Z[i] && Z[i].stars).length, sterren = ids.reduce((a, i) => a + ((Z[i] && Z[i].stars) || 0), 0);
         return { tekst: `${af}/12 zones · ${sterren}/36 ★ · ${S.coins || 0} munten${af === 12 ? ' 🏆' : ''}`, pct: Math.round(100 * af / 12) };
       } },
-    { code: 'spel-getallenshow', map: 'getallenshow', titel: 'Getallenshow ℕ ℤ', sub: 'Quizshow met 17 rubrieken', icoon: '🎤',
+    { code: 'spel-getallenshow', map: 'getallenshow', titel: 'Getallenshow ℤ', sub: 'Quizshow met 17 rubrieken over ℕ en ℤ', icoon: '🎤',
       voortgang(st) {
         const S = lees(st, 'getallenshow-v1', null);
         if (!S) return { tekst: 'nog niet gestart', pct: 0 };
@@ -59,6 +68,26 @@ const Spellen = (() => {
     { code: 'spel-expeditie-r', map: 'expeditie-r', titel: 'Expeditie ℝ', sub: '10 delen in één tocht', icoon: '⛰️',
       voortgang: (st) => expeditie(st, 'expeditie-r-v1', 10) },
     { code: 'spel-oefenarena-r', map: 'oefenarena-r', titel: 'Oefenarena ℝ', sub: 'Zelf onderdelen kiezen en oefenen', icoon: '🏋️',
+      voortgang: (st) => arena(st, 10) },
+    // +-versie ℕ (gevorderden): vragen rechtstreeks uit het leerpad Rekenen in ℕ + (spellen/plus-motor.js)
+    { code: 'spel-expeditie-n-plus', map: 'expeditie-n-plus', titel: 'Expeditie ℕ +', sub: '6 delen in één tocht · gevorderden', icoon: '🏔️',
+      voortgang: (st) => expeditie(st, 'expeditie-n-plus-v1', 6) },
+    { code: 'spel-oefenarena-n-plus', map: 'oefenarena-n-plus', titel: 'Oefenarena ℕ +', sub: 'Zelf delen kiezen · gevorderden', icoon: '💪',
+      voortgang: (st) => arena(st, 6) },
+    // +-versie ℤ (gevorderden): vragen rechtstreeks uit het leerpad Rekenen in ℤ + (spellen/plus-motor.js)
+    { code: 'spel-expeditie-z-plus', map: 'expeditie-z-plus', titel: 'Expeditie ℤ +', sub: '10 delen in één tocht · gevorderden', icoon: '🏔️',
+      voortgang: (st) => expeditie(st, 'expeditie-z-plus-v1', 10) },
+    { code: 'spel-oefenarena-z-plus', map: 'oefenarena-z-plus', titel: 'Oefenarena ℤ +', sub: 'Zelf delen kiezen · gevorderden', icoon: '💪',
+      voortgang: (st) => arena(st, 10) },
+    // +-versie ℚ (gevorderden): vragen rechtstreeks uit het leerpad Rekenen in ℚ + (spellen/plus-motor.js)
+    { code: 'spel-expeditie-q-plus', map: 'expeditie-q-plus', titel: 'Expeditie ℚ +', sub: '13 delen in één tocht · gevorderden', icoon: '🏔️',
+      voortgang: (st) => expeditie(st, 'expeditie-q-plus-v1', 13) },
+    { code: 'spel-oefenarena-q-plus', map: 'oefenarena-q-plus', titel: 'Oefenarena ℚ +', sub: 'Zelf delen kiezen · gevorderden', icoon: '💪',
+      voortgang: (st) => arena(st, 13) },
+    // +-versie ℝ (gevorderden): vragen rechtstreeks uit het leerpad Rekenen in ℝ + (spellen/plus-motor.js)
+    { code: 'spel-expeditie-r-plus', map: 'expeditie-r-plus', titel: 'Expeditie ℝ +', sub: '10 delen in één tocht · gevorderden', icoon: '🏔️',
+      voortgang: (st) => expeditie(st, 'expeditie-r-plus-v1', 10) },
+    { code: 'spel-oefenarena-r-plus', map: 'oefenarena-r-plus', titel: 'Oefenarena ℝ +', sub: 'Zelf delen kiezen · gevorderden', icoon: '💪',
       voortgang: (st) => arena(st, 10) },
     // Grafiekdetective: hoort bij het 5de jaar, komt later in een andere klas (map spellen/grafiekdetective blijft staan).
     /*

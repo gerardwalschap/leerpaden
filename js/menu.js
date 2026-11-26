@@ -27,14 +27,14 @@ window.MENUS = {
 
       { id: 'getallenleer', nr: 2, icoon: '🔢', titel: 'Getallenleer', sub: 'Rekenen in ℕ, ℤ, ℚ en ℝ',
         knoppen: [
-          { leerpad: 'getallenleer-n',      teken: 'ℕ', spellen: ['spel-codekraker', 'spel-getallenshow'] },
-          { leerpad: 'getallenleer-n-plus', teken: 'ℕ', plus: true, spellen: [] },
+          { leerpad: 'getallenleer-n',      teken: 'ℕ', spellen: ['spel-codekraker', 'spel-getallenshow-n'] },
+          { leerpad: 'getallenleer-n-plus', teken: 'ℕ', plus: true, spellen: ['spel-expeditie-n-plus', 'spel-oefenarena-n-plus'] },
           { leerpad: 'getallenleer-z',      teken: 'ℤ', spellen: ['spel-expeditie-z', 'spel-getallenshow'] },
-          { leerpad: 'getallenleer-z-plus', teken: 'ℤ', plus: true, spellen: [] },
+          { leerpad: 'getallenleer-z-plus', teken: 'ℤ', plus: true, spellen: ['spel-expeditie-z-plus', 'spel-oefenarena-z-plus'] },
           { leerpad: 'getallenleer-q',      teken: 'ℚ', spellen: ['spel-expeditie-q', 'spel-oefenarena-q'] },
-          { leerpad: 'getallenleer-q-plus', teken: 'ℚ', plus: true, spellen: [] },
+          { leerpad: 'getallenleer-q-plus', teken: 'ℚ', plus: true, spellen: ['spel-expeditie-q-plus', 'spel-oefenarena-q-plus'] },
           { leerpad: 'reele-getallen',      teken: 'ℝ', spellen: ['spel-expeditie-r', 'spel-oefenarena-r'] },
-          { leerpad: 'reele-getallen-plus', teken: 'ℝ', plus: true, spellen: [] },
+          { leerpad: 'reele-getallen-plus', teken: 'ℝ', plus: true, spellen: ['spel-expeditie-r-plus', 'spel-oefenarena-r-plus'] },
           { leerpad: 'proeftoets-getallenleer', ster: true, sub: 'Afsluiter · alle soorten oefeningen · over meerdere dagen', spellen: [] },
         ] },
 

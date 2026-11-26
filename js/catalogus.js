@@ -105,7 +105,9 @@ window.CATALOGUS = {
           leerpaden: ['statistiek'] },
         // spellen: oefenspellen (map spellen/), koppelen zoals een leerpad; speeltijd en voortgang bij 🎮 Spellen
         { nr: 9, ster: true, titel: 'Spellen', sub: 'Oefenen al spelend · ℕ, ℤ, ℚ en ℝ · speeltijd en voortgang volg je bij 🎮 Spellen',
-          spellen: ['spel-codekraker', 'spel-expeditie-z', 'spel-getallenshow', 'spel-expeditie-q', 'spel-oefenarena-q', 'spel-expeditie-r', 'spel-oefenarena-r'] },
+          spellen: ['spel-codekraker', 'spel-getallenshow-n', 'spel-expeditie-z', 'spel-getallenshow', 'spel-expeditie-q', 'spel-oefenarena-q', 'spel-expeditie-r', 'spel-oefenarena-r',
+                    'spel-expeditie-n-plus', 'spel-oefenarena-n-plus', 'spel-expeditie-z-plus', 'spel-oefenarena-z-plus',
+                    'spel-expeditie-q-plus', 'spel-oefenarena-q-plus', 'spel-expeditie-r-plus', 'spel-oefenarena-r-plus'] },
       ],
     },
   },

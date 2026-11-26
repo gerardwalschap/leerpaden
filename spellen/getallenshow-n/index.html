@@ -1,0 +1,922 @@
+<meta charset="utf-8">
+<title>Getallenshow ℕ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Figtree:wght@400;600;800&display=swap">
+<style>
+/* Layout: quizstudio — een puntenbord als hoofdscherm (max 980px), vragen in een kaart die het bord vervangt. ℕ = groenblauw, ℤ = koraal. */
+:root{
+  --bg:#eef4f2; --stage:#ffffff; --ink:#18252b; --ink-soft:#56676d; --line:#d3e0dc;
+  --n:#14806b; --n-soft:#d6efe8; --n-ink:#ffffff;
+  --z:#e2522f; --z-soft:#fbe0d7; --z-ink:#ffffff;
+  --gold:#f4b400; --gold-ink:#3b2a00; --ok:#1f8a4c; --ok-bg:#dff3e6; --no:#c8372d; --no-bg:#fbe3e0; --done:#e3ebe8;
+  --f-display:"Bowlby One","Arial Black",Impact,sans-serif; --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif; --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101a1d; --stage:#18252a; --ink:#ecf3f1; --ink-soft:#9fb3b0; --line:#2a3b40;
+  --n:#2bb193; --n-soft:#143b33; --n-ink:#06201a; --z:#ff7552; --z-soft:#43221a; --z-ink:#2a0d05;
+  --gold:#ffc83d; --gold-ink:#2e2000; --ok:#5fd394; --ok-bg:#163826; --no:#ff8579; --no-bg:#43201d; --done:#22333a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101a1d; --stage:#18252a; --ink:#ecf3f1; --ink-soft:#9fb3b0; --line:#2a3b40;
+  --n:#2bb193; --n-soft:#143b33; --n-ink:#06201a; --z:#ff7552; --z-soft:#43221a; --z-ink:#2a0d05;
+  --gold:#ffc83d; --gold-ink:#2e2000; --ok:#5fd394; --ok-bg:#163826; --no:#ff8579; --no-bg:#43201d; --done:#22333a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5;padding-inline:16px;padding-block:16px 48px}
+#app{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;line-height:1.05;margin:0;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{border:0;border-radius:999px;padding:12px 22px;font-weight:800;background:var(--gold);color:var(--gold-ink);box-shadow:0 3px 0 color-mix(in srgb,var(--gold) 55%,#000)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 color-mix(in srgb,var(--gold) 55%,#000)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+.btn.small{padding:7px 14px;font-size:.9rem}
+.btn:disabled{opacity:.45;cursor:default}
+.stage{background:var(--stage);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--ink-soft)}
+.soft{color:var(--ink-soft)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.set-n{--c:var(--n);--cs:var(--n-soft);--ci:var(--n-ink)} .set-z{--c:var(--z);--cs:var(--z-soft);--ci:var(--z-ink)}
+.badge{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:6px;background:var(--c);color:var(--ci);font-weight:800;font-size:.85rem}
+
+/* start */
+.logo{font-size:clamp(2.8rem,11vw,5.2rem);letter-spacing:-.01em}
+.logo .n{color:var(--n)} .logo .z{color:var(--z)}
+.field input{font:inherit;padding:11px 14px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%;max-width:300px}
+.pick{display:grid;gap:14px}
+.group h3{font-size:1.15rem;display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--c);background:transparent;border-radius:999px;padding:7px 14px;font-weight:600;font-size:.95rem}
+.chip[aria-pressed="true"]{background:var(--c);color:var(--ci)}
+.chip:disabled{opacity:.4;cursor:not-allowed}
+.stats{display:grid;gap:8px}
+.srow{display:grid;grid-template-columns:minmax(0,190px) 1fr 52px;gap:10px;align-items:center;font-size:.9rem}
+.srow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.track{height:10px;border-radius:999px;background:var(--done);overflow:hidden}
+.track i{display:block;height:100%;background:var(--c);border-radius:999px}
+.srow .pc{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+
+/* bord */
+.hud{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.score{font-family:var(--f-display);font-size:2rem;font-variant-numeric:tabular-nums}
+.score small{font-family:var(--f-body);font-size:.8rem;color:var(--ink-soft);font-weight:600;display:block;line-height:1}
+.board-wrap{overflow-x:auto}
+.board{display:grid;gap:8px;min-width:0}
+.colhead{background:var(--c);color:var(--ci);border-radius:10px;padding:10px 8px;font-weight:800;font-size:.86rem;line-height:1.2;text-align:center;display:grid;place-items:center;gap:4px;min-height:74px;hyphens:auto;overflow-wrap:anywhere}
+.colhead .short{display:none}
+.colhead .badge{background:var(--ci);color:var(--c)}
+.tile{border:0;border-radius:10px;min-height:64px;background:var(--cs);color:var(--c);font-family:var(--f-display);font-size:clamp(1.05rem,3.4vw,1.7rem);box-shadow:inset 0 -4px 0 color-mix(in srgb,var(--c) 30%,transparent);transition:transform .12s}
+.tile:hover:not(:disabled){transform:translateY(-2px)}
+.tile:disabled{cursor:default;background:var(--done);color:var(--ink-soft);box-shadow:none;font-family:var(--f-body);font-weight:800;font-size:.95rem}
+.tile.ok:disabled{color:var(--ok)} .tile.no:disabled{color:var(--no)}
+
+/* vraag */
+.qcard{display:grid;gap:16px}
+.qcard>*{min-width:0}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--cs);color:var(--ink);font-weight:800;font-size:.9rem}
+.joker{background:var(--gold);color:var(--gold-ink);border-radius:10px;padding:10px 14px;font-weight:800;display:flex;gap:10px;align-items:center}
+.joker b{font-family:var(--f-display);font-weight:400;font-size:1.4rem}
+.instr{font-weight:600}
+.math{font-size:clamp(1.6rem,6vw,2.4rem);font-variant-numeric:tabular-nums;line-height:1.25;overflow-wrap:anywhere}
+.math.small{font-size:1.15rem;font-weight:600}
+.blank{display:inline-block;min-width:1.5em;text-align:center;border-bottom:3px solid var(--gold);color:var(--gold)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opts.cmp{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opts.words{grid-template-columns:1fr}
+.opt{border:2px solid var(--line);background:var(--stage);border-radius:12px;padding:14px 10px;font-size:1.25rem;font-weight:800;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.opts.cmp .opt{font-size:2rem;padding:8px}
+.opts.words .opt{font-size:1.02rem;text-align:left;padding:12px 16px}
+.opt:hover:not(:disabled){border-color:var(--gold)}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)} .opt.wrong{border-color:var(--no);background:var(--no-bg)}
+.opt:disabled{cursor:default}
+.typein{display:grid;gap:10px}
+.typein>*{min-width:0}
+.typein .line{display:flex;gap:10px;flex-wrap:wrap}
+.typein input{flex:1 1 200px;min-width:0;width:100%;font:inherit;font-size:1.4rem;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.keys{display:flex;flex-wrap:wrap;gap:6px}
+.keys button{min-width:42px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);font-weight:800;font-size:1.05rem}
+.hint{font-size:.88rem;color:var(--ink-soft)}
+.warn{color:var(--no);font-weight:600}
+.fb{border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+.fb.ok{background:var(--ok-bg)} .fb.no{background:var(--no-bg)}
+.fb h3{font-size:1.4rem} .fb.ok h3{color:var(--ok)} .fb.no h3{color:var(--no)}
+.fb .st{display:block;font-variant-numeric:tabular-nums}
+.fb .row{justify-content:flex-end}
+.tbl-wrap{overflow-x:auto}
+.tbl{border-collapse:collapse;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{border:1px solid var(--line);padding:6px 10px;text-align:center;white-space:nowrap}
+.tbl th{text-align:left;font-size:.9rem;background:var(--bg)}
+.tb-blank{background:color-mix(in srgb,var(--gold) 30%,transparent);font-weight:800}
+.svgbox{max-width:420px;width:100%;margin:0 auto}
+.svgbox svg,.nlbox svg{display:block;width:100%;height:auto}
+.gtxt{fill:var(--ink-soft);font-family:var(--f-body);font-size:11px}
+.result{display:grid;gap:14px;justify-items:center;text-align:center}
+.big{font-family:var(--f-display);font-size:clamp(3rem,14vw,5.5rem);line-height:1;color:var(--gold)}
+@media (max-width:560px){.colhead .long{display:none}.colhead .short{display:block;overflow-wrap:normal;word-break:normal;white-space:nowrap;font-size:.66rem}.stage.bordstage{padding:8px}body{font-size:16px}.stage{padding:16px}.colhead{font-size:.72rem;min-height:66px;padding:8px 4px}.tile{min-height:54px}.board{gap:6px}.srow{grid-template-columns:minmax(0,1fr) 70px 44px}}
+</style>
+<div id="app" lang="nl" aria-live="polite"></div>
+<script src="../../js/config.js?v=2" charset="utf-8"></script>
+<script src="../../js/kern/api.js?v=5" charset="utf-8"></script>
+<script src="../../js/kern/demo.js?v=8" charset="utf-8"></script>
+<script src="../../js/spellen.js?v=3" charset="utf-8"></script>
+<script src="../spel-volg.js?v=1" charset="utf-8"></script> <!-- leerpaden: aanmelding, voortgang en speeltijd -->
+<script>/* ===== Expeditie ℤ — logica: hulpfuncties, veeltermen, generatoren ===== */
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const nz=(a,b)=>{let v;do{v=R(a,b)}while(v===0);return v};
+const nzx=(a,b,ex)=>{let v;do{v=R(a,b)}while(v===0||ex.includes(v));return v};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const MIN='−';
+const f=n=>n<0?MIN+(-n):String(n);
+const p=n=>n<0?'('+f(n)+')':f(n);
+const SUPC={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const SUBC={'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+const sup=n=>String(n).split('').map(c=>SUPC[c]||c).join('');
+const sub=n=>String(n).split('').map(c=>SUBC[c]||c).join('');
+const isInt=x=>Number.isInteger(x);
+
+/* ---------- veeltermen ---------- */
+function vexp(k){const m={};for(const x of k.matchAll(/([a-z])(\d+)/g))m[x[1]]=(m[x[1]]||0)+ +x[2];return m}
+function vkey(m){return Object.keys(m).filter(v=>m[v]!==0).sort().map(v=>v+m[v]).join('')}
+function clean(a){const r={};for(const k in a)if(Math.abs(a[k])>1e-9)r[k]=a[k];return r}
+function padd(a,b){const r={...a};for(const k in b)r[k]=(r[k]||0)+b[k];return clean(r)}
+function pneg(a){const r={};for(const k in a)r[k]=-a[k];return r}
+function pmul(a,b){const r={};for(const ka in a)for(const kb in b){const m=vexp(ka),n=vexp(kb);for(const v in n)m[v]=(m[v]||0)+n[v];const k=vkey(m);r[k]=(r[k]||0)+a[ka]*b[kb]}return clean(r)}
+function pdiv(a,b){const ks=Object.keys(b);if(ks.length!==1)throw new Error('deling');const kb=ks[0],cb=b[kb];const r={};for(const ka in a){const m=vexp(ka),n=vexp(kb);for(const v in n){m[v]=(m[v]||0)-n[v];if(m[v]<0)throw new Error('deling')}const k=vkey(m);r[k]=(r[k]||0)+a[ka]/cb}return clean(r)}
+function ppow(a,n){if(!isInt(n)||n<0||n>20)throw new Error('exp');let r={'':1};for(let i=0;i<n;i++)r=pmul(r,a);return r}
+function pequal(a,b){const d=padd(a,pneg(b));return Object.keys(d).length===0}
+function pconst(a){const ks=Object.keys(a);if(ks.length===0)return 0;if(ks.length===1&&ks[0]==='')return a[''];return null}
+
+function normalize(s){
+  s=String(s).toLowerCase().replace(/[−–—]/g,'-').replace(/[·×∙•*⋅]/g,'*').replace(/[:÷\/]/g,'/');
+  s=s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g,m=>'^'+m.split('').map(c=>Object.keys(SUPC).find(k=>SUPC[k]===c)).join(''));
+  return s.replace(/\s+/g,'');
+}
+function tokenize(s){const t=[];let i=0;while(i<s.length){const c=s[i];
+  if(/\d/.test(c)){let j=i;while(j<s.length&&/[\d.]/.test(s[j]))j++;t.push({t:'n',v:parseFloat(s.slice(i,j))});i=j}
+  else if(/[a-z]/.test(c)){t.push({t:'v',v:c});i++}
+  else if('+-*/^()'.includes(c)){t.push({t:c});i++}
+  else throw new Error('teken')}return t}
+function parsePoly(str){
+  const t=tokenize(normalize(str));if(!t.length)throw new Error('leeg');let i=0;
+  const pk=()=>t[i];
+  function expr(){let r=term();while(pk()&&(pk().t==='+'||pk().t==='-')){const op=t[i++].t;const b=term();r=op==='+'?padd(r,b):padd(r,pneg(b))}return r}
+  function term(){let r=factor();for(;;){const n=pk();if(!n)break;
+    if(n.t==='*'){i++;r=pmul(r,factor())}
+    else if(n.t==='/'){i++;r=pdiv(r,factor())}
+    else if(n.t==='v'||n.t==='('){r=pmul(r,power())}
+    else break}return r}
+  function factor(){const n=pk();if(!n)throw new Error('einde');
+    if(n.t==='-'){i++;return pneg(factor())}if(n.t==='+'){i++;return factor()}return power()}
+  function power(){let b=atom();if(pk()&&pk().t==='^'){i++;let e;
+      if(pk()&&pk().t==='n'){e=t[i++].v}
+      else if(pk()&&pk().t==='('){i++;if(!pk()||pk().t!=='n')throw new Error('exp');e=t[i++].v;if(!pk()||pk().t!==')')throw new Error('exp');i++}
+      else throw new Error('exp');
+      b=ppow(b,e)}return b}
+  function atom(){const n=t[i++];if(!n)throw new Error('einde');
+    if(n.t==='n')return clean({'':n.v});
+    if(n.t==='v')return {[n.v+'1']:1};
+    if(n.t==='('){const r=expr();if(!pk()||pk().t!==')')throw new Error('haakje');i++;return r}
+    throw new Error('syntax')}
+  const r=expr();if(i!==t.length)throw new Error('rest');return r;
+}
+function isSimplified(raw,target){
+  const s=normalize(raw);if(/[()\/]/.test(s))return false;
+  const terms=s.replace(/^[+-]/,'').split(/[+-]/);
+  if(terms.some(x=>x===''))return false;
+  for(const x of terms){const y=x.replace(/\^\d+/g,'');const nums=y.match(/\d+(\.\d+)?/g)||[];const vars=y.match(/[a-z]/g)||[];
+    if(nums.length>1)return false;if(new Set(vars).size!==vars.length)return false;if(/\^/.test(y))return false}
+  const n=Math.max(1,Object.keys(target).length);
+  return terms.length===n;
+}
+const VORDER=['a','b','x','y'];
+function fmtNum(n){return isInt(n)?String(n):String(Math.round(n*100)/100).replace('.',',')}
+function fmtPoly(pl){
+  const ks=Object.keys(pl);if(!ks.length)return '0';
+  const deg=k=>Object.values(vexp(k)).reduce((s,e)=>s+e,0);
+  ks.sort((x,y)=>{const d=deg(y)-deg(x);if(d)return d;const ex=vexp(x),ey=vexp(y);for(const v of VORDER){const c=(ey[v]||0)-(ex[v]||0);if(c)return c}return 0});
+  return ks.map((k,i)=>{const c=pl[k],a=Math.abs(c);const m=vexp(k);
+    const vars=Object.keys(m).sort().map(v=>v+(m[v]===1?'':sup(m[v]))).join('');
+    const core=(a===1&&vars?'':fmtNum(a))+vars;
+    return i===0?(c<0?MIN:'')+core:(c<0?' '+MIN+' ':' + ')+core}).join('');
+}
+
+/* ---------- meerkeuze ---------- */
+function intOptions(v,wrongs,extra){
+  const lab=x=>typeof x==='number'?f(x):x;
+  const seen=new Set([lab(v)]);const o=[{label:lab(v),correct:true}];
+  const add=w=>{if(o.length>=4)return;if(typeof w==='number'&&!isInt(w))return;const l=lab(w);if(!seen.has(l)){seen.add(l);o.push({label:l,correct:false})}};
+  (extra||[]).forEach(add);wrongs.forEach(add);
+  let g=0;while(o.length<4&&g++<80){const base=typeof v==='number'?v:0;add(pick([-base,base+nz(-6,6),base+nz(-3,3),base*2]))}
+  return shuffle(o);
+}
+function perturb(pl){const r={...pl};const ks=Object.keys(r);if(!ks.length)return {a1:1};const k=pick(ks);const t=R(0,2);
+  if(t===0)r[k]=-r[k];else if(t===1){r[k]+=nz(-2,2)}else{const m=vexp(k);const v=Object.keys(m)[0];if(v){m[v]=m[v]+pick([1,-1]);const c=r[k];delete r[k];const nk=vkey(m);r[nk]=(r[nk]||0)+c}else r[k]=-r[k]}
+  return clean(r)}
+function exprOptions(target,wrongs){
+  const seen=new Set([fmtPoly(target)]);const o=[{label:fmtPoly(target),correct:true}];
+  const add=w=>{if(o.length>=4||!w)return;if(pequal(w,target))return;const l=fmtPoly(w);if(!seen.has(l)){seen.add(l);o.push({label:l,correct:false})}};
+  wrongs.forEach(w=>{try{add(typeof w==='string'?parsePoly(w):w)}catch(e){}});
+  let g=0;while(o.length<4&&g++<80)add(perturb(target));
+  return shuffle(o);
+}
+/* bouwt een vraag met getal-antwoord */
+function intQ(mode,{instr,math,v,wrongs=[],explain,bn=false}){
+  const q={instr,math,explain,answerLabel:v===null?'bestaat niet':f(v)};
+  if(mode==='mc'){q.options=intOptions(v===null?'bestaat niet':v,wrongs,bn?['bestaat niet']:[])}
+  else{q.kind=bn?'intbn':'int';q.value=v}
+  return q}
+function exprQ(mode,{instr,math,target,wrongs=[],explain,vars}){
+  const q={instr,math,explain,answerLabel:fmtPoly(target),vars};
+  if(mode==='mc')q.options=exprOptions(target,wrongs);else{q.kind='expr';q.target=target}
+  return q}
+
+/* ---------- uitleghulp ---------- */
+function sumExplain(x,y){const v=x+y;
+  if(x===0||y===0)return `Optellen met 0 verandert niets: ${f(v)}.`;
+  if(x===-y)return `${f(x)} en ${f(y)} zijn tegengestelde getallen: hun som is 0.`;
+  if(Math.sign(x)===Math.sign(y))return `${f(x)} en ${f(y)} hebben hetzelfde teken: tel ${Math.abs(x)} + ${Math.abs(y)} = ${Math.abs(v)} en behoud het teken → <b>${f(v)}</b>.`;
+  const big=Math.abs(x)>Math.abs(y)?x:y,sm=big===x?y:x;
+  return `Verschillend teken: ${Math.abs(big)} − ${Math.abs(sm)} = ${Math.abs(v)}. Neem het teken van ${f(big)} (grootste absolute waarde) → <b>${f(v)}</b>.`}
+function signText(nNeg){return nNeg%2===0?`${nNeg===0?'geen':'een even aantal ('+nNeg+')'} mintekens → positief`:`een oneven aantal (${nNeg}) mintekens → negatief`}
+const steps=(start,arr)=>`<span class="st">${start}</span>`+arr.map(s=>`<span class="st">= ${s}</span>`).join('');
+
+/* ===== ZONE 1: optellen en aftrekken ===== */
+function genAdd(mode){
+  const a=nz(-20,20),b=nz(-15,15),minus=Math.random()<.55;
+  const math=`${f(a)} ${minus?MIN:'+'} ${p(b)}`;const b2=minus?-b:b,v=a+b2;
+  let ex='';if(minus)ex+=`Aftrekken = optellen met het tegengestelde: ${math} = ${f(a)} + ${p(-b)}.<br>`;
+  ex+=sumExplain(a,b2);
+  return intQ(mode,{instr:'Bereken.',math,v,wrongs:[a-b2,-v,(v<0?-1:1)*(Math.abs(a)+Math.abs(b2)),-a+b2],explain:ex});
+}
+/* ===== ZONE 2: vermenigvuldigen en delen ===== */
+function genMul(mode){
+  const t=R(0,4);
+  if(t===0){const a=nzx(-12,12,[1,-1]),b=nzx(-12,12,[1,-1]),v=a*b;
+    return intQ(mode,{instr:'Bereken.',math:`${f(a)} · ${p(b)}`,v,wrongs:[-v,a+b,a-b],explain:`Tekenregel: ${signText((a<0)+(b<0))}. ${Math.abs(a)} · ${Math.abs(b)} = ${Math.abs(v)} → <b>${f(v)}</b>.`})}
+  if(t===1){const b=nzx(-12,12,[1,-1]),q=nzx(-12,12,[1,-1]),a=b*q;
+    return intQ(mode,{instr:'Bereken.',math:`${f(a)} : ${p(b)}`,v:q,wrongs:[-q,a-b,q*2],explain:`Tekenregel (ook bij delen): ${signText((a<0)+(b<0))}. ${Math.abs(a)} : ${Math.abs(b)} = ${Math.abs(q)} → <b>${f(q)}</b>.`})}
+  if(t===2){const b=nzx(-6,6,[1,-1]),q=nzx(-9,9,[1,-1]),a=b*q,c=nzx(-5,5,[1,-1]),v=q*c;const alt=a/(b*c);
+    return intQ(mode,{instr:'Bereken. Werk van links naar rechts.',math:`${f(a)} : ${p(b)} · ${p(c)}`,v,wrongs:[-v,alt,-alt],explain:`Delen en vermenigvuldigen doe je van links naar rechts.`+steps(`${f(a)} : ${p(b)} · ${p(c)}`,[`${f(q)} · ${p(c)}`,`<b>${f(v)}</b>`])})}
+  if(t===3){const a=nzx(-6,6,[1,-1]),b=nzx(-6,6,[1,-1]),c=nzx(-5,5,[1,-1]),v=a*b*c;
+    return intQ(mode,{instr:'Bereken.',math:`${f(a)} · ${p(b)} · ${p(c)}`,v,wrongs:[-v,a*b-c,a+b+c],explain:`Tel de mintekens: ${signText((a<0)+(b<0)+(c<0))}.`+steps(`${f(a)} · ${p(b)} · ${p(c)}`,[`${f(a*b)} · ${p(c)}`,`<b>${f(v)}</b>`])})}
+  {let a,b,pr,c,g=0;do{a=nzx(-9,9,[1,-1]);b=nzx(-9,9,[1,-1]);pr=a*b;const ds=[2,3,4,5,6,8].filter(d=>pr%d===0&&d!==Math.abs(pr));c=ds.length?pick(ds)*pick([1,-1]):0}while(!c&&g++<50);
+    if(!c)return genMul(mode);const v=pr/c;
+    return intQ(mode,{instr:'Bereken. Werk van links naar rechts.',math:`${f(a)} · ${p(b)} : ${p(c)}`,v,wrongs:[-v,isInt(b/c)?a*(b/c)*-1:v+2],explain:`Van links naar rechts:`+steps(`${f(a)} · ${p(b)} : ${p(c)}`,[`${f(pr)} : ${p(c)}`,`<b>${f(v)}</b>`])})}
+}
+/* ===== ZONE 3: machten ===== */
+function genPow(mode){
+  const t=R(0,5);const maxN={2:6,3:5,4:4,5:4};
+  const k=R(2,5),n=R(2,maxN[k]);const kn=k**n;
+  const prod=(b,n)=>Array(n).fill(b).join(' · ');
+  if(t===0){const v=(-k)**n;return intQ(mode,{instr:'Bereken de macht.',math:`(${MIN}${k})${sup(n)}`,v,wrongs:[-v,-k*n,k*n],explain:`Het grondtal is ${MIN}${k}: (${MIN}${k})${sup(n)} = ${prod('('+MIN+k+')',n)} = <b>${f(v)}</b>.<br>${n%2?'Oneven exponent → negatief.':'Even exponent → positief.'}`})}
+  if(t===1){const v=-kn;return intQ(mode,{instr:'Bereken de macht.',math:`${MIN}${k}${sup(n)}`,v,wrongs:[kn,-k*n,(-k)**n===v?k*n:(-k)**n],explain:`Opgelet: het grondtal is ${k}, niet ${MIN}${k}. Eerst de macht, dan het minteken: ${MIN}${k}${sup(n)} = ${MIN}(${prod(k,n)}) = <b>${f(v)}</b>.`})}
+  if(t===2){const P=(-k)**n,v=-P;return intQ(mode,{instr:'Bereken.',math:`${MIN}(${MIN}${k})${sup(n)}`,v,wrongs:[P,-k*n,k*n],explain:`Reken eerst de macht: (${MIN}${k})${sup(n)} = ${f(P)}. Het minteken ervoor geeft het tegengestelde: <b>${f(v)}</b>.`})}
+  if(t===3){const b=pick([k,-k,R(6,15),-R(6,15)]);return intQ(mode,{instr:'Bereken de macht.',math:`${p(b)}${sup(0)}`,v:1,wrongs:[0,b,-1],explain:`Elk getal verschillend van 0 tot de macht 0 is <b>1</b>.`})}
+  if(t===4){const m=R(7,25),v=m%2?-1:1;return intQ(mode,{instr:'Bereken de macht.',math:`(${MIN}1)${sup(m)}`,v,wrongs:[-v,-m,m],explain:`(${MIN}1) tot een ${m%2?'oneven':'even'} macht is <b>${f(v)}</b>: de mintekens heffen elkaar per twee op${m%2?' en er blijft er één over':''}.`})}
+  {const v=kn;return intQ(mode,{instr:'Bereken de macht.',math:`${k}${sup(n)}`,v,wrongs:[k*n,-v,k**(n-1)],explain:`${k}${sup(n)} = ${prod(k,n)} = <b>${v}</b>.`})}
+}
+/* ===== ZONE 4: wortels en logaritmen ===== */
+function genRoot(mode){
+  const t=R(0,7);const BN=null;
+  const sq=x=>x<0?`√(${f(x)})`:`√${x}`,cb=x=>x<0?`∛(${f(x)})`:`∛${x}`;
+  const I='Bereken. Bestaat de uitkomst niet in ℤ, kies dan “bestaat niet”.';
+  if(t===0){const s=R(2,15);return intQ(mode,{instr:I,math:sq(s*s),v:s,bn:true,wrongs:[-s,s*2,s*s/2],explain:`${s}² = ${s*s}, dus √${s*s} = <b>${s}</b>. Een vierkantswortel is nooit negatief.`})}
+  if(t===1){const s=R(2,12);return intQ(mode,{instr:I,math:`${MIN}${sq(s*s)}`,v:-s,bn:true,wrongs:[s,-s*2],explain:`√${s*s} = ${s} want ${s}² = ${s*s}. Het minteken staat vóór de wortel: <b>${f(-s)}</b>.`})}
+  if(t===2){const s=R(2,10);return intQ(mode,{instr:I,math:sq(-s*s),v:BN,bn:true,wrongs:[-s,s],explain:`Een kwadraat is nooit negatief: geen enkel geheel getal in het kwadraat geeft ${f(-s*s)}. Dus √(${f(-s*s)}) <b>bestaat niet</b> in ℤ.`})}
+  if(t===3){const neg=Math.random()<.3;let s,tot,a,b;
+    if(neg){tot=-R(2,20)}else{s=R(2,10);tot=s*s}
+    do{a=nz(-15,20);b=tot-a}while(b===0);
+    const inside=b>0?`${f(a)} + ${b}`:`${f(a)} − ${-b}`;
+    const v=neg?BN:s;
+    return intQ(mode,{instr:I,math:`√(${inside})`,v,bn:true,wrongs:neg?[Math.round(Math.sqrt(-tot)),-Math.round(Math.sqrt(-tot))]:[-s,Math.round(Math.sqrt(Math.abs(a)))+Math.round(Math.sqrt(Math.abs(b)))],
+      explain:`Reken eerst onder het wortelteken: ${inside} = ${f(tot)}. `+(neg?`√(${f(tot)}) <b>bestaat niet</b> in ℤ, want een kwadraat is nooit negatief.`:`√${tot} = <b>${s}</b> want ${s}² = ${tot}.`)})}
+  if(t===4){const c=nzx(-5,5,[]);const c3=c**3;return intQ(mode,{instr:I,math:cb(c3),v:c,bn:true,wrongs:[-c,c3/3|0||c*3],explain:`${p(c)}³ = ${f(c3)}, dus ${cb(c3)} = <b>${f(c)}</b>. Een derdemachtswortel van een negatief getal bestaat wél.`})}
+  if(t===5){const c=nzx(-5,5,[1,-1]);const c3=c**3;return intQ(mode,{instr:I,math:`${MIN}${cb(c3)}`,v:-c,bn:true,wrongs:[c,c3],explain:`${cb(c3)} = ${f(c)} want ${p(c)}³ = ${f(c3)}. Het minteken ervoor: <b>${f(-c)}</b>.`})}
+  {const b=pick([2,2,3,5,10]);const nmax={2:7,3:5,5:4,10:4}[b];const n=R(1,nmax);const x=b**n;
+    return intQ(mode,{instr:I,math:`log${sub(b)} ${x}`,v:n,bn:true,wrongs:[x/b,n+1,n-1,-n],explain:`log${sub(b)} ${x}: tot welke macht moet je ${b} verheffen om ${x} te krijgen? ${b}${sup(n)} = ${x}, dus <b>${n}</b>.`})}
+}
+/* ===== ZONE 5: volgorde van bewerkingen ===== */
+function genOrder(mode){
+  const t=R(0,6);const I='Bereken. Let op de volgorde van de bewerkingen.';
+  const tip='Volgorde: haakjes → machten, wortels, log → · en : (links naar rechts) → + en − (links naar rechts).<br>';
+  if(t===0){const a=nz(-9,12),b=R(2,6),c=nz(-9,9),pr=b*c,v=a-pr;const math=`${f(a)} − ${b} · ${p(c)}`;
+    const st=[`${f(a)} − ${p(pr)}`];if(pr<0)st.push(`${f(a)} + ${-pr}`);st.push(`<b>${f(v)}</b>`);
+    return intQ(mode,{instr:I,math,v,wrongs:[(a-b)*c,a+pr,-v],explain:tip+steps(math,st)})}
+  if(t===1){const k=R(2,3),n=k===3?R(2,3):R(2,4),s=R(2,9),c=R(2,6),d=nz(-6,6);const P=(-k)**n,q=c*d,v=P-s+q;
+    const math=`(${MIN}${k})${sup(n)} − √${s*s} + ${c} · ${p(d)}`;
+    return intQ(mode,{instr:I,math,v,wrongs:[-(k**n)-s+q,P+s+q,P-s-q,(P-s+c)*d],explain:tip+steps(math,[`${f(P)} − ${s} + ${p(q)}`,`${f(P-s)} + ${p(q)}`,`<b>${f(v)}</b>`])})}
+  if(t===2){const m=-R(2,5),a=R(1,9),b=R(2,12),r=pick([2,3,4])*pick([1,-1]);const ds=Math.abs(r)===4?[2,4]:[Math.abs(r)];const d=pick(ds)*pick([1,-1]);
+    const inner=a-b,A=m*inner,B=r/d,v=A-B;const math=`${f(m)} · (${a} − ${b}) − ∛${p(r**3)} : ${p(d)}`;
+    return intQ(mode,{instr:I,math,v,wrongs:[A+B,-A-B,(A-r)/d],explain:tip+steps(math,[`${f(m)} · ${p(inner)} − ${p(r)} : ${p(d)}`,`${f(A)} − ${p(B)}`,`<b>${f(v)}</b>`])})}
+  if(t===3){const k=R(2,6),b=R(2,6),c=nz(-7,7),n=R(2,9),sg=n%2?-1:1,v=k*k-b*c+sg;
+    const math=`(${MIN}${k})² − ${b} · ${p(c)} + (${MIN}1)${sup(n)}`;
+    return intQ(mode,{instr:I,math,v,wrongs:[-k*k-b*c+sg,k*k-b*c-sg,(k*k-b)*c+sg],explain:tip+steps(math,[`${k*k} − ${p(b*c)} + ${p(sg)}`,`<b>${f(v)}</b>`])})}
+  if(t===4){const y=nzx(-8,8,[1,-1]),q=nzx(-9,9,[1,-1]),x=y*q,z=R(2,6),w=nz(-8,8),v=q+z*w;const math=`${f(x)} : ${p(y)} + ${z} · ${p(w)}`;
+    return intQ(mode,{instr:I,math,v,wrongs:[(q+z)*w,-q+z*w,q-z*w],explain:tip+steps(math,[`${f(q)} + ${p(z*w)}`,`<b>${f(v)}</b>`])})}
+  if(t===5){const k=R(2,5),a=nz(-6,8),b=R(1,9),d=nz(-5,5),inner=a-b,v=-k*k+inner*d;const math=`${MIN}${k}² + (${f(a)} − ${b}) · ${p(d)}`;
+    return intQ(mode,{instr:I,math,v,wrongs:[k*k+inner*d,(-k*k+inner)*d,-k*k-inner*d],explain:tip+steps(math,[`${f(-k*k)} + ${p(inner)} · ${p(d)}`,`${f(-k*k)} + ${p(inner*d)}`,`<b>${f(v)}</b>`])})}
+  {const s=R(2,8);let a,b;do{a=nz(-10,10);b=s*s-a}while(b===0);const c=R(2,5),n=R(2,9),sg=n%2?-1:1,m=R(1,5),v=s-c*sg+m;
+    const inside=b>0?`${f(a)} + ${b}`:`${f(a)} − ${-b}`;const math=`√(${inside}) − ${c} · (${MIN}1)${sup(n)} + log₂ ${2**m}`;
+    return intQ(mode,{instr:I,math,v,wrongs:[s+c*sg+m,(s-c)*sg+m,s-c*sg+2**m/2],explain:tip+steps(math,[`√${s*s} − ${c} · ${p(sg)} + ${m}`,`${s} − ${p(c*sg)} + ${m}`,`<b>${f(v)}</b>`])})}
+}
+/* ===== ZONE 6: vergelijken en getallenas ===== */
+function cmpPair(){
+  const t=R(0,8);
+  if(t===0){const a=nz(-15,15);let b;do{b=nz(-15,15)}while(b===a);return [{l:f(a),v:a},{l:f(b),v:b}]}
+  if(t===1){const a=-R(1,15),b=-R(1,15);return [{l:f(a),v:a},{l:f(b),v:b}]}
+  if(t===2){const k=R(2,5);const A={l:`(${MIN}${k})²`,v:k*k},B={l:`${MIN}${k}²`,v:-k*k};return shuffle([A,B])}
+  if(t===3){const k=R(2,4);const A={l:`${MIN}${k}³`,v:-(k**3)},B={l:`(${MIN}${k})³`,v:(-k)**3};return shuffle([A,B])}
+  if(t===4){const a=R(2,9),b=R(2,9);return [{l:`${a} · (${MIN}${b})`,v:-a*b},{l:`${MIN}${b} · ${a}`,v:-a*b}]}
+  if(t===5){const n=R(2,12);return pick([[{l:`${MIN}(${MIN}${n})`,v:n},{l:`${n}`,v:n}],[{l:`${MIN}(${MIN}${n})`,v:n},{l:`${MIN}${n}`,v:-n}]])}
+  if(t===6){const m=R(2,9),n=R(2,9);return [{l:`(${MIN}1)${sup(m)}`,v:m%2?-1:1},{l:`(${MIN}1)${sup(n)}`,v:n%2?-1:1}]}
+  if(t===7){const a=R(1,9);let b;do{b=R(1,12)}while(b===a);return [{l:`${a} − ${b}`,v:a-b},{l:`${b} − ${a}`,v:b-a}]}
+  {const d=R(2,5),a=d*R(2,6);return shuffle([{l:`${MIN}${a} : ${d}`,v:-a/d},{l:`${MIN}${a} : (${MIN}${d})`,v:a/d}])}
+}
+function genCmp(){
+  const [A,B]=cmpPair();const s=A.v<B.v?'<':A.v>B.v?'>':'=';
+  const sym={'<':'&lt;','>':'&gt;','=':'='};
+  const showA=A.l===f(A.v)?A.l:`${A.l} = ${f(A.v)}`,showB=B.l===f(B.v)?B.l:`${B.l} = ${f(B.v)}`;
+  let ex=`${showA} en ${showB}. `;
+  ex+=s==='='?'Beide uitkomsten zijn gelijk, dus <b>=</b>.':`${f(Math.max(A.v,B.v))} ligt rechts van ${f(Math.min(A.v,B.v))} op de getallenas, dus <b>${A.l} ${sym[s]} ${B.l}</b>.`;
+  return {instr:'Vul het juiste symbool in.',math:`${A.l} <span class="blank">?</span> ${B.l}`,layout:'cmp',
+    options:['<','>','='].map(x=>({label:sym[x],correct:x===s})),answerLabel:sym[s],explain:ex};
+}
+function nlItem(){
+  for(let g=0;g<100;g++){const t=R(0,7);let l,v;
+    if(t===0){const k=R(1,5),m=nz(-4,4);l=`${k} · ${p(m)}`;v=k*m}
+    else if(t===1){const a=nz(-10,10),b=nz(-10,10);l=`${f(a)} + ${p(b)}`;v=a+b}
+    else if(t===2){const k=R(1,2),n=R(2,3);l=`(${MIN}${k})${sup(n)}`;v=(-k)**n}
+    else if(t===3){const n=R(2,60);l=`${n} : (${MIN}${n})`;v=-1}
+    else if(t===4){const k=R(1,3);l=`${MIN}${k}²`;v=-k*k}
+    else if(t===5){const n=R(2,9),k=R(1,9);l=`(${MIN}1)${sup(n)} · ${k}`;v=(n%2?-1:1)*k}
+    else if(t===6){const d=R(2,5),q=nz(-5,5);l=`${f(d*q*-1)} : (${MIN}${d})`;v=q}
+    else {const a=R(-5,8),b=R(1,12);l=`${f(a)} − ${b}`;v=a-b}
+    if(Math.abs(v)<=10&&isInt(v))return {l,v}}
+  return {l:'2 · (−3)',v:-6}}
+function genNL(){
+  const L=pick('ABCDEFGHI'.split(''));const it=nlItem();
+  return {instr:`Bereken en klik de plaats aan op de getallenas.`,math:`${L} = ${it.l}`,kind:'nl',value:it.v,letter:L,answerLabel:f(it.v),
+    explain:`${it.l} = <b>${f(it.v)}</b>. ${it.v===0?'Dat is de oorsprong.':`Vanaf 0 ga je ${Math.abs(it.v)} ${Math.abs(it.v)===1?'stap':'stappen'} naar ${it.v<0?'links':'rechts'}.`}`};
+}
+/* ===== ZONE 7: coördinaten ===== */
+function randPt(){const onAxis=Math.random()<.18;let x=R(-6,6),y=R(-6,6);if(onAxis){if(Math.random()<.5)x=0;else y=0}if(x===0&&y===0)x=R(1,6);return {x,y}}
+const cs=(x,y)=>`(${f(x)}, ${f(y)})`;
+function coordExplain(x,y,L){return `Eerst x (horizontaal), dan y (verticaal). ${L} ligt ${x===0?'op de y-as':`${Math.abs(x)} naar ${x<0?'links':'rechts'}`} en ${y===0?'op de x-as':`${Math.abs(y)} naar ${y<0?'onder':'boven'}`}: <b>${L}${cs(x,y)}</b>.`}
+function genCoordRead(mode){
+  const {x,y}=randPt();const L=pick('ABCDEFGH'.split(''));
+  const q={instr:`Lees de coördinaten van punt ${L} af.`,math:`${L}( … , … )`,grid:{points:[{x,y,label:L}]},answerLabel:`${L}${cs(x,y)}`,explain:coordExplain(x,y,L)};
+  if(mode==='mc'){const cand=[[y,x],[-x,y],[x,-y],[-y,-x],[-x,-y]];const seen=new Set([cs(x,y)]);const o=[{label:cs(x,y),correct:true}];
+    for(const [a,b] of shuffle(cand)){const l=cs(a,b);if(o.length<4&&!seen.has(l)&&Math.abs(a)<=6&&Math.abs(b)<=6){seen.add(l);o.push({label:l,correct:false})}}
+    let g=0;while(o.length<4&&g++<50){const l=cs(x+nz(-2,2),y);if(!seen.has(l)){seen.add(l);o.push({label:l,correct:false})}}
+    q.options=shuffle(o)}else{q.kind='coord';q.value={x,y}}
+  return q}
+function genCoordClick(){const {x,y}=randPt();const L=pick('IJKLMN'.split(''));
+  return {instr:`Klik in het rooster op de plaats van het punt.`,math:`${L}${cs(x,y)}`,kind:'grid',value:{x,y},letter:L,answerLabel:`${L}${cs(x,y)}`,explain:coordExplain(x,y,L)}}
+/* ===== ZONE 8: vereenvoudigen ===== */
+function T(c,v,first){const a=Math.abs(c);const core=(a===1&&v?'':a)+v;return first?(c<0?MIN:'')+core:(c<0?` ${MIN} `:' + ')+core}
+function genSimp(mode){
+  const t=R(0,7);const I='Vereenvoudig.';let math,expd=null,wr=[];
+  if(t===0){const a=nzx(-9,9,[]),b=nzx(-9,9,[-a]);math=T(a,'a',1)+T(b,'a');wr=[`${a-b}a`,`${-(a+b)}a`]}
+  if(t===1){const a=nz(-7,7),b=nz(-7,7),c=nzx(-7,7,[-a]),d=nzx(-7,7,[-b]);math=T(a,'a',1)+T(b,'b')+T(c,'a')+T(d,'b');wr=[`${a-c}a+${b+d}b`,`${a+c}a+${b-d}b`,`${a+b+c+d}ab`]}
+  if(t===2){const a=nz(-5,5),b=nz(-5,5),c=nzx(-5,5,[]),d=nz(-5,5),e=nz(-5,5);math=T(a,'a',1)+T(b,'b')+T(c,'a')+T(d,'b')+T(e,'a');wr=[]}
+  if(t===3){const k=nzx(-6,6,[1]),m=R(2,6),n=nz(-9,9);math=`${k===-1?MIN:f(k)}(${T(m,'a',1)}${T(n,'')})`;expd=T(k*m,'a',1)+T(k*n,'');wr=[`${k*m}a+${n}`,`${k*m}a-${k*n}`,`${k+m}a+${k+n}`]}
+  if(t===4){const m=R(1,6),n=nz(-6,6);math=`${MIN}(${T(m,'a',1)}${T(-n,'b')})`;expd=T(-m,'a',1)+T(n,'b');wr=[`-${m}a-${n}b`,`${m}a+${n}b`]}
+  if(t===5){const k=R(2,5),q=R(2,5),r=nz(-6,6);math=`${k}(a ${MIN} ${q}b)`+T(r,'a');expd=T(k,'a',1)+T(-k*q,'b')+T(r,'a');wr=[`${k+r}a-${q}b`,`${k+r}a+${k*q}b`]}
+  if(t===6){const a=nz(-6,6),q=R(2,4),r=R(1,5),s=nz(-5,5);math=T(a,'a',1)+` ${MIN} ${q}(${T(r,'a',1)}${T(-s,'b')})`;expd=T(a,'a',1)+T(-q*r,'a')+T(q*s,'b');wr=[`${a-q*r}a-${q*s}b`,`${a-q*r}a-${s}b`,`${a+q*r}a+${q*s}b`]}
+  if(t===7){const a=R(2,5),b=R(2,5),c=nz(-5,5);math=`${a}a ${MIN} ${b} · ${R(2,5)}a`+T(c,'b');wr=[]}
+  const target=parsePoly(math);
+  if(t===7){const m=math.match(/^(\d+)a − (\d+) · (\d+)a/);wr=[`${(+m[1]-+m[2])*+m[3]}a`]}
+  let ex=expd?`Werk de haakjes uit (elke term vermenigvuldigen):`+steps(math,[expd])+`<br>Neem gelijksoortige termen samen: <b>${fmtPoly(target)}</b>.`:
+    `Neem enkel gelijksoortige termen samen (a-termen bij elkaar, b-termen bij elkaar): <b>${fmtPoly(target)}</b>.`;
+  if(t===7)ex=`Eerst vermenigvuldigen, dan optellen/aftrekken.`+steps(math,[fmtPoly(target)]).replace(/= ([^<]*)<\/span>$/,'= <b>$1</b></span>');
+  if(t===4)ex='Een minteken vóór haakjes verandert het teken van elke term.<br>'+ex;
+  if(Object.keys(target).length===0)return genSimp(mode);
+  return exprQ(mode,{instr:I,math,target,wrongs:wr,explain:ex,vars:['a','b']});
+}
+/* ===== ZONE 9: getalwaarde ===== */
+const GW=[
+ {s:'a²',u:'A²',f:(a,b)=>a*a},{s:'3a − b',u:'3 · A − B',f:(a,b)=>3*a-b},{s:'a · b²',u:'A · B²',f:(a,b)=>a*b*b},
+ {s:'a³',u:'A³',f:(a,b)=>a**3},{s:'(a + b)²',u:'(A + B)²',f:(a,b)=>(a+b)**2,m:(a,b)=>`${p(a+b)}²`},
+ {s:'−2a(a − b)',u:'−2 · A · (A − B)',f:(a,b)=>-2*a*(a-b),m:(a,b)=>`${MIN}2 · ${p(a)} · ${p(a-b)}`},
+ {s:'2a² − 3b',u:'2 · A² − 3 · B',f:(a,b)=>2*a*a-3*b,m:(a,b)=>`2 · ${a*a} − ${p(3*b)}`},
+ {s:'b² − a²',u:'B² − A²',f:(a,b)=>b*b-a*a,m:(a,b)=>`${b*b} − ${a*a}`},
+ {s:'5a − b · b',u:'5 · A − B · B',f:(a,b)=>5*a-b*b,m:(a,b)=>`${f(5*a)} − ${p(b*b)}`},
+ {s:'−a²',u:'−A²',f:(a,b)=>-a*a},{s:'a² + ab',u:'A² + A · B',f:(a,b)=>a*a+a*b,m:(a,b)=>`${a*a} + ${p(a*b)}`},
+ {s:'(a − b)(a + b)',u:'(A − B) · (A + B)',f:(a,b)=>(a-b)*(a+b),m:(a,b)=>`${p(a-b)} · ${p(a+b)}`},
+ {s:'−b + 4a',u:'−B + 4 · A',f:(a,b)=>-b+4*a},{s:'ab − b',u:'A · B − B',f:(a,b)=>a*b-b,m:(a,b)=>`${f(a*b)} − ${p(b)}`}];
+function genGW(mode){
+  const a=Math.random()<.75?-R(1,4):R(2,4),b=a<0?R(1,4)*(Math.random()<.2?-1:1):-R(1,4);
+  const g=pick(GW);const v=g.f(a,b);const subst=g.u.replace(/A/g,p(a)).replace(/B/g,p(b)).replace(/^−/,MIN);
+  const st=[subst];if(g.m)st.push(g.m(a,b));st.push(`<b>${f(v)}</b>`);
+  return intQ(mode,{instr:`Bereken de getalwaarde voor a = ${f(a)} en b = ${f(b)}.`,math:g.s,v,wrongs:[g.f(-a,b),g.f(a,-b),-v],
+    explain:`Vervang elke letter door haar waarde, tussen haakjes:`+steps(g.s.replace(/(\d)([ab])/g,'$1$2'),st)});
+}
+/* ===== ZONE 10: rekenregels machten ===== */
+function genPowRules(mode){
+  const t=R(0,8);const I='Vereenvoudig met de rekenregels van machten.';let math,wr=[],rule;
+  const v=pick(['a','x','y','b']);
+  if(t===0){const m=R(2,7),n=R(2,6);math=`${v}${sup(m)} · ${v}${sup(n)}`;wr=[`${v}^${m*n}`,`2${v}^${m+n}`];rule=`Zelfde grondtal vermenigvuldigen: tel de exponenten op. ${v}${sup(m)} · ${v}${sup(n)} = ${v}<sup>${m}+${n}</sup>`}
+  if(t===1){const m=R(2,5),n=R(2,4);math=`(${v}${sup(m)})${sup(n)}`;wr=[`${v}^${m+n}`,`${n}${v}^${m}`];rule=`Macht van een macht: vermenigvuldig de exponenten. (${v}${sup(m)})${sup(n)} = ${v}<sup>${m}·${n}</sup>`}
+  if(t===2){const n=R(2,5),m=n+R(2,7);math=`${v}${sup(m)} : ${v}${sup(n)}`;wr=[`${v}^${m+n}`,isInt(m/n)?`${v}^${m/n}`:`${v}^${m-n+1}`];rule=`Zelfde grondtal delen: trek de exponenten af. ${v}${sup(m)} : ${v}${sup(n)} = ${v}<sup>${m}−${n}</sup>`}
+  if(t===3){const k=nzx(-6,6,[1,-1]),l=nzx(-6,6,[1,-1]),m=R(1,5),n=R(2,5);const xm=m===1?v:v+sup(m);math=`${f(k)}${xm} · ${p(l)}${v}${sup(n)}`;
+    if(l>0)math=`${f(k)}${xm} · ${l}${v}${sup(n)}`;wr=[`${k+l}${v}^${m+n}`,`${k*l}${v}^${m*n}`,`${-k*l}${v}^${m+n}`];rule=`Vermenigvuldig de coëfficiënten (${f(k)} · ${p(l)} = ${f(k*l)}) en tel de exponenten op`}
+  if(t===4){const k=pick([2,3,-2,-3]),m=R(2,4),n=pick([2,3]);math=`(${f(k)}${v}${sup(m)})${sup(n)}`;wr=[`${k}${v}^${m*n}`,`${k*n}${v}^${m*n}`,`${-(k**n)}${v}^${m*n}`,`${k**n}${v}^${m+n}`];rule=`Elke factor tot de macht ${n}: (${f(k)})${sup(n)} = ${f(k**n)} en (${v}${sup(m)})${sup(n)} = ${v}${sup(m*n)}`}
+  if(t===5){const q=nzx(-6,6,[1,-1]),c=nzx(-6,6,[1,-1]),n=R(1,4),m=n+R(1,5);const pc=q*c;const xn=n===1?v:v+sup(n);math=`${f(pc)}${v}${sup(m)} : (${f(c)}${xn})`;wr=[`${-q}${v}^${m-n}`,`${q}${v}^${m+n}`,`${pc-c}${v}^${m-n}`];rule=`Deel de coëfficiënten (${f(pc)} : ${p(c)} = ${f(q)}) en trek de exponenten af`}
+  if(t===6){const [x,y]=pick([['x','y'],['a','b']]);const m=R(2,4),n=R(2,3);math=`(${x}${sup(m)}${y})${sup(n)}`;wr=[`${x}^${m*n}*${y}`,`${x}^${m+n}*${y}^${n}`];rule=`Macht van een product: elke factor tot de macht ${n}`}
+  if(t===7){const k=R(2,5),l=R(2,5),m=R(1,3),n=R(2,4);math=`${k}a${m===1?'':sup(m)}b · ${l}ab${sup(n)}`;wr=[`${k+l}a^${m+1}b^${n+1}`,`${k*l}a^${m}b^${n}`];rule=`Vermenigvuldig de coëfficiënten en tel per letter de exponenten op`}
+  if(t===8){const k=R(2,3),m=R(2,3),n=R(2,5);math=`(${k}${v}${sup(m)})² · ${v}${sup(n)}`;wr=[`${2*k}${v}^${2*m+n}`,`${k*k}${v}^${m+2+n}`];rule=`Eerst de macht: (${k}${v}${sup(m)})² = ${k*k}${v}${sup(2*m)}; dan exponenten optellen`}
+  const target=parsePoly(math);
+  return exprQ(mode,{instr:I,math,target,wrongs:wr,explain:`${rule}: <b>${fmtPoly(target)}</b>.`,vars:[...new Set(math.match(/[abxy]/g))]});
+}
+/* ===== ZONE 11: uitwerken ===== */
+function genExpand(mode){
+  const t=R(0,4);const I='Werk uit en vereenvoudig.';let math,expd,wr=[];
+  if(t===0){const k=nzx(-4,4,[1,-1]),m=R(1,3),a=nzx(-5,5,[]),n=R(2,4),b=nz(-6,6),r=R(1,n-1);const xm=m===1?'x':'x'+sup(m),xr=r===1?'x':'x'+sup(r);
+    math=`${f(k)}${xm}(${T(a,'x'+sup(n),1)}${T(b,xr)})`;expd=T(k*a,'x'+sup(m+n),1)+T(k*b,'x'+((m+r)===1?'':sup(m+r)));
+    wr=[`${k*a}x^${m*n}+${k*b}x^${m*r}`,`${k*a}x^${m+n}+${b}x^${r}`,`${k*a}x^${m+n}-${k*b}x^${m+r}`]}
+  if(t===1){const k=R(2,5),pp=R(1,6),q=nz(-7,7);math=`${MIN}${k}a(a² ${MIN} ${pp}a${T(q,'')})`;expd=T(-k,'a³',1)+T(k*pp,'a²')+T(-k*q,'a');
+    wr=[`-${k}a^3-${k*pp}a^2-${k*q}a`,`-${k}a^3+${k*pp}a^2+${q}`,`-${k}a^2+${k*pp}a-${k*q}`]}
+  if(t===2){const pp=nz(-6,6),q=nz(-6,6);math=`(x${T(pp,'')})(x²${T(q,'')})`;expd=`x³${T(q,'x')}${T(pp,'x²')}${T(pp*q,'')}`;
+    wr=[`x^3+${pp*q}`,`x^2+${pp+q}x+${pp*q}`,`x^3+${q}x+${pp}x^2-${pp*q}`]}
+  if(t===3){const k=R(2,4),pp=nz(-5,5),q=nz(-5,5);math=`${k}x²(x³${T(pp,'')}) ${MIN} x(x⁴${T(-q,'x')})`;expd=`${k}x⁵${T(k*pp,'x²')}${T(-1,'x⁵')}${T(q,'x²')}`;
+    wr=[`${k+1}x^5+${k*pp-q}x^2`,`${k-1}x^5+${k*pp-q}x^2`,`${k-1}x^5+${k*pp}x^2`]}
+  if(t===4){const pp=R(2,6),q=nz(-6,6);math=`a(a + ${pp}) ${MIN} ${pp}(a${T(q,'')})`;expd=`a²${T(pp,'a')}${T(-pp,'a')}${T(-pp*q,'')}`;
+    wr=[`a^2+${2*pp}a+${-pp*q}`,`a^2+${pp*q}`,`a^2-${pp*q}+${2*pp}a`]}
+  const target=parsePoly(math);
+  if(Object.keys(target).length===0)return genExpand(mode);
+  return exprQ(mode,{instr:I,math,target,wrongs:wr,explain:`Vermenigvuldig elke term met elke term:`+steps(math,normalize(expd)===normalize(fmtPoly(target))?[`<b>${expd}</b>`]:[expd,`<b>${fmtPoly(target)}</b>`]),vars:[...new Set(math.match(/[ax]/g))]});
+}
+/* ===== ZONE 12: verbanden ===== */
+const VERB=['recht evenredig','omgekeerd evenredig','lineair'];
+function makeTable(){
+  const t=R(0,2);
+  if(t===0){const ctx=R(0,2);
+    if(ctx===2){const k=nzx(-4,5,[1,-1,0]);const xs=[-2,-1,0,1,2,3];return {type:0,title:'Functietabel.',xl:'x',yl:'y',xs,ys:xs.map(x=>k*x),k,ex:`y : x is telkens ${f(k)} en x = 0 geeft y = 0`,form:x=>`${f(k)} · ${p(x)}`}}
+    const k=R(2,9);const xs=shuffle([1,2,3,4,5,6,8,10,12]).slice(0,6).sort((a,b)=>a-b);
+    const c=ctx===0?{title:`Concert: een ticket kost € ${k}.`,xl:'Tickets t',yl:'Prijs p (€)'}:{title:`Een fietser legt elk kwartier ${k} km af.`,xl:'Kwartieren',yl:'Afstand (km)'};
+    return {type:0,...c,xs,ys:xs.map(x=>k*x),k,ex:`y : x is telkens ${k}: dubbel zoveel x geeft dubbel zoveel y`,form:x=>`${k} · ${x}`}}
+  if(t===1){const c=pick([24,36,48,60,72]);const ds=[];for(let d=2;d<c;d++)if(c%d===0)ds.push(d);const xs=shuffle(ds).slice(0,6).sort((a,b)=>a-b);
+    const ctx=pick([{title:`${c} stoelen verdelen over gelijke rijen.`,xl:'Rijen r',yl:'Stoelen per rij'},{title:`${c} snoepjes eerlijk verdelen.`,xl:'Kinderen',yl:'Snoepjes per kind'},{title:'Functietabel.',xl:'x',yl:'y'}]);
+    return {type:1,...ctx,xs,ys:xs.map(x=>c/x),c,ex:`x · y is telkens ${c}: dubbel zoveel x geeft de helft van y`,form:x=>`${c} : ${x}`}}
+  {const ctx=R(0,2);
+    if(ctx===0){const q=R(10,30),m=R(2,8);const xs=[0,2,4,6,8,10];return {type:2,title:`Sporthal: € ${q} lidgeld en € ${m} per beurt.`,xl:'Beurten b',yl:'Prijs p (€)',xs,ys:xs.map(x=>q+m*x),ex:`x neemt telkens met 2 toe en y telkens met ${2*m}, maar voor x = 0 is y = ${q} (niet 0)`,form:x=>`${q} + ${m} · ${x}`}}
+    if(ctx===1){const m=R(1,3),q=m*R(6,9);const xs=[0,1,2,3,4,5];return {type:2,title:`Een kaars van ${q} cm wordt elk uur ${m} cm korter.`,xl:'Uren',yl:'Lengte (cm)',xs,ys:xs.map(x=>q-m*x),ex:`elk uur gaat er ${m} cm af, maar bij 0 uur is de lengte ${q} (niet 0)`,form:x=>`${q} − ${m} · ${x}`}}
+    const m=nzx(-4,4,[0]),q=nz(-6,6);const xs=[-2,-1,0,1,2,3];return {type:2,title:'Functietabel.',xl:'x',yl:'y',xs,ys:xs.map(x=>m*x+q),ex:`als x telkens met 1 toeneemt, verandert y telkens met ${f(m)}, maar voor x = 0 is y = ${f(q)} (niet 0)`,form:x=>`${f(m)} · ${p(x)} + ${p(q)}`.replace(/\+ \(−(\d+)\)/,'− $1')}}
+}
+function tableHTML(tb,blank){const cell=(v,i)=>i===blank?'<td class="tb-blank">?</td>':`<td>${f(v)}</td>`;
+  return `<div class="tbl-wrap"><table class="tbl"><tr><th>${tb.xl}</th>${tb.xs.map(x=>`<td>${f(x)}</td>`).join('')}</tr><tr><th>${tb.yl}</th>${tb.ys.map(cell).join('')}</tr></table></div>`}
+function genVerband(){const tb=makeTable();
+  return {instr:'Welk verband zie je in de tabel?',math:tb.title,visual:tableHTML(tb,-1),options:VERB.map((l,i)=>({label:l,correct:i===tb.type})),layout:'words',answerLabel:VERB[tb.type],
+    explain:`<b>${VERB[tb.type]}</b>: ${tb.ex}.${tb.type===2?' Lineair maar niet recht evenredig.':''}`}}
+function genFill(mode){const tb=makeTable();const idx=R(1,4);const v=tb.ys[idx];
+  const q=intQ(mode,{instr:'Welk getal hoort in het lege vakje?',math:tb.title,v,wrongs:[tb.ys[idx-1]+tb.ys[idx+1]-v===v?v+1:tb.ys[idx-1],tb.ys[idx+1],v+(tb.ys[1]-tb.ys[0])],
+    explain:`Het verband is ${VERB[tb.type]} (${tb.ex}).<br>Dus: ${tb.form(tb.xs[idx])} = <b>${f(v)}</b>.`});q.visual=tableHTML(tb,idx);return q}
+
+/* ===== zones ===== */
+const ZONES=[
+ {id:1,name:'De Haven',topic:'Optellen en aftrekken',alt:0,who:'Kapitein Kaai',x:190,y:505,ls:'r',
+  intro:'Welkom op Eiland ℤ! Hier stijgt en daalt het water de hele dag. Toon me dat je kunt optellen en aftrekken met gehele getallen, dan krijg je het eerste stuk van het kompas.',
+  tip:'Aftrekken = optellen met het tegengestelde: 8 − (−5) = 8 + 5 = 13.<br>Zelfde teken: tel de absolute waarden op en behoud het teken.<br>Verschillend teken: trek af en neem het teken van het getal met de grootste absolute waarde.',
+  plan:()=>Array(8).fill(genAdd),hint:'Typ één getal, bv. −12'},
+ {id:2,name:'De Markt',topic:'Vermenigvuldigen en delen',alt:5,who:'Marktkramer Mira',x:85,y:455,ls:'r',
+  intro:'Op mijn markt wordt er gerekend dat het een lieve lust is. Vermenigvuldigen en delen, en let op die mintekens!',
+  tip:'Tekenregel: gelijke tekens → +, verschillende tekens → −.<br>Bij meer factoren: even aantal mintekens → +, oneven → −.<br>· en : doe je van links naar rechts.',
+  plan:()=>Array(8).fill(genMul),hint:'Typ één getal, bv. −48'},
+ {id:3,name:'De Uitkijktoren',topic:'Machten',alt:60,who:'Torenwachter Theo',x:70,y:385,ls:'r',
+  intro:'Hoog in mijn toren tellen we in machten. Pas op: een haakje meer of minder verandert alles.',
+  tip:'(−3)⁴ = (−3)·(−3)·(−3)·(−3) = 81, maar −3⁴ = −(3·3·3·3) = −81.<br>Negatief grondtal: even exponent → positief, oneven → negatief.<br>Elk getal ≠ 0 tot de macht 0 is 1.',
+  plan:()=>Array(8).fill(genPow),hint:'Typ één getal, bv. −27'},
+ {id:4,name:'De Grotten',topic:'Wortels en logaritmen',alt:-40,who:'Grotgids Gust',x:215,y:345,ls:'r',
+  intro:'Diep onder zeeniveau liggen mijn grotten. Hier zoeken we wortels en logaritmen. Soms bestaat de uitkomst niet. Herken jij dat?',
+  tip:'√49 = 7 want 7² = 49. √(−25) bestaat niet in ℤ: een kwadraat is nooit negatief.<br>∛(−125) = −5 want (−5)³ = −125.<br>log₂ 16 = 4 want 2⁴ = 16.',
+  plan:()=>Array(8).fill(genRoot),hint:'Typ een getal of “bestaat niet”',bn:true},
+ {id:5,name:'De Tempel',topic:'Volgorde van bewerkingen',alt:20,who:'Tempelwachter Vera',x:290,y:420,ls:'l',
+  intro:'De poort van mijn tempel gaat alleen open voor wie de bewerkingen in de juiste volgorde uitvoert.',
+  tip:'1. haakjes<br>2. machten, wortels en logaritmen<br>3. vermenigvuldigen en delen, van links naar rechts<br>4. optellen en aftrekken, van links naar rechts',
+  plan:()=>Array(8).fill(genOrder),hint:'Typ één getal (de eindoplossing)'},
+ {id:6,name:'De Brug',topic:'Vergelijken en getallenas',alt:10,who:'Brugwachter Bram',x:310,y:300,ls:'l',
+  intro:'Mijn brug is een getallenas. Wie wil oversteken, moet getallen kunnen vergelijken en op hun plaats zetten.',
+  tip:'Op de getallenas ligt het grootste getal rechts: −3 > −8.<br>Reken eerst uit, vergelijk daarna: (−2)² = 4 maar −2² = −4.',
+  plan:()=>[genCmp,genNL,genCmp,genNL,genCmp,genNL,genCmp,genNL]},
+ {id:7,name:'De Kaartenkamer',topic:'Coördinaten',alt:15,who:'Cartografe Carla',x:230,y:250,ls:'l',
+  intro:'In mijn kaartenkamer ligt elke schat op een punt met twee coördinaten. Lees ze af en zet ze juist.',
+  tip:'P(x, y): eerst x (horizontaal: links/rechts), dan y (verticaal: onder/boven).<br>De oorsprong is O(0, 0).',
+  plan:()=>[genCoordRead,genCoordRead,genCoordClick,genCoordRead,genCoordClick,genCoordRead,genCoordClick,genCoordRead],hint:'Typ bv. (2, −5)'},
+ {id:8,name:'Het Letterwoud',topic:'Vereenvoudigen',alt:30,who:'Boswachter Bo',x:80,y:300,ls:'r',
+  intro:'In mijn woud groeien letters aan de bomen. Breng orde in de takken: neem samen wat samen hoort.',
+  tip:'Enkel gelijksoortige termen samennemen: 3a + 5a = 8a, maar 3a + 2b blijft staan.<br>−3(2a − 5) = −6a + 15: vermenigvuldig met elke term.<br>Een minteken vóór haakjes verandert alle tekens.',
+  plan:()=>Array(8).fill(genSimp),hint:'Typ bv. 2a − 5b'},
+ {id:9,name:'Het Moeras',topic:'Getalwaarde',alt:-5,who:'Moerasheks Wanda',x:75,y:200,ls:'r',
+  intro:'Wie door mijn moeras wil, moet letters kunnen vervangen door getallen. Vergeet de haakjes niet, of je zakt weg!',
+  tip:'Vervang elke letter door haar waarde, tussen haakjes.<br>Voor a = −2: a² = (−2)² = 4 en 3a = 3 · (−2) = −6.<br>Volg daarna de volgorde van de bewerkingen.',
+  plan:()=>Array(8).fill(genGW),hint:'Typ één getal'},
+ {id:10,name:'De Berg',topic:'Rekenregels van machten',alt:120,who:'Berggids Bert',x:150,y:130,ls:'r',
+  intro:'De top van mijn berg haal je alleen met de rekenregels van machten. Exponenten optellen, aftrekken of vermenigvuldigen?',
+  tip:'aᵐ · aⁿ = aᵐ⁺ⁿ &nbsp;&nbsp; aᵐ : aⁿ = aᵐ⁻ⁿ<br>(aᵐ)ⁿ = a<sup>m·n</sup> &nbsp;&nbsp; (a · b)ⁿ = aⁿ · bⁿ<br>Coëfficiënten vermenigvuldig of deel je gewoon: −3x² · 5x⁴ = −15x⁶.',
+  plan:()=>Array(8).fill(genPowRules),hint:'Typ bv. −15x^6 of gebruik de knoppen'},
+ {id:11,name:'De Vulkaan',topic:'Uitwerken',alt:90,who:'Vulkanoloog Vik',x:285,y:175,ls:'l',
+  intro:'Mijn vulkaan rommelt! Werk de haakjes uit voor hij uitbarst, en vereenvoudig tot het einde.',
+  tip:'2x²(3x³ − 4x) = 6x⁵ − 8x³.<br>(x + 4)(x² − 3) = x³ − 3x + 4x² − 12: elke term met elke term.<br>Neem daarna gelijksoortige termen samen.',
+  plan:()=>Array(8).fill(genExpand),hint:'Typ bv. x^3 + 4x^2 − 3x − 12'},
+ {id:12,name:'Het Kasteel',topic:'Verbanden in tabellen',alt:45,who:'Kasteelvrouw Zoë',x:240,y:70,ls:'l',
+  intro:'Het laatste stuk van het kompas ligt in mijn kasteel. Herken jij de verbanden in mijn tabellen?',
+  tip:'Recht evenredig: y : x is constant (en x = 0 geeft y = 0).<br>Omgekeerd evenredig: x · y is constant.<br>Lineair: gelijke stappen in x geven gelijke stappen in y, maar y : x is niet constant.',
+  plan:()=>[genVerband,genFill,genVerband,genFill,genVerband,genFill,genVerband,genFill],hint:'Typ één getal'}
+];
+function makeQuestions(z){const plan=z.plan();
+  return plan.map((g,i)=>{const mode=i<4?'mc':'type';const q=g(mode);q.mode=mode;return q})}
+
+/* ---------- antwoordcontrole ---------- */
+const BNRE=/^\s*(bestaat\s*niet|b\.?\s*n\.?|bn)\s*$/i;
+function checkTyped(q,raw){
+  raw=String(raw||'').trim();if(!raw)return {status:'empty',msg:'Typ eerst een antwoord.'};
+  if(q.kind==='int'||q.kind==='intbn'){
+    if(q.kind==='intbn'&&BNRE.test(raw))return {status:q.value===null?'ok':'wrong'};
+    if(/^[a-z ]+$/i.test(raw)&&!/^[abxy]$/i.test(raw))return {status:'format',msg:q.kind==='intbn'?'Typ een getal of “bestaat niet”.':'Typ één getal.'};
+    const s=normalize(raw);
+    if(/^[+-]?\d+$/.test(s)){const n=parseInt(s,10);return {status:q.value!==null&&n===q.value?'ok':'wrong'}}
+    try{const pl=parsePoly(raw);if(pconst(pl)!==null)return {status:'format',msg:'Schrijf je antwoord als één getal (reken volledig uit).'}}catch(e){}
+    return {status:'format',msg:'Ik kan dit niet lezen. Typ één getal, bv. −12.'};
+  }
+  if(q.kind==='coord'){const s=normalize(raw).replace(/^[a-z]/,'');const m=s.match(/^\(?([+-]?\d+)[,;]([+-]?\d+)\)?$/);
+    if(!m)return {status:'format',msg:'Typ de coördinaten zo: (2, −5).'};
+    return {status:+m[1]===q.value.x&&+m[2]===q.value.y?'ok':'wrong'}}
+  if(q.kind==='expr'){let pl;try{pl=parsePoly(raw)}catch(e){return {status:'format',msg:'Ik kan dit niet lezen. Controleer haakjes en tekens, bv. 3a^2 − 5b.'}}
+    if(!pequal(pl,q.target))return {status:'wrong'};
+    if(!isSimplified(raw,q.target))return {status:'format',msg:'Dat is gelijk aan de opgave, maar nog niet volledig vereenvoudigd. Werk verder uit.'};
+    return {status:'ok'}}
+  return {status:'wrong'};
+}
+
+/* ===== Codekraker ℕ — generatoren ===== */
+const D='·';
+const stepsN=(start,arr)=>`<span class="st">${start}</span>`+arr.map(s=>`<span class="st">= ${s}</span>`).join('');
+const fin=v=>`<b>${v}</b>`;
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+function natOptions(v,wrongs){const seen=new Set([String(v)]);const o=[{label:String(v),correct:true}];
+  const add=w=>{if(o.length>=4)return;if(!isInt(w)||w<0)return;const l=String(w);if(!seen.has(l)){seen.add(l);o.push({label:l,correct:false})}};
+  wrongs.forEach(add);let g=0;while(o.length<4&&g++<80)add(v+nz(-Math.max(3,Math.round(v*.2)),Math.max(3,Math.round(v*.2))));return shuffle(o)}
+function numQ(mode,{instr,math,v,wrongs=[],explain,unit=''}){const q={instr,math,explain,answerLabel:v+(unit?' '+unit:''),unit};
+  if(mode==='mc')q.options=natOptions(v,wrongs);else{q.kind='num';q.value=v}return q}
+function natPerturb(pl){const r={...pl};const ks=Object.keys(r);const k=pick(ks);const t=R(0,2);
+  if(t===0||t===1){r[k]=Math.max(1,r[k]+pick([1,2,-1,1]));if(r[k]===pl[k])r[k]+=1}
+  else{const m=vexp(k);const v=Object.keys(m)[0];if(v){m[v]=m[v]===1?2:m[v]-1;const c=r[k];delete r[k];const nk=vkey(m);r[nk]=(r[nk]||0)+c}else r[k]+=2}
+  return clean(r)}
+function polyOptions(target,wrongs){const seen=new Set([fmtPoly(target)]);const o=[{label:fmtPoly(target),correct:true}];
+  const add=w=>{if(o.length>=4||!w)return;if(pequal(w,target))return;if(Object.values(w).some(c=>c<0))return;const l=fmtPoly(w);if(!seen.has(l)){seen.add(l);o.push({label:l,correct:false})}};
+  wrongs.forEach(w=>{try{add(typeof w==='string'?parsePoly(w):w)}catch(e){}});let g=0;while(o.length<4&&g++<80)add(natPerturb(target));return shuffle(o)}
+const sqr=n=>`√${n}`,cbr=n=>`∛${n}`,lg=(b,x)=>`log${sub(b)} ${x}`;
+
+/* ===== ZAAL A: bewerkingen ===== */
+function genOps(mode){
+  const I='Bereken. Let op de volgorde van de bewerkingen.';
+  for(let g=0;g<200;g++){const t=R(0,14);let math,st,v,wr=[];
+    if(t===0){const e=R(1,5),d=R(1,6),c=d+e,b=R(2,5),a=R(3,9);v=a*a-b*e;if(v<0)continue;math=`${a}² − ${b}${D}(${c} − ${d})`;st=[`${a*a} − ${b}${D}${e}`,`${a*a} − ${b*e}`,fin(v)];wr=[(a*a-b)*e,a*a-b*c-d]}
+    if(t===1){const a=R(1,6),b=R(1,6),s=a+b,c=R(1,3);v=s*s-c**3;if(v<0||s<3)continue;math=`(${a} + ${b})² − ${c}³`;st=[`${s}² − ${c}³`,`${s*s} − ${c**3}`,fin(v)];wr=[a*a+b*b-c**3,s*2-c*3]}
+    if(t===2){const s=R(2,12),c=R(1,4);v=s+c**3;math=`${sqr(s*s)} + ${c}³`;st=[`${s} + ${c**3}`,fin(v)];wr=[s*s/2+c**3,s+c*3]}
+    if(t===3){const b=R(1,4),c=R(1,6),d=b*b+c,q=R(2,12),N=d*q;if(N>200)continue;v=q;math=`${N} : (${b}² + ${c})`;st=[`${N} : (${b*b} + ${c})`,`${N} : ${d}`,fin(v)];wr=[N/(b*b)+c,N/(2*b+c)]}
+    if(t===4){const k=R(2,5),a=R(1,8),b=R(2,4),c=R(1,9);v=k*(a+b*b)-c;if(v<0)continue;math=`${k}${D}(${a} + ${b}²) − ${c}`;st=[`${k}${D}(${a} + ${b*b}) − ${c}`,`${k}${D}${a+b*b} − ${c}`,`${k*(a+b*b)} − ${c}`,fin(v)];wr=[k*a+b*b-c,k*(a+2*b)-c]}
+    if(t===5){const p=R(4,12),q=R(2,p-1);v=p-q;math=`${sqr(p*p)} − ${sqr(q*q)}`;st=[`${p} − ${q}`,fin(v)];wr=[Math.round(Math.sqrt(p*p-q*q))||v+2,p*p-q*q]}
+    if(t===6){const b=2,n=R(3,5),s=R(2,9),k=R(2,4);v=b**n+s*k;math=`${b}${sup(n)} + ${sqr(s*s)} ${D} ${k}`;st=[`${b**n} + ${s} ${D} ${k}`,`${b**n} + ${s*k}`,fin(v)];wr=[(b**n+s)*k,b*n+s*k]}
+    if(t===7){const e=R(2,4),d=R(1,6),a=d+e,ds=[2,4,8,3,9,27,16].filter(x=>e**3%x===0&&x<e**3);if(!ds.length)continue;const c=pick(ds);v=e**3/c;math=`(${a} − ${d})³ : ${c}`;st=[`${e}³ : ${c}`,`${e**3} : ${c}`,fin(v)];wr=[(a**3-d**3)/c,e*3/c]}
+    if(t===8){const m=R(1,6),n=R(1,4);v=m+n;math=`${lg(2,2**m)} + ${lg(3,3**n)}`;st=[`${m} + ${n}`,fin(v)];wr=[2**m/2+3**n/3,m*n]}
+    if(t===9){const k=R(2,5),c=R(2,4),d=R(1,3),e=c+d,f=R(2,4);v=k*k-f*(e-c*c<0?0:e-c*c);if(e-c*c<0||v<0)continue;math=`${k}² − ${f}${D}(${e} − ${c}²)`;st=[`${k*k} − ${f}${D}(${e} − ${c*c})`,`${k*k} − ${f}${D}${e-c*c}`,`${k*k} − ${f*(e-c*c)}`,fin(v)];wr=[(k*k-f)*(e-c*c),k*k-f*e+c*c]}
+    if(t===10){const c=R(2,5),b=R(1,3);v=c+b**3;math=`${cbr(c**3)} + ${b}³`;st=[`${c} + ${b**3}`,fin(v)];wr=[c**3/3+b**3,c+b*3]}
+    if(t===11){const a=R(1,3),b=R(1,4),s=a**3+b*b,ds=[2,3,4,5,6,7,8,9,10,11,12,13].filter(x=>s%x===0&&x<s);if(!ds.length)continue;const c=pick(ds);v=s/c;math=`(${a}³ + ${b}²) : ${c}`;st=[`(${a**3} + ${b*b}) : ${c}`,`${s} : ${c}`,fin(v)];wr=[a**3+b*b/c,(a*3+b*2)/c]}
+    if(t===12){const bb=pick([2,3,5,10]),n=R(1,3),k=R(2,4),m=R(1,k*n);v=k*n-m;math=`${k}${D}${lg(bb,bb**n)} − ${m}`;st=[`${k}${D}${n} − ${m}`,`${k*n} − ${m}`,fin(v)];wr=[k*bb**n-m,k*(n-m)]}
+    if(t===13){const a=R(3,9),s=a*a-1,ds=[];for(let x=2;x<=s;x++)if(s%x===0)ds.push(x);const prs=ds.filter(x=>x>=4).flatMap(x=>{const r=[];for(let b=2;b<=x/2;b++)if(x%b===0&&x/b>=2)r.push([b,x/b]);return r});if(!prs.length)continue;const [b,c]=pick(prs);v=s/(b*c);math=`(${a}² − 1) : (${b}${D}${c})`;st=[`(${a*a} − 1) : ${b*c}`,`${s} : ${b*c}`,fin(v)];wr=[s/b*c,(a*a-1)/b]}
+    if(t===14){const s=R(2,10),c=R(2,4),m=R(1,9);v=s*c-m;if(v<0)continue;math=`${sqr(s*s)} ${D} ${cbr(c**3)} − ${m}`;st=[`${s} ${D} ${c} − ${m}`,`${s*c} − ${m}`,fin(v)];wr=[s*(c-m)>0?s*(c-m):v+1,s*s*c-m]}
+    if(v===undefined||!isInt(v)||v<0||!math)continue;
+    return numQ(mode,{instr:I,math,v,wrongs:wr,explain:`Eerst haakjes, dan machten/wortels/log, dan ${D} en :, dan + en −.`+stepsN(math,st)})}
+}
+/* ===== ZAAL B: letters ===== */
+function genSimpN(){
+  const t=R(0,8);let math,expl='',wr=[];
+  const c=()=>R(2,9);
+  if(t===0){const p=c(),q=c(),r=c();math=`${p}a + ${q}a + ${r}a`;expl=`Alle termen zijn gelijksoortig: (${p} + ${q} + ${r})a.`;wr=[`${p+q+r}a^3`,`${p*q*r}a`]}
+  if(t===1){const [x,y]=pick([['a','b'],['x','y']]);const p=c(),q=c(),r=c(),s=R(1,9);math=`${p}${x} + ${q}${y} + ${r}${x} + ${s===1?'':s}${y}`;expl=`Neem de ${x}-termen samen en de ${y}-termen samen.`;wr=[`${p+q+r+s}${x}${y}`,`${p+q}${x}+${r+s}${y}`]}
+  if(t===2){const k=c(),m=c();math=`${k}${D}(${m} + a)`;expl=`Vermenigvuldig ${k} met elke term tussen de haakjes: ${k}${D}${m} + ${k}${D}a.`;wr=[`${k*m}+a`,`${k+m}a`,`${m}+${k}a`]}
+  if(t===3){const k=c(),m=c(),n=R(2,5);math=`${k}${D}(a + b) + ${m}${D}(a + ${n}b)`;expl=`Haakjes uitwerken: ${k}a + ${k}b + ${m}a + ${m*n}b. Dan samennemen.`;wr=[`${k+m}a+${k+n}b`,`${k+m}a+${k+m*n}ab`]}
+  if(t===4){const p=c(),q=c(),k=c(),m=c();math=`${p} + ${q}a + ${k}${D}(${m} + a)`;expl=`Haakjes uitwerken: ${p} + ${q}a + ${k*m} + ${k}a. Dan samennemen.`;wr=[`${q+k}a+${p+m}`,`${q+1}a+${p+k*m}`]}
+  if(t===5){const p=c(),q=c(),r=c();math=`${p}a + a${D}${q}a + ${r}b`;expl=`a${D}${q}a = ${q}a². Dat is geen a-term, dus niet samennemen met ${p}a.`;wr=[`${p+q}a+${r}b`,`${p+q}a^2+${r}b`]}
+  if(t===6){const p=c(),q=c(),r=c();math=`a${D}${p} + a + b${D}a + ${q}b + ${r}a`;expl=`a${D}${p} = ${p}a en b${D}a = ab. Neem de a-termen samen: ${p} + 1 + ${r}.`;wr=[`${p+r}a+ab+${q}b`,`${p+1+r}a+${q+1}b`]}
+  if(t===7){const p=R(2,5),q=R(2,5),r=c();math=`${p}a${D}${q}b + ${r}ab − ab`;expl=`${p}a${D}${q}b = ${p*q}ab. Alle termen zijn ab-termen: ${p*q} + ${r} − 1.`;wr=[`${p+q+r-1}ab`,`${p*q+r+1}ab`]}
+  if(t===8){const p=R(4,9),q=R(2,6),r=R(1,p-1);math=`${p}a² + ${q}a${D}a − ${r===1?'':r}a²`;expl=`${q}a${D}a = ${q}a². Alle termen zijn a²-termen: ${p} + ${q} − ${r}.`;wr=[`${p+q-r}a`,`${p+q+r}a^2`]}
+  const target=parsePoly(math);
+  return {instr:'Vereenvoudig. Kies de juiste sleutel.',math,options:polyOptions(target,wr),answerLabel:fmtPoly(target),explain:`${expl}<br>Uitkomst: ${fin(fmtPoly(target))}.`};
+}
+const GWN=[
+ {s:'2a + 3b − c',f:(a,b,c)=>2*a+3*b-c,u:(a,b,c)=>[`2${D}${a} + 3${D}${b} − ${c}`,`${2*a} + ${3*b} − ${c}`]},
+ {s:'a² + b² + c²',f:(a,b,c)=>a*a+b*b+c*c,u:(a,b,c)=>[`${a}² + ${b}² + ${c}²`,`${a*a} + ${b*b} + ${c*c}`]},
+ {s:'a·b·c + 2a',f:(a,b,c)=>a*b*c+2*a,u:(a,b,c)=>[`${a}${D}${b}${D}${c} + 2${D}${a}`,`${a*b*c} + ${2*a}`]},
+ {s:'3a + 2·(b + c)',f:(a,b,c)=>3*a+2*(b+c),u:(a,b,c)=>[`3${D}${a} + 2${D}(${b} + ${c})`,`${3*a} + 2${D}${b+c}`,`${3*a} + ${2*(b+c)}`]},
+ {s:'a² − b',f:(a,b,c)=>a*a-b,u:(a,b,c)=>[`${a}² − ${b}`,`${a*a} − ${b}`]},
+ {s:'(a + b)²',f:(a,b,c)=>(a+b)**2,u:(a,b,c)=>[`(${a} + ${b})²`,`${a+b}²`]},
+ {s:'4ab − c',f:(a,b,c)=>4*a*b-c,u:(a,b,c)=>[`4${D}${a}${D}${b} − ${c}`,`${4*a*b} − ${c}`]},
+ {s:'a³ + bc',f:(a,b,c)=>a**3+b*c,u:(a,b,c)=>[`${a}³ + ${b}${D}${c}`,`${a**3} + ${b*c}`]},
+ {s:'5c + a·(b + 1)',f:(a,b,c)=>5*c+a*(b+1),u:(a,b,c)=>[`5${D}${c} + ${a}${D}(${b} + 1)`,`${5*c} + ${a}${D}${b+1}`,`${5*c} + ${a*(b+1)}`]}];
+function genGWN(mode){for(;;){const a=R(2,6),b=R(1,5),c=R(1,4);const g=pick(GWN);const v=g.f(a,b,c);if(v<0)continue;
+  return numQ(mode,{instr:`Bereken de getalwaarde voor a = ${a}, b = ${b} en c = ${c}.`,math:g.s,v,wrongs:[g.f(b,a,c),g.f(a,b,0),v+a],explain:'Vervang elke letter door haar waarde en reken uit:'+stepsN(g.s,[...g.u(a,b,c),fin(v)])})}}
+function genSimpCalc(mode){
+  const t=R(0,3);const a=R(2,6),b=R(1,5);let math,simp,f;
+  if(t===0){const p=c2(),q=c2(),r=c2(),s=R(1,r-1);math=`${p}a + ${q}a + ${r}b − ${s}b`;simp=`${p+q}a + ${r-s}b`;f=(p+q)*a+(r-s)*b}
+  if(t===1){const p=c2(),q=c2();math=`${p}a + b + ${q}a + ${p}b`;simp=`${p+q}a + ${p+1}b`;f=(p+q)*a+(p+1)*b}
+  if(t===2){const k=c2(),p=c2();math=`${k}${D}(a + b) + ${p}a`;simp=`${k+p}a + ${k}b`;f=(k+p)*a+k*b}
+  if(t===3){const p=c2(),q=c2();math=`a${D}${p}a + ${q}a²`;simp=`${p+q}a²`;f=(p+q)*a*a}
+  return numQ(mode,{instr:`Eerst vereenvoudigen, dan berekenen voor a = ${a} en b = ${b}.`,math,v:f,wrongs:[f+a,f-b,f*2],explain:`Vereenvoudig eerst: ${math} = ${simp}.<br>Vul dan in: ${simp.replace(/(\d)a²/,`$1${D}${a}²`).replace(/(\d)a/,`$1${D}${a}`).replace(/(\d)b/,`$1${D}${b}`)} = ${fin(f)}.`})}
+function c2(){return R(2,9)}
+/* ===== ZAAL C: getallenas en ordenen ===== */
+function cmpItem(){const t=R(0,6);
+  if(t===0){const a=R(0,30);return {l:String(a),v:a}}
+  if(t===1){const a=R(2,9),b=R(2,9);return {l:`${a}${D}${b}`,v:a*b}}
+  if(t===2){const a=R(1,20),b=R(1,20);return {l:`${a} + ${b}`,v:a+b}}
+  if(t===3){const b=R(2,9),q=R(2,9);return {l:`${b*q} : ${b}`,v:q}}
+  if(t===4){const a=R(2,8);return {l:`${a}²`,v:a*a}}
+  if(t===5){const a=R(2,9);return {l:sqr(a*a),v:a}}
+  {const a=R(2,4);return {l:`${a}³`,v:a**3}}}
+function genCmpN(){let A,B;
+  const eq=Math.random()<.25;A=cmpItem();
+  if(eq){for(let g=0;g<50;g++){B=cmpItem();if(B.v===A.v&&B.l!==A.l)break}if(!B||B.v!==A.v||B.l===A.l){B={l:`${A.v-1} + 1`,v:A.v};if(A.v<1)B={l:'1 − 1',v:0}}}
+  else{let g=0;do{B=cmpItem()}while((B.v===A.v||Math.abs(B.v-A.v)>15)&&g++<50)}
+  const s=A.v<B.v?'<':A.v>B.v?'>':'=';const sym={'<':'&lt;','>':'&gt;','=':'='};
+  const show=X=>X.l===String(X.v)?X.l:`${X.l} = ${X.v}`;
+  return {instr:'Vul het juiste symbool in.',math:`${A.l} <span class="blank">?</span> ${B.l}`,layout:'cmp',options:['<','>','='].map(x=>({label:sym[x],correct:x===s})),answerLabel:sym[s],
+    explain:`${show(A)} en ${show(B)}, dus ${fin(`${A.l} ${sym[s]} ${B.l}`)}.`}}
+function genPlace(){const t=R(0,4);let l,v;
+  if(t===0){v=R(1,20);l=String(v)}
+  if(t===1){const a=R(1,10),b=R(1,10);l=`${a} + ${b}`;v=a+b}
+  if(t===2){const a=R(2,5),b=R(1,4);l=`${a}${D}${b}`;v=a*b}
+  if(t===3){const b=R(2,5),q=R(1,8);l=`${b*q} : ${b}`;v=q}
+  if(t===4){const a=R(2,4);l=`${a}²`;v=a*a}
+  if(v>20)return genPlace();
+  const L=pick('ABCDEFGHI'.split(''));
+  return {instr:'Bereken eerst en klik dan de plaats aan op de getallenas.',math:`${L} = ${l}`,kind:'place',value:v,letter:L,answerLabel:String(v),explain:`${l===String(v)?'':l+' = '+v+'. '}${fin(v)} ligt ${v} ${v===1?'stap':'stappen'} rechts van 0.`}}
+function genSet(){
+  for(let g=0;g<100;g++){const t=R(0,5);let lo,hi,lInc,hInc,txt,loL,hiL;
+    lo=R(0,12);hi=lo+R(2,8);lInc=Math.random()<.5;hInc=Math.random()<.5;loL=String(lo);hiL=String(hi);
+    if(t===4){lo=0;lInc=true;hInc=false;hi=R(2,7);txt=`x < ${hi}`}
+    else if(t===5){const a=R(2,6),b=lo-a;if(b<1)continue;loL=`${a} + ${b}`;const k=pick([2,3,4]);if(hi%k)continue;hiL=`${k}${D}${hi/k}`;txt=`${loL} ${lInc?'≤':'<'} x ${hInc?'≤':'<'} ${hiL}`}
+    else if(t===3){hi=lo;lInc=hInc=true;txt=`${lo} ≤ x ≤ ${lo}`}
+    else txt=`${lo} ${lInc?'≤':'<'} x ${hInc?'≤':'<'} ${hi}`;
+    if(hi>20)continue;const set=[];for(let x=0;x<=20;x++)if((lInc?x>=lo:x>lo)&&(hInc?x<=hi:x<hi))set.push(x);
+    if(!set.length)continue;
+    let ex=t===5?`Reken eerst de grenzen uit: ${loL} = ${lo} en ${hiL} = ${hi}. `:'';
+    ex+=t===4?`In ℕ begint het bij 0. `:`${lo} ${lInc?'hoort er wel bij (≤)':'hoort er niet bij (<)'}, ${hi} ${hInc?'hoort er wel bij (≤)':'hoort er niet bij (<)'}. `;
+    ex+=`V = ${fin('{'+set.join(', ')+'}')}`;
+    return {instr:'Welke natuurlijke getallen voldoen? Duid ze allemaal aan op de getallenas.',math:txt,kind:'set',value:set,answerLabel:'{'+set.join(', ')+'}',explain:ex}}
+}
+/* ===== ZAAL D: percentages ===== */
+function genPct(mode){
+  const p=pick([10,20,25,50,5,75,150,4,30,40,60,200,1,15]);const step=100/gcd(p,100);const N=step*R(Math.max(1,Math.ceil(20/step)),Math.max(2,Math.floor(400/step)));
+  const v=N*p/100;
+  let how;
+  if(p===50)how=`50% is de helft: ${N} : 2`;else if(p===25)how=`25% is een vierde: ${N} : 4`;else if(p===75)how=`75% is drie vierde: ${N} : 4 = ${N/4}, ${D} 3`;
+  else if(p===10)how=`10% is een tiende: ${N} : 10`;else if(p===20)how=`20% = 2 ${D} 10%: ${N} : 10 = ${N/10}, ${D} 2`;else if(p===5)how=`5% is de helft van 10%: ${N/10} : 2`;
+  else if(p===1)how=`1% is een honderdste: ${N} : 100`;else if(p===150)how=`150% = 100% + 50%: ${N} + ${N/2}`;else if(p===200)how=`200% is het dubbele: 2 ${D} ${N}`;
+  else how=`1% van ${N} = ${N/100}. ${p}% = ${p} ${D} ${N/100}`;
+  if(p===4||p===15||p===30||p===40||p===60){if(N%10===0&&p%10===0)how=`10% van ${N} = ${N/10}, dus ${p}% = ${p/10} ${D} ${N/10}`;else if(p===15)how=`10% = ${N/10} en 5% = ${N/20}, samen 15%`;else if(p===4&&N%100===0)how=`1% van ${N} = ${N/100}, dus 4% = 4 ${D} ${N/100}`;else how=`${p}% = ${p}/100: ${N} ${D} ${p} : 100`}
+  return numQ(mode,{instr:'Bereken zonder rekentoestel.',math:`${p}% van ${N}`,v,wrongs:[N-v,v*10,v/2,N+v].filter(isInt),explain:`${how} = ${fin(v)}.`})}
+function genPctWord(mode){
+  for(let g=0;g<100;g++){const t=R(0,6);let txt,v,ex,unit='',wr=[];
+    if(t===0){const it=pick(['Een broek','Een jas','Een paar schoenen','Een rugzak']);const p=pick([10,20,25,50]);const P=(100/gcd(p,100))*R(2,20);if(P>300)continue;const k=P*p/100;v=P-k;txt=`${it} kost €${P}. Er is ${p}% korting. Wat is de nieuwe prijs (in €)?`;ex=stepsN(`korting: ${p}% van ${P}`,[`${k}`])+`<br>nieuwe prijs: ${P} − ${k} = ${fin(v)} euro`;wr=[k,P+k]}
+    if(t===1){const it=pick(['Een fiets','Een gsm','Een tent','Een tablet']);const p=pick([5,10,15,20,25]);const P=(100/gcd(p,100))*R(2,30);if(P>600||P<40)continue;const k=P*p/100;if(!isInt(k))continue;v=P+k;txt=`${it} kost €${P}. De prijs stijgt met ${p}%. Wat is de nieuwe prijs (in €)?`;ex=`stijging: ${p}% van ${P} = ${k}<br>nieuwe prijs: ${P} + ${k} = ${fin(v)} euro`;wr=[k,P-k]}
+    if(t===2){const p=pick([10,20,25,50,5,30,40]);const P=(100/gcd(p,100))*R(2,15);if(P>400)continue;const k=P*p/100;txt=`Een tas kost normaal €${P}. Je betaalt nu €${P-k}. Met hoeveel procent is de prijs gedaald?`;v=p;unit='%';ex=`daling: ${P} − ${P-k} = ${k} euro.<br>${k} euro op ${P} euro is evenveel als ${p} op 100 (${k} : ${P/100} = ${p}), dus ${fin(p+'%')}`;wr=[k,100-p]}
+    if(t===3){const p=pick([40,60,45,55,30,70]);const N=pick([200,300,400,500,600]);const m=N*p/100;v=N-m;txt=`Een school telt ${N} leerlingen, waarvan ${p}% meisjes zijn. Hoeveel jongens zijn er?`;ex=`jongens: 100% − ${p}% = ${100-p}%<br>${100-p}% van ${N} = ${fin(v)}`;wr=[m,100-p]}
+    if(t===4){const p=pick([10,20]);const P=100*R(1,5);const a=P-P*p/100,b=a-a*p/100;if(!isInt(b))continue;v=b;txt=`Een toestel kost €${P}. Eerst krijg je ${p}% korting, en op de nieuwe prijs nog eens ${p}% korting. Wat is de uiteindelijke prijs (in €)?`;ex=`na 1e korting: ${P} − ${P*p/100} = ${a}<br>na 2e korting: ${a} − ${a*p/100} = ${fin(b)} euro<br>Let op: dat is niet hetzelfde als ${2*p}% korting (${P-P*2*p/100} euro).`;wr=[P-P*2*p/100,a]}
+    if(t===5){const p=pick([2,3,4,5]);const K=100*R(2,9);const i=K*p/100;v=K+i;txt=`Een spaarrekening van €${K} groeit met ${p}% per jaar (enkelvoudige intrest). Hoeveel staat er na 1 jaar op de rekening (in €)?`;ex=`intrest: ${p}% van ${K} = ${i}<br>na 1 jaar: ${K} + ${i} = ${fin(v)} euro`;wr=[i,K+p]}
+    if(t===6){const p=pick([4,8,10,20,5,6]);const N=pick([50,100,150,200,250,300]);const r=N*p/100;if(!isInt(r))continue;v=N-r;const fr=pick(['appels in een krat','eieren in een doos','tomaten in een kist']);txt=`Van de ${N} ${fr} is ${p}% rot. Hoeveel zijn er nog goed?`;ex=`rot: ${p}% van ${N} = ${r}<br>goed: ${N} − ${r} = ${fin(v)}`;wr=[r,N-p]}
+    if(v===undefined||!isInt(v))continue;
+    const q=numQ(mode,{instr:'Los het vraagstuk op.',math:txt,v,wrongs:wr,explain:ex,unit});q.wordy=true;return q}
+}
+/* ===== ZAAL E: evenredigheden ===== */
+const RECHT=[
+ {t:(x1,y1,x2)=>`Een auto verbruikt ${y1} liter benzine per ${x1} km. Hoeveel liter verbruikt hij voor ${x2} km?`,xu:'km',yu:'liter',g:[50,25,100],ym:[2,3,4,5]},
+ {t:(x1,y1,x2)=>`${x1} kg tomaten kosten €${y1}. Hoeveel euro kosten ${x2} kg?`,xu:'kg',yu:'euro',g:[1,1,2,3],ym:[2,3,4,5,6]},
+ {t:(x1,y1,x2)=>`Een drukker drukt ${y1} pagina's in ${x1} minuten. Hoeveel pagina's drukt hij in ${x2} minuten (zelfde tempo)?`,xu:'min',yu:"pagina's",g:[5,1,10],ym:[8,10,12,16,20,30,32]},
+ {t:(x1,y1,x2)=>`Een fabriek verpakt ${y1} dozen in ${x1} uur. Hoeveel dozen verpakt ze in ${x2} uur (constant tempo)?`,xu:'uur',yu:'dozen',g:[1,1,2],ym:[25,40,50,60,75]},
+ {t:(x1,y1,x2)=>`Een trein legt ${y1} km af in ${x1} uur. Hoeveel km legt hij af in ${x2} uur (constante snelheid)?`,xu:'uur',yu:'km',g:[1,1,2],ym:[60,80,90,120]},
+ {t:(x1,y1,x2)=>`Een kraan levert ${y1} liter water per ${x1} minuten. Hoeveel liter levert ze in ${x2} minuten?`,xu:'min',yu:'liter',g:[1,1,5],ym:[12,15,20,25]},
+ {t:(x1,y1,x2)=>`Een groep van ${x1} leerlingen verzamelt €${y1} voor een goed doel. Hoeveel euro verzamelen ${x2} leerlingen aan hetzelfde tempo?`,xu:'leerlingen',yu:'euro',g:[1,1,2],ym:[6,8,10,12,15]},
+ {t:(x1,y1,x2)=>`Voor een muur van ${x1} m² heb je ${y1} stenen nodig. Hoeveel stenen heb je nodig voor ${x2} m²?`,xu:'m²',yu:'stenen',g:[1,1,3],ym:[30,35,40,50]}];
+const OMG=[
+ {t:(x1,y1,x2)=>`${x1} machines vullen samen een bestelling in ${y1} uur. Hoeveel uur hebben ${x2} machines nodig?`,xu:'machines',yu:'uur'},
+ {t:(x1,y1,x2)=>`${x1} schilders schilderen een gebouw in ${y1} dagen. Hoeveel dagen hebben ${x2} schilders nodig?`,xu:'schilders',yu:'dagen'},
+ {t:(x1,y1,x2)=>`Een tank wordt met ${x1} identieke pompen leeggepompt in ${y1} uur. Hoeveel uur duurt het met ${x2} pompen?`,xu:'pompen',yu:'uur'},
+ {t:(x1,y1,x2)=>`${x1} arbeiders bouwen een brug in ${y1} dagen. Hoeveel dagen hebben ${x2} arbeiders nodig?`,xu:'arbeiders',yu:'dagen'},
+ {t:(x1,y1,x2)=>`${x1} vrijwilligers pakken in ${y1} uur alle pakjes in. Hoeveel uur hebben ${x2} vrijwilligers nodig?`,xu:'vrijwilligers',yu:'uur'},
+ {t:(x1,y1,x2)=>`Bij een snelheid van ${x1} km/u doet een fietser een tocht in ${y1} uur. Hoeveel uur doet hij erover bij ${x2} km/u?`,xu:'km/u',yu:'uur',sp:true}];
+function ratioTable(rows){return `<div class="tbl-wrap"><table class="tbl rt">${rows.map(r=>`<tr>${r.map((c,i)=>i===0?`<th>${c}</th>`:`<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>`}
+function makeRecht(){const c=pick(RECHT);for(let g=0;g<200;g++){const gs=pick(c.g),ym=pick(c.ym);const m1=R(2,9),m2=R(2,12);if(m1===m2)continue;
+    const x1=gs*m1,x2=gs*m2,y1=ym*m1,y2=ym*m2;if(x1>500||x2>500)continue;return {c,x1,x2,y1,y2,gs,ym,m1,m2}}}
+function makeOmg(){const c=pick(OMG);for(let g=0;g<300;g++){const P=c.sp?pick([180,240,360,120,300]):pick([60,72,90,120,144,180,240,360]);const ds=[];for(let d=2;d<P;d++)if(P%d===0)ds.push(d);
+    const pool=c.sp?ds.filter(d=>d>=10&&d<=120&&P/d<=24):ds.filter(d=>d<=30&&P/d<=60);if(pool.length<2)continue;const x1=pick(pool),x2=pick(pool);if(x1===x2)continue;return {c,x1,x2,y1:P/x1,y2:P/x2,P}}}
+function genRecht(mode){const r=makeRecht();const {c,x1,x2,y1,y2,gs,ym,m1,m2}=r;
+  const tb=ratioTable([[c.xu,x1,gs,x2],[c.yu,y1,ym,y2]]);
+  const q=numQ(mode,{instr:'Recht evenredig. Gebruik de verhoudingstabel.',math:c.t(x1,y1,x2),v:y2,wrongs:[y1*x2,Math.round(y1*x1/x2)||y2+ym,y1+x2-x1],
+    explain:`Hoe meer ${c.xu}, hoe meer ${c.yu}: recht evenredig.${tb}${x1} : ${m1} = ${gs} → ${y1} : ${m1} = ${ym}<br>${gs} ${D} ${m2} = ${x2} → ${ym} ${D} ${m2} = ${fin(y2)} ${c.yu}`,unit:c.yu});q.wordy=true;return q}
+function genOmg(mode){const o=makeOmg();const {c,x1,x2,y1,y2,P}=o;
+  const q=numQ(mode,{instr:'Omgekeerd evenredig. Het product blijft gelijk.',math:c.t(x1,y1,x2),v:y2,wrongs:[y1*x2/x1,y1+x1-x2,Math.round(y1*x2/x1)],
+    explain:`Meer ${c.xu} → minder ${c.yu}: omgekeerd evenredig.<br>Totaal werk: ${x1} ${D} ${y1} = ${P}<br>${P} : ${x2} = ${fin(y2)} ${c.yu}`,unit:c.yu});q.wordy=true;return q}
+function genKind(){const rec=Math.random()<.5;const o=rec?makeRecht():makeOmg();const txt=o.c.t(o.x1,o.y1,o.x2);
+  return {instr:'Is dit verband recht of omgekeerd evenredig?',math:txt,wordy:true,layout:'words',options:[{label:'recht evenredig',correct:rec},{label:'omgekeerd evenredig',correct:!rec}],answerLabel:rec?'recht evenredig':'omgekeerd evenredig',
+    explain:rec?`Dubbel zoveel ${o.c.xu} geeft dubbel zoveel ${o.c.yu}: ${fin('recht evenredig')}.`:`Dubbel zoveel ${o.c.xu} geeft maar de helft van ${o.c.yu}: ${fin('omgekeerd evenredig')}. Het product ${o.x1} ${D} ${o.y1} blijft gelijk.`}}
+
+/* ===== zalen ===== */
+const ROOMS=[
+ {id:'A',name:'Zaal der Bewerkingen',topic:'Bewerkingen en volgorde',guard:'De oude rekenmachine',
+  story:'Een stoffige rekenmachine van koper bewaakt het eerste slot. Hij geeft pas een cijfer prijs als je de bewerkingen in de juiste volgorde uitvoert.',
+  tip:'1. haakjes &nbsp;2. machten, wortels, log &nbsp;3. · en : van links naar rechts &nbsp;4. + en − van links naar rechts.<br>√49 = 7 want 7² = 49 &nbsp;·&nbsp; ∛64 = 4 want 4³ = 64 &nbsp;·&nbsp; log₂ 8 = 3 want 2³ = 8',
+  plan:()=>[genOps,genOps,genOps,genOps,genOps,genOps]},
+ {id:'B',name:'De Lettergalerij',topic:'Eentermen en veeltermen',guard:'De schilderijen',
+  story:'In deze galerij hangen schilderijen vol letters. Achter elk schilderij zit een cijfer, maar enkel wie de letters juist samenneemt, mag kijken.',
+  tip:'Neem enkel gelijksoortige termen samen: 3a + 5a = 8a, maar 2a + 3b blijft staan.<br>a·5a = 5a² is geen a-term. &nbsp; 3·(a + b) = 3a + 3b.<br>Getalwaarde: vervang elke letter door haar getal.',
+  plan:()=>[genSimpN,genSimpN,genGWN,genSimpN,genGWN,genSimpCalc]},
+ {id:'C',name:'De Gang van de Getallenas',topic:'Getallenas en ordenen',guard:'De meetlat',
+  story:'Een lange gang met een meetlat op de vloer. De tegels gaan pas open als je de getallen op de juiste plaats zet.',
+  tip:'Het grootste getal ligt rechts. Reken eerst uit, vergelijk daarna.<br>≤ : het getal hoort erbij &nbsp;·&nbsp; < : het getal hoort er niet bij.<br>ℕ = {0, 1, 2, 3, …}',
+  plan:()=>[genCmpN,genCmpN,genPlace,genSet,genPlace,genSet]},
+ {id:'D',name:'De Procentenkelder',topic:'Procentrekenen',guard:'De kassa',
+  story:'In de kelder staat een oude kassa met een prijskaartje aan elke lade. Alleen de juiste bedragen openen de lades.',
+  tip:'10% = een tiende &nbsp;·&nbsp; 25% = een vierde &nbsp;·&nbsp; 50% = de helft &nbsp;·&nbsp; 1% = een honderdste.<br>Korting: trek het percentage af van de prijs. Stijging: tel het erbij.',
+  plan:()=>[genPct,genPct,genPct,genPctWord,genPctWord,genPctWord]},
+ {id:'E',name:'De Verhoudingentoren',topic:'Evenredigheden',guard:'Het uurwerk',
+  story:'Boven in de toren tikt een reusachtig uurwerk. De wijzers geven het laatste cijfer pas vrij als je de verhoudingen doorziet.',
+  tip:'Recht evenredig: dubbel zoveel → dubbel zoveel. Werk via de eenheid in een verhoudingstabel.<br>Omgekeerd evenredig: dubbel zoveel → de helft. Het product blijft gelijk: 6 machines · 20 uur = 120 = 15 · 8.',
+  plan:()=>[genKind,genKind,genRecht,genOmg,genRecht,genOmg]},
+ {id:'K',name:'De Hoofdkluis',topic:'Alles door elkaar',guard:'De kluis',
+  story:'Je staat voor de grote kluisdeur. Ze vraagt van elke zaal nog één laatste bewijs. Kraak haar en je bent vrij!',
+  tip:'Alles uit de vorige zalen komt terug. Werk rustig en noteer je tussenstappen op papier.',
+  plan:()=>shuffle([genOps,genGWN,genSet,genPctWord,pick([genRecht,genOmg]),genSimpN])}
+];
+function makePuzzles(r){return r.plan().map((g,i)=>{const mode=i<2?'mc':'type';const q=g(mode);q.mode=q.options?'mc':mode;return q})}
+function checkNum(q,raw){raw=String(raw||'').trim();if(!raw)return {status:'empty',msg:'Typ eerst een getal.'};if(!/^\d+$/.test(raw))return {status:'format',msg:'Typ enkel cijfers.'};return {status:+raw===q.value?'ok':'wrong'}}
+/* ===== Getallenshow — rubrieken ===== */
+const CATS=[
+ {id:'n-bew',set:'N',name:'Bewerkingen',short:'Bewerk',easy:[genOps],hard:[genOps]},
+ {id:'n-let',set:'N',name:'Letters',short:'Letter',easy:[genSimpN],hard:[genGWN,genSimpCalc]},
+ {id:'n-ord',set:'N',name:'Ordenen',short:'Orden',easy:[genCmpN],hard:[genPlace,genSet]},
+ {id:'n-pct',set:'N',name:'Procenten',short:'%',easy:[genPct],hard:[genPctWord]},
+ {id:'n-evr',set:'N',name:'Evenredigheden',short:'Evenr',easy:[genKind],hard:[genRecht,genOmg]},
+ /*ℤ*/{id:'z-opt',set:'Z',name:'Optellen en aftrekken',short:'+ en −',easy:[genAdd],hard:[genAdd]},
+ {id:'z-ver',set:'Z',name:'Vermenigvuldigen en delen',short:'· en :',easy:[genMul],hard:[genMul]},
+ {id:'z-mac',set:'Z',name:'Machten',short:'Macht',easy:[genPow],hard:[genPow]},
+ {id:'z-wor',set:'Z',name:'Wortels en log',short:'√ en log',easy:[genRoot],hard:[genRoot]},
+ {id:'z-vol',set:'Z',name:'Volgorde van bewerkingen',short:'Volgo',easy:[genOrder],hard:[genOrder]},
+ {id:'z-as',set:'Z',name:'Getallenas',short:'As',easy:[genCmp],hard:[genNL]},
+ {id:'z-coo',set:'Z',name:'Coördinaten',short:'Coörd',easy:[genCoordRead],hard:[genCoordClick,genCoordRead]},
+ {id:'z-vee',set:'Z',name:'Vereenvoudigen',short:'Vereenv',easy:[genSimp],hard:[genSimp]},
+ {id:'z-gw',set:'Z',name:'Getalwaarde',short:'Getalw',easy:[genGW],hard:[genGW]},
+ {id:'z-reg',set:'Z',name:'Rekenregels machten',short:'Regels',easy:[genPowRules],hard:[genPowRules]},
+ {id:'z-uit',set:'Z',name:'Uitwerken',short:'Uitwerk',easy:[genExpand],hard:[genExpand]},
+ {id:'z-tab',set:'Z',name:'Verbanden',short:'Tabel',easy:[genVerband],hard:[genFill]}];
+CATS.splice(0,CATS.length,...CATS.filter(c=>c.set==='N')); // Getallenshow ℕ: enkel de rubrieken van ℕ
+const VALUES=[100,200,300,400,500];
+const HINTS={'z-wor':'Typ een getal of “bestaat niet”','z-coo':'Typ bv. (2, −5)','z-vee':'Typ bv. 2a − 5b','z-reg':'Typ bv. −15x^6','z-uit':'Typ bv. x^3 + 4x^2 − 12'};
+function makeTile(cat,val){const easy=val<=300;const g=pick(easy?cat.easy:cat.hard);const mode=val<=200?'mc':'type';const q=g(mode);q.mode=q.options?'mc':mode;q.cat=cat.id;q.val=val;return q}
+function checkAny(q,raw){if(q.kind==='num')return checkNum(q,raw);return checkTyped(q,raw)}
+if(false)module.exports={CATS,VALUES,makeTile,checkAny};
+</script>
+<script>
+(function(){
+const KEY='getallenshow-n-v1';
+let S={name:'',stats:{},best:0,shows:0,game:null};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const app=document.getElementById('app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const C=id=>CATS.find(c=>c.id===id);
+const setCls=c=>c.set==='N'?'set-n':'set-z';
+const setBadge=c=>`<span class="badge">${c.set==='N'?'ℕ':'ℤ'}</span>`;
+let chosen=new Set();
+
+/* ---------- start ---------- */
+function startScreen(){window.scrollTo(0,0);
+  const g=S.game&&S.game.tiles.some(t=>!t.done);
+  app.innerHTML=`<section class="stage" style="display:grid;gap:16px">
+   <p class="eyebrow">Wiskunde 7VJHO · Rekenen in ℕ</p>
+   <h1 class="logo">Getallen<span class="n">sh</span><span class="z">ow</span></h1>
+   <p style="max-width:62ch">Welkom in de studio! Stel je eigen spelbord samen met rubrieken uit de natuurlijke getallen (ℕ). Kies daarna zelf welke vraag je speelt: hoe hoger de waarde, hoe moeilijker. Ergens op het bord verstoppen zich twee jokers die dubbel tellen.</p>
+   <div class="row" style="align-items:flex-end"><div class="field" style="flex:1 1 220px;display:grid;gap:6px"><label for="nm" style="font-weight:800">Naam van de kandidaat</label><input id="nm" maxlength="20" value="${esc(S.name)}" placeholder="Je voornaam" autocomplete="off"></div>
+   ${g?`<button class="btn ghost" id="resume">Verder met je bord (${S.game.score} ptn)</button>`:''}</div>
+  </section>
+  <section class="stage pick"><div class="row" style="justify-content:space-between"><h2 style="font-size:1.6rem">Kies 3 tot 5 rubrieken</h2><span class="soft" id="cnt"></span></div>
+   ${['N'].map(s=>`<div class="group ${s==='N'?'set-n':'set-z'}"><h3><span class="badge">${s==='N'?'ℕ':'ℤ'}</span>${s==='N'?'Natuurlijke getallen':'Gehele getallen'}</h3><div class="chips">${CATS.filter(c=>c.set===s).map(c=>`<button class="chip" data-id="${c.id}" aria-pressed="${chosen.has(c.id)}">${c.name}</button>`).join('')}</div></div>`).join('')}
+   <div class="row"><button class="btn" id="go">Start de show</button><button class="btn ghost" id="rnd">Verrassingsbord</button><button class="btn ghost small" id="weak" title="Kies je rubrieken met de laagste score">Mijn zwakste rubrieken</button></div><p class="warn" id="warn" hidden></p>
+  </section>
+  ${statsPanel()}`;
+  const cnt=document.getElementById('cnt');
+  const upd=()=>{cnt.textContent=`${chosen.size} gekozen`;app.querySelectorAll('.chip').forEach(b=>{b.setAttribute('aria-pressed',chosen.has(b.dataset.id));b.disabled=!chosen.has(b.dataset.id)&&chosen.size>=6})};upd();
+  app.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{const id=b.dataset.id;chosen.has(id)?chosen.delete(id):chosen.add(id);upd()});
+  const name=()=>{const n=document.getElementById('nm').value.trim();if(n)S.name=n;return n};
+  const warn=t=>{const w=document.getElementById('warn');w.hidden=false;w.textContent=t};
+  document.getElementById('go').onclick=()=>{if(!name())return warn('Vul eerst je naam in.');if(chosen.size<3)return warn('Kies minstens 3 rubrieken.');newGame([...chosen])};
+  document.getElementById('rnd').onclick=()=>{if(!name())return warn('Vul eerst je naam in.');newGame(shuffle(CATS).slice(0,R(3,5)).map(c=>c.id))};
+  document.getElementById('weak').onclick=()=>{const played=CATS.filter(c=>S.stats[c.id]?.n);if(played.length<3)return warn('Speel eerst een paar rubrieken, dan weet de show wat je zwakke punten zijn.');
+    chosen=new Set(played.sort((a,b)=>pct(a.id)-pct(b.id)).slice(0,6).map(c=>c.id));upd()};
+  const r=document.getElementById('resume');if(r)r.onclick=()=>{name();boardScreen()};
+}
+const pct=id=>{const s=S.stats[id];return s&&s.n?Math.round(100*s.ok/s.n):0};
+function statsPanel(){const played=CATS.filter(c=>S.stats[c.id]?.n);
+  if(!played.length)return `<section class="stage"><p class="eyebrow">Jouw resultaten</p><p class="soft" style="margin-top:6px">Hier verschijnt na je eerste show per rubriek hoeveel procent je juist had. Zo zie je meteen wat je nog moet oefenen.</p></section>`;
+  return `<section class="stage" style="display:grid;gap:12px"><div class="row" style="justify-content:space-between"><p class="eyebrow">Jouw resultaten per rubriek</p><span class="soft" style="font-size:.9rem">Beste show: <b>${S.best}</b> ptn · ${S.shows} ${S.shows===1?'show':'shows'}</span></div>
+   <div class="stats">${played.sort((a,b)=>pct(a.id)-pct(b.id)).map(c=>`<div class="srow ${setCls(c)}"><span class="nm">${setBadge(c)}${c.name}</span><span class="track"><i style="width:${pct(c.id)}%"></i></span><span class="pc">${pct(c.id)}%</span></div>`).join('')}</div>
+   <p class="hint">Bovenaan staan de rubrieken waar je het minst goed scoort. Gebaseerd op ${played.reduce((s,c)=>s+S.stats[c.id].n,0)} vragen.</p></section>`}
+function newGame(ids){const tiles=[];ids.forEach(id=>VALUES.forEach(v=>tiles.push({cat:id,val:v,done:false,ok:false,pts:0})));
+  const pool=tiles.filter(t=>t.val>=200);shuffle(pool).slice(0,2).forEach(t=>t.joker=true);
+  S.game={cats:ids,tiles,score:0};save();boardScreen()}
+
+/* ---------- bord ---------- */
+function boardScreen(){window.scrollTo(0,0);const G=S.game;const n=G.cats.length;
+  const left=G.tiles.filter(t=>!t.done).length;
+  app.innerHTML=`<div class="hud"><div><p class="eyebrow">Kandidaat</p><h2 style="font-size:1.6rem">${esc(S.name)}</h2></div>
+   <div class="row"><div class="score" aria-label="Score">${G.score}<small>punten</small></div><button class="btn ghost small" id="stop">${left?'Stop de show':'Bekijk je score'}</button></div></div>
+  <section class="stage bordstage"><div class="board-wrap"><div class="board" style="grid-template-columns:repeat(${n},minmax(0,1fr))">
+   ${G.cats.map(id=>{const c=C(id);return `<div class="colhead ${setCls(c)}">${setBadge(c)}<span class="long">${c.name}</span><span class="short">${c.short}</span></div>`}).join('')}
+   ${VALUES.map(v=>G.cats.map(id=>{const c=C(id),i=G.tiles.findIndex(t=>t.cat===id&&t.val===v),t=G.tiles[i];
+     return `<button class="tile ${setCls(c)}${t.done?(t.ok?' ok':' no'):''}" data-i="${i}" ${t.done?'disabled':''} aria-label="${c.name}, ${v} punten${t.done?(t.ok?', juist':', fout'):''}">${t.done?(t.ok?`✓ ${t.pts}`:'✗'):v}</button>`}).join('')).join('')}
+  </div></div></section>
+  <p class="hint">100 en 200: meerkeuze · 300: zelf invullen · 400 en 500: moeilijker, zelf invullen. Twee tegels verbergen een joker (dubbele punten).</p>`;
+  app.querySelectorAll('.tile:not(:disabled)').forEach(b=>b.onclick=()=>playTile(+b.dataset.i));
+  document.getElementById('stop').onclick=endScreen;
+}
+/* ---------- vraag ---------- */
+let Q=null;
+function playTile(i){window.scrollTo(0,0);const G=S.game,t=G.tiles[i],c=C(t.cat);const q=makeTile(c,t.val);Q={i,q,c,t};let ans='';
+  if(q.options)ans=`<div class="opts ${q.layout||''}">${q.options.map((o,k)=>`<button class="opt" data-k="${k}">${o.label}</button>`).join('')}</div>`;
+  else if(q.kind==='nl')ans=`<div class="nlbox">${nlZ()}</div><p class="hint">Klik op het juiste streepje.</p>`;
+  else if(q.kind==='grid')ans=`<div class="svgbox">${gridSVG([],true)}</div><p class="hint">Klik op het snijpunt van de rasterlijnen.</p>`;
+  else if(q.kind==='place')ans=`<div class="nlbox">${nlN()}</div><p class="hint">Klik op het juiste streepje.</p>`;
+  else if(q.kind==='set')ans=`<div class="nlbox">${nlN()}</div><div class="row" style="justify-content:space-between"><p class="hint">Klik elk getal aan dat voldoet. Nog eens klikken = weghalen.</p><button class="btn" id="chk">Controleer</button></div><p class="warn" id="warn" hidden></p>`;
+  else{const keys=q.kind==='coord'?['(','−',',',')']:q.kind==='expr'?['−',...(q.vars&&q.vars.length?q.vars:['a','b']),'²','³','⁴','⁵','^','(',')']:q.kind==='intbn'?['−','bestaat niet']:q.kind==='num'?[]:['−'];
+    ans=`<form class="typein" id="tf" autocomplete="off"><div class="line"><input id="ti" aria-label="Je antwoord" placeholder="${esc(HINTS[c.id]||'Je antwoord')}" ${q.kind==='num'?'inputmode="numeric"':''} autocapitalize="off" spellcheck="false"><button class="btn" type="submit">Controleer</button></div>
+     ${keys.length?`<div class="keys">${keys.map(k=>`<button type="button" data-k="${esc(k)}">${esc(k)}</button>`).join('')}</div>`:''}${q.unit?`<p class="hint">Antwoord in ${esc(q.unit)}.</p>`:''}<p class="warn" id="warn" hidden></p></form>`}
+  app.innerHTML=`<section class="stage qcard ${setCls(c)}">
+   <div class="qhead"><span class="pill">${setBadge(c)} ${c.name} · ${t.val}</span><button class="btn ghost small" id="back">Terug naar het bord</button></div>
+   ${t.joker?`<div class="joker"><b>JOKER!</b> Deze vraag telt dubbel: ${t.val*2} punten.</div>`:''}
+   <p class="instr">${q.instr}</p><div class="math${q.layout==='words'||q.wordy||(q.visual&&q.kind!=='grid')?' small':''}">${q.math}</div>
+   ${q.visual||''}${q.grid?`<div class="svgbox">${gridSVG(q.grid.points,false)}</div>`:''}${ans}<div id="fb"></div></section>`;
+  document.getElementById('back').onclick=boardScreen;
+  if(q.options)app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const o=q.options[+b.dataset.k];app.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(q.options[k].correct)x.classList.add('right')});if(!o.correct)b.classList.add('wrong');resolve(o.correct)});
+  else if(q.kind==='nl')bindLine(q,app.querySelector('.nlbox svg'),NXZ);
+  else if(q.kind==='place')bindLine(q,app.querySelector('.nlbox svg'),NXN);
+  else if(q.kind==='set')bindSet(q);
+  else if(q.kind==='grid')bindGrid(q);
+  else{const inp=document.getElementById('ti'),warn=document.getElementById('warn');inp.focus({preventScroll:true});
+    app.querySelectorAll('.keys button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='bestaat niet')inp.value=k;else{const s=inp.selectionStart??inp.value.length,e=inp.selectionEnd??s;inp.value=inp.value.slice(0,s)+k+inp.value.slice(e);inp.setSelectionRange(s+k.length,s+k.length)}inp.focus()});
+    document.getElementById('tf').onsubmit=e=>{e.preventDefault();const r=checkAny(q,inp.value);if(r.status==='empty'||r.status==='format'){warn.hidden=false;warn.textContent=r.msg;return}
+      inp.disabled=true;app.querySelectorAll('#tf button').forEach(b=>b.disabled=true);resolve(r.status==='ok')}}
+}
+function resolve(ok){const {q,c,t}=Q;const G=S.game;const pts=ok?t.val*(t.joker?2:1):0;
+  t.done=true;t.ok=ok;t.pts=pts;G.score+=pts;const st=S.stats[c.id]||(S.stats[c.id]={ok:0,n:0});st.n++;if(ok)st.ok++;save();
+  const left=G.tiles.filter(x=>!x.done).length;
+  document.getElementById('fb').innerHTML=`<div class="fb ${ok?'ok':'no'}"><h3>${ok?`Juist! +${pts}`:'Helaas, geen punten'}</h3>
+   ${ok?'':`<p>Het juiste antwoord is <b>${q.answerLabel}</b>.</p>`}<div>${q.explain}</div>
+   <div class="row"><button class="btn" id="nx">${left?'Terug naar het bord':'Bekijk je score'}</button></div></div>`;
+  const b=document.getElementById('back');if(b)b.remove();
+  const nx=document.getElementById('nx');nx.focus({preventScroll:true});document.getElementById('fb').scrollIntoView({behavior:'smooth',block:'nearest'});
+  nx.onclick=()=>left?boardScreen():endScreen()}
+/* ---------- einde ---------- */
+function endScreen(){window.scrollTo(0,0);const G=S.game;if(!G)return startScreen();
+  const played=G.tiles.filter(t=>t.done),ok=played.filter(t=>t.ok).length;const max=G.tiles.reduce((s,t)=>s+t.val,0);
+  const rec=G.score>S.best;if(played.length){S.shows++;if(rec)S.best=G.score}S.game=null;save();
+  const per=G.cats.map(id=>{const ts=G.tiles.filter(t=>t.cat===id&&t.done);return {c:C(id),n:ts.length,ok:ts.filter(t=>t.ok).length}}).filter(x=>x.n);
+  app.innerHTML=`<section class="stage result"><p class="eyebrow">Einde van de show</p><h2 style="font-size:2rem">${esc(S.name)}, je score is</h2><div class="big">${G.score}</div>
+   <p>${ok} van ${played.length} vragen juist${rec&&played.length?' · <b>Nieuw persoonlijk record!</b>':''} · maximum op dit bord: ${max} (zonder jokers)</p>
+   ${per.length?`<div class="stats" style="width:100%;max-width:520px;text-align:left">${per.map(x=>`<div class="srow ${setCls(x.c)}"><span class="nm">${setBadge(x.c)}${x.c.name}</span><span class="track"><i style="width:${Math.round(100*x.ok/x.n)}%"></i></span><span class="pc">${x.ok}/${x.n}</span></div>`).join('')}</div>`:''}
+   <div class="row" style="justify-content:center"><button class="btn" id="again">Nieuwe show</button></div></section>`;
+  document.getElementById('again').onclick=startScreen}
+
+/* ---------- getallenassen ---------- */
+const NXZ=n=>30+(n+10)*28,NXN=n=>26+n*28.4;
+function axis(range,X,labelEvery,fs){let s=`<svg viewBox="0 0 620 100" role="group" aria-label="Getallenas"><line x1="12" y1="48" x2="606" y2="48" stroke="var(--ink)" stroke-width="2"/><path d="M608 48 l-10 -5 v10z" fill="var(--ink)"/>`;
+  for(let n=range[0];n<=range[1];n++){const x=X(n),big=n===0||n%5===0;s+=`<line x1="${x}" y1="${big?32:38}" x2="${x}" y2="${big?64:58}" stroke="var(--ink)" stroke-width="${big?3:1.8}"/>`;
+    if(n%labelEvery===0)s+=`<text x="${x}" y="90" text-anchor="middle" font-size="${n%10===0?fs+3:fs}" font-weight="${n===0?800:400}" fill="var(--ink)" font-family="Figtree,sans-serif">${n<0?'−'+(-n):n}</text>`;
+    s+=`<circle class="dot" data-n="${n}" cx="${x}" cy="48" r="12" fill="transparent"/><rect class="hit" data-n="${n}" x="${x-14}" y="4" width="28" height="94" fill="transparent" style="cursor:pointer"><title>${n}</title></rect>`}
+  return s+'<g id="marks"></g></svg>'}
+const nlZ=()=>axis([-10,10],NXZ,2,21),nlN=()=>axis([0,20],NXN,2,22);
+function bindLine(q,svg,X){let busy=false;const L=q.letter||'';
+  const mk=(v,col)=>`<g><path d="M${X(v)},42 l-9,-16 h18z" fill="${col}"/><text x="${X(v)}" y="20" text-anchor="middle" font-size="17" font-family="Bowlby One,sans-serif" fill="${col}">${L}</text></g>`;
+  svg.querySelectorAll('.hit').forEach(h=>h.addEventListener('click',()=>{if(busy)return;busy=true;const n=+h.dataset.n,ok=n===q.value;svg.querySelector('#marks').innerHTML=(ok?'':mk(n,'var(--no)'))+mk(q.value,'var(--ok)');resolve(ok)}))}
+function bindSet(q){const svg=app.querySelector('.nlbox svg'),sel=new Set(),warn=document.getElementById('warn');let busy=false;
+  const paint=()=>svg.querySelectorAll('.dot').forEach(d=>d.setAttribute('fill',sel.has(+d.dataset.n)?'var(--gold)':'transparent'));
+  svg.querySelectorAll('.hit').forEach(h=>h.addEventListener('click',()=>{if(busy)return;const n=+h.dataset.n;sel.has(n)?sel.delete(n):sel.add(n);warn.hidden=true;paint()}));
+  document.getElementById('chk').onclick=()=>{if(busy)return;if(!sel.size){warn.hidden=false;warn.textContent='Duid eerst getallen aan.';return}busy=true;document.getElementById('chk').disabled=true;
+    const ok=sel.size===q.value.length&&q.value.every(x=>sel.has(x));if(!ok){sel.clear();q.value.forEach(x=>sel.add(x));paint()}resolve(ok)}}
+/* ---------- rooster ---------- */
+const U=22,O=160;
+function gridSVG(points,interactive){let s=`<svg viewBox="0 0 320 320" ${interactive?'class="clickgrid" role="group" aria-label="Assenstelsel, klik op een roosterpunt"':'role="img" aria-label="Assenstelsel"'}>`;
+  for(let i=-6;i<=6;i++){const c=O+i*U;s+=`<line x1="${c}" y1="${O-6*U}" x2="${c}" y2="${O+6*U}" stroke="var(--line)"/><line x1="${O-6*U}" y1="${c}" x2="${O+6*U}" y2="${c}" stroke="var(--line)"/>`}
+  s+=`<line x1="${O-6*U-8}" y1="${O}" x2="${O+6*U+10}" y2="${O}" stroke="var(--ink)" stroke-width="1.8"/><line x1="${O}" y1="${O+6*U+8}" x2="${O}" y2="${O-6*U-10}" stroke="var(--ink)" stroke-width="1.8"/><text x="${O+6*U+6}" y="${O+16}" class="gtxt" font-weight="800">x</text><text x="${O+8}" y="${O-6*U-4}" class="gtxt" font-weight="800">y</text>`;
+  for(let i=-6;i<=6;i++){if(!i)continue;if(i%2===0)s+=`<text x="${O+i*U}" y="${O+14}" text-anchor="middle" class="gtxt">${i<0?'−'+(-i):i}</text><text x="${O-6}" y="${O-i*U+4}" text-anchor="end" class="gtxt">${i<0?'−'+(-i):i}</text>`;s+=`<line x1="${O+i*U}" y1="${O-3}" x2="${O+i*U}" y2="${O+3}" stroke="var(--ink)"/><line x1="${O-3}" y1="${O-i*U}" x2="${O+3}" y2="${O-i*U}" stroke="var(--ink)"/>`}
+  for(const p of points)s+=pt(p.x,p.y,p.label,'var(--gold)');
+  if(interactive)s+=`<g id="hov"></g><g id="gm"></g><rect id="gc" width="320" height="320" fill="transparent" style="cursor:crosshair"/>`;return s+'</svg>'}
+function pt(x,y,L,col){const cx=O+x*U,cy=O-y*U;return `<g><circle cx="${cx}" cy="${cy}" r="6" fill="${col}" stroke="var(--ink)" stroke-width="1.5"/><text x="${cx+8}" y="${cy-8}" font-family="Bowlby One,sans-serif" font-size="14" fill="var(--ink)" stroke="var(--stage)" stroke-width="3" paint-order="stroke">${L}</text></g>`}
+function bindGrid(q){const svg=app.querySelector('.clickgrid');let busy=false;const toPt=e=>{const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const l=p.matrixTransform(svg.getScreenCTM().inverse());return {x:Math.max(-6,Math.min(6,Math.round((l.x-O)/U))),y:Math.max(-6,Math.min(6,Math.round((O-l.y)/U)))}};
+  const c=svg.querySelector('#gc'),hov=svg.querySelector('#hov');
+  c.addEventListener('pointermove',e=>{if(busy)return;const g=toPt(e);hov.innerHTML=`<circle cx="${O+g.x*U}" cy="${O-g.y*U}" r="7" fill="none" stroke="var(--gold)" stroke-width="2.5"/>`});
+  c.addEventListener('click',e=>{if(busy)return;busy=true;hov.innerHTML='';const g=toPt(e),ok=g.x===q.value.x&&g.y===q.value.y;svg.querySelector('#gm').innerHTML=(ok?'':pt(g.x,g.y,'?','var(--no)'))+pt(q.value.x,q.value.y,q.letter,'var(--ok)');resolve(ok)})}
+
+startScreen();
+})();
+</script>
