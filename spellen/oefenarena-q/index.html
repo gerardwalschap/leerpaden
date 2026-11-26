@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="nl-BE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oefenarena ℚ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+:root{
+  --bg:#e8f0f3; --card:#ffffff; --ink:#15314a; --ink-soft:#4e6879; --line:#d5e2e6; --soft:#dfeaee;
+  --accent:#2f8f8a; --accent-ink:#ffffff; --gold:#f2a516; --gold-ink:#5a3a00;
+  --pos:#2b8f5c; --pos-bg:#e3f4ea; --neg:#cf4a3f; --neg-bg:#fbe7e4; --lock:#9fb0b8;
+  --f-display:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif; --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1d29; --card:#142a3b; --ink:#e5f0f4; --ink-soft:#9fb7c4; --line:#24435a; --soft:#1b3547;
+  --accent:#4fc0b8; --accent-ink:#06201e; --gold:#ffb733; --gold-ink:#3a2500;
+  --pos:#4cc489; --pos-bg:#143a2b; --neg:#ff7b6e; --neg-bg:#41201f; --lock:#4d6574; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5;padding:16px 16px 40px}
+#app{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;letter-spacing:.01em;line-height:1.1;margin:0}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{border:0;border-radius:999px;padding:12px 22px;font-weight:700;background:var(--accent);color:var(--accent-ink);box-shadow:0 3px 0 color-mix(in srgb,var(--accent) 55%,#000)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 color-mix(in srgb,var(--accent) 55%,#000)}
+.btn.gold{background:var(--gold);color:var(--gold-ink);box-shadow:0 3px 0 color-mix(in srgb,var(--gold) 55%,#000)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+.card{background:var(--card);border-radius:var(--r);padding:20px;border:1px solid var(--line)}
+.eyebrow{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft);font-weight:700}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--ink-soft)}
+.hero h1{font-size:clamp(2.4rem,9vw,4rem)}
+.hero h1 .q{color:var(--accent)}
+.field{display:grid;gap:6px}
+.field input{font:inherit;padding:12px 14px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);max-width:340px;width:100%}
+/* breuken */
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .15em;line-height:1.15}
+.fr>span:first-child{border-bottom:2px solid currentColor;padding:0 .2em}
+.fr>span:last-child{padding:0 .2em}
+.par{font-size:1.9em;vertical-align:middle;font-weight:300;line-height:1}
+sup{font-size:.7em}
+.sqrt{font-size:1.6em;vertical-align:middle}
+.rad{border-top:2px solid currentColor;display:inline-block;padding-top:2px}
+/* vraag */
+.qtext{font-size:1.25rem;line-height:1.9}
+.axis{color:var(--ink);margin-top:8px}
+.axis svg{width:100%;height:auto;display:block}
+.answer{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.answer input{font:inherit;font-size:1.2rem;padding:10px 14px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:180px}
+.unit{font-weight:700;font-size:1.2rem}
+.hint{font-size:.85rem;color:var(--ink-soft);margin-top:6px}
+.mc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.mc button{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px;font-size:1.15rem;min-height:64px}
+.mc button:hover{border-color:var(--accent)}
+.mc button.good{border-color:var(--pos);background:var(--pos-bg)}
+.mc button.bad{border-color:var(--neg);background:var(--neg-bg)}
+.fb{margin-top:14px;border-radius:12px;padding:12px 14px;display:grid;gap:6px}
+.fb.ok{background:var(--pos-bg);border-left:5px solid var(--pos)}
+.fb.no{background:var(--neg-bg);border-left:5px solid var(--neg)}
+.fb .sol{font-size:1.1rem;line-height:1.9}
+.fb .tip{font-size:.9rem;color:var(--ink-soft)}
+.progress{height:10px;background:var(--soft);border-radius:999px;overflow:hidden}
+.progress>div{height:100%;background:var(--accent);transition:width .3s}
+.dots{display:flex;gap:6px}
+.dots span{width:14px;height:14px;border-radius:50%;background:var(--soft);border:2px solid var(--line)}
+.dots span.ok{background:var(--pos);border-color:var(--pos)}
+.dots span.no{background:var(--neg);border-color:var(--neg)}
+.tipbox{border-left:4px solid var(--gold);padding:10px 14px;background:color-mix(in srgb,var(--gold) 12%,var(--card));border-radius:0 10px 10px 0}
+table{border-collapse:collapse;width:100%}
+td,th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:.85rem;color:var(--ink-soft)}
+
+.topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px}
+.topic{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}
+.topic:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card))}
+.topic input{width:20px;height:20px;margin-top:3px;accent-color:var(--accent)}
+.topic b{display:block;font-size:.95rem}.topic small{display:block;font-size:.8rem;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<footer style="max-width:760px;margin:24px auto 0;font-size:.8rem;color:var(--ink-soft);text-align:center">Wiskunde 7VJHO · De Resonant · G. Walschap</footer>
+<script src="../../js/config.js?v=2" charset="utf-8"></script>
+<script src="../../js/kern/api.js?v=5" charset="utf-8"></script>
+<script src="../../js/kern/demo.js?v=8" charset="utf-8"></script>
+<script src="../../js/spellen.js?v=1" charset="utf-8"></script>
+<script src="../spel-volg.js?v=1" charset="utf-8"></script> <!-- leerpaden: aanmelding, voortgang en speeltijd -->
+<script>
+/* ===== Vraag-engine rationale getallen (7VJHO, hoofdstuk 3) ===== */
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
+const red = (n, d) => { if (d < 0) { n = -n; d = -d; } const g = gcd(n, d); return [n / g, d / g]; };
+const MIN = "−";
+const sgn = n => (n < 0 ? MIN + Math.abs(n) : String(n));
+const com = s => String(s).replace(".", ",");
+/* breuk als HTML */
+function F(n, d) {
+  if (d === undefined || d === 1) return `<span class="num">${sgn(n)}</span>`;
+  const neg = (n < 0) !== (d < 0);
+  return `${neg ? '<span class="num">' + MIN + "</span>" : ""}<span class="fr"><span>${Math.abs(n)}</span><span>${Math.abs(d)}</span></span>`;
+}
+const Fraw = (t, b) => `<span class="fr"><span>${t}</span><span>${b}</span></span>`;
+const pw = (base, e) => `${base}<sup>${String(e).replace("-", MIN)}</sup>`;
+const par = h => `<span class="par">(</span>${h}<span class="par">)</span>`;
+
+/* staartdeling: geheel deel, vast deel, periode */
+function longDiv(n, d) {
+  const ip = Math.floor(n / d); let r = n % d; const seen = {}; let digits = "";
+  while (r !== 0 && seen[r] === undefined) { seen[r] = digits.length; r *= 10; digits += Math.floor(r / d); r %= d; }
+  if (r === 0) return { ip, pre: digits, per: "" };
+  return { ip, pre: digits.slice(0, seen[r]), per: digits.slice(seen[r]) };
+}
+const decStr = (n, d) => { const L = longDiv(n, d); return L.per ? `${L.ip},${L.pre}${L.per}${L.per}…` : (L.pre ? `${L.ip},${L.pre}` : `${L.ip}`); };
+
+/* ---- invoer lezen ---- */
+const clean = s => String(s).trim().replace(/−/g, "-").replace(/\s+/g, "");
+function parseFrac(s) { const m = clean(s).match(/^(-?\d+)(?:\/(-?\d+))?$/); if (!m) return null; const n = +m[1], d = m[2] === undefined ? 1 : +m[2]; if (d === 0) return null; return [n, d]; }
+function parseNum(s) { const t = clean(s).replace(/[%€]/g, "").replace(",", "."); if (!/^-?\d+(\.\d+)?$/.test(t)) return null; return parseFloat(t); }
+
+/* ---- vraagtypes ---- */
+// breuk-antwoord, altijd vereenvoudigd
+function qFrac(sec, q, n, d, sol, tip) {
+  const [rn, rd] = red(n, d);
+  return { sec, q, kind: "frac", ans: rd === 1 ? String(rn) : rn + "/" + rd, hint: "Typ een breuk zoals 3/4 of een geheel getal.", tip, sol: sol || F(rn, rd),
+    check(inp) {
+      const p = parseFrac(inp); if (!p) return { ok: false, msg: "Typ je antwoord als breuk, bv. 3/4." };
+      const [a, b] = p;
+      if (a * rd !== rn * b) return { ok: false };
+      const [sa, sb] = red(a, b);
+      if (sa !== a * Math.sign(b) || sb !== Math.abs(b)) return { ok: false, msg: "De waarde klopt, maar vereenvoudig je breuk nog." };
+      return { ok: true };
+    } };
+}
+// getal-antwoord (tolerantie)
+function qNum(sec, q, val, sol, tip, unit = "", tol = 1e-9) {
+  return { sec, q, kind: "num", unit, ans: com(+val.toFixed(6)), hint: unit === "%" ? "Typ enkel het getal, bv. 12,5." : "Typ een getal, gebruik een komma voor decimalen.", tip, sol,
+    check(inp) { const v = parseNum(inp); if (v === null) return { ok: false, msg: "Typ een getal." }; return { ok: Math.abs(v - val) <= tol + 1e-9 }; } };
+}
+// exacte schrijfwijze (afronden: nullen tellen mee)
+function qExact(sec, q, str, tip) {
+  return { sec, q, kind: "num", ans: str, hint: "Typ het afgeronde getal, met een komma.", tip, sol: str,
+    check(inp) { const s = clean(inp).replace(".", ","); if (s === str) return { ok: true };
+      const v = parseNum(inp); if (v !== null && Math.abs(v - parseFloat(str.replace(",", "."))) < 1e-9) return { ok: false, msg: "Let op het aantal decimalen: schrijf ook de nullen op het einde." };
+      return { ok: false }; } };
+}
+// meerkeuze
+function qMC(sec, q, opts, correct, sol, tip) {
+  const order = shuffle(opts.map((o, i) => i));
+  return { sec, q, kind: "mc", opts: order.map(i => opts[i]), correctIdx: order.indexOf(correct), tip, sol: sol || opts[correct], check: i => ({ ok: i === order.indexOf(correct) }) };
+}
+
+/* ---- onderdelen ---- */
+const SECTIONS = [
+  { id: 1, t: "Decimale vormen", s: "begrensd, zuiver en gemengd repeterend", tip: "Begrensd: de deling stopt. Zuiver repeterend: de periode begint meteen na de komma. Gemengd: eerst een vast deel, dan de periode. Schrijf de periode altijd twee keer, gevolgd door drie punten." },
+  { id: 2, t: "Afronden", s: "op een gevraagd aantal decimalen", tip: "Kijk naar het eerst weggelaten cijfer: < 5 → behoud, ≥ 5 → verhoog met 1." },
+  { id: 3, t: "Vereenvoudigen", s: "kleinst mogelijke teller en noemer", tip: "Deel teller en noemer door hetzelfde getal tot het niet meer kan." },
+  { id: 4, t: "Gelijknamig maken", s: "dezelfde noemer, dan ordenen", tip: "Twee breuken zijn gelijknamig als ze dezelfde noemer hebben. Door gelijknamig te maken, kan je breuken ordenen." },
+  { id: 5, t: "Percentages", s: "decimaal, breuk en percentage", tip: "Een percentage is een verhouding vergeleken met 100. Breuk → percentage: teller delen door noemer, maal 100." },
+  { id: 6, t: "Getallenas", s: "breuken aanduiden en ordenen", tip: "Verdeel de eenheid in evenveel stukjes als de noemer en neem het aantal stukjes van de teller." },
+  { id: 7, t: "Optellen en aftrekken", s: "eerst gelijknamig maken", tip: "Je kan alleen gelijknamige breuken optellen of aftrekken. a/b + c/d = (a·d + b·c)/(b·d)." },
+  { id: 8, t: "Vermenigvuldigen en delen", s: "delen = maal het omgekeerde", tip: "a/b · c/d = (a·c)/(b·d)   en   a/b : c/d = a/b · d/c." },
+  { id: 9, t: "Machten en wortels", s: "van breuken", tip: "(a/b)ⁿ = aⁿ/bⁿ,   a⁻ⁿ = 1/aⁿ,   (a/b)⁻ⁿ = bⁿ/aⁿ,   √(a/b) = √a/√b." },
+  { id: 10, t: "Rekenregels machten", s: "maal, gedeeld, macht van macht", tip: "xᵐ·xⁿ = xᵐ⁺ⁿ,  xᵐ:xⁿ = xᵐ⁻ⁿ,  (xᵐ)ⁿ = xᵐ·ⁿ,  x¹ = x,  x⁰ = 1,  x⁻ⁿ = 1/xⁿ." },
+  { id: 11, t: "Decimaal → breuk", s: "begrensd en repeterend", tip: "Begrensd: zoveel cijfers na de komma, zoveel nullen in de noemer. Repeterend: vermenigvuldig zodat de periode vóór en juist ná de komma staat, trek af en deel." },
+  { id: 12, t: "Vraagstukken procenten", s: "met een verhoudingstabel", tip: "Zet de hoeveelheid boven en de procenten onder in een verhoudingstabel. Wat je boven doet, doe je ook onder." },
+  { id: 13, t: "Evenredigheden", s: "recht en omgekeerd", tip: "Recht (hoe meer, hoe meer): wat je boven doet, doe je ook onder. Omgekeerd (hoe meer, hoe minder): boven maal → onder gedeeld door." },
+];
+const TIP = id => SECTIONS[id - 1].tip;
+
+const GEN = {
+  1: [
+    () => { // soort
+      const kind = R(0, 2), dens = [[2, 4, 5, 8, 10, 16, 20, 25, 40], [3, 7, 9, 11, 13, 27, 33, 37], [6, 12, 14, 15, 18, 22, 24, 30]][kind];
+      let d = pick(dens), n; do { n = R(1, 2 * d); } while (gcd(n, d) !== 1);
+      return qMC(1, `Welke decimale vorm heeft ${F(n, d)} ?`, ["Begrensd", "Zuiver repeterend", "Gemengd repeterend"], kind, `${F(n, d)} = ${decStr(n, d)} → ${["begrensd", "zuiver repeterend", "gemengd repeterend"][kind]}`, TIP(1));
+    },
+    () => { // schrijfwijze
+      const c = pick([[1, 3], [2, 3], [1, 6], [5, 6], [2, 9], [4, 11], [7, 12], [5, 9], [1, 12], [8, 33], [7, 15]]);
+      const L = longDiv(c[0], c[1]), base = `${L.ip},${L.pre}`;
+      const good = `${base}${L.per}${L.per}…`, once = `${base}${L.per}…`;
+      const v = c[0] / c[1], r2 = com(v.toFixed(2)), three = `${base}${L.per}${L.per}${L.per}`;
+      const opts = [good, once, r2, three].filter((x, i, a) => a.indexOf(x) === i);
+      return qMC(1, `Welke schrijfwijze van ${F(c[0], c[1])} is correct?`, opts, 0, good, TIP(1));
+    },
+  ],
+  2: [
+    () => { // rond af
+      const ip = R(0, 30), dec = String(R(10000, 99999)), k = R(1, 3);
+      const N = BigInt(ip + dec), unit = 10n ** BigInt(5 - k);
+      const rnd = (N + unit / 2n) / unit; let s = rnd.toString().padStart(k + 1, "0");
+      const str = `${s.slice(0, s.length - k)},${s.slice(s.length - k)}`;
+      return qExact(2, `Rond <b>${ip},${dec}</b> af op <b>${k}</b> decima${k === 1 ? "al" : "len"}.`, str, TIP(2));
+    },
+    () => { // breuk op 3 decimalen
+      let d = pick([3, 6, 7, 9, 11, 12, 13, 14, 15]), n; do { n = R(1, 2 * d); } while (gcd(n, d) !== 1 || n % d === 0);
+      const v = Math.floor((2 * n * 1000 + d) / (2 * d)); let s = String(v).padStart(4, "0");
+      const str = `${s.slice(0, -3)},${s.slice(-3)}`;
+      return qExact(2, `Reken uit op 3 decimalen: ${F(n, d)} = ?`, str, TIP(2));
+    },
+  ],
+  3: [
+    () => { let q = R(2, 12), p; do { p = R(1, 3 * q); } while (gcd(p, q) !== 1 || p % q === 0); const k = R(2, 9);
+      return qFrac(3, `Vereenvoudig: ${F(p * k, q * k)}`, p, q, `${F(p * k, q * k)} = ${F(p, q)}  (: ${k})`, TIP(3)); },
+    () => { const pc = pick([4, 5, 8, 12, 15, 20, 25, 30, 35, 40, 45, 60, 64, 75, 80, 85, 90, 120, 125]); const [n, d] = red(pc, 100);
+      return qFrac(3, `Schrijf als breuk en vereenvoudig: <b>${pc}%</b>`, n, d, `${pc}% = ${F(pc, 100)} = ${F(n, d)}`, TIP(3)); },
+  ],
+  4: [
+    () => { // grootste/kleinste
+      let a, b, c, d; do { b = R(2, 12); d = R(2, 12); a = R(1, b + 2); c = R(1, d + 2); } while (b === d || a * d === b * c);
+      const big = R(0, 1) === 1, v1 = a / b, v2 = c / d, ans = (big ? v1 > v2 : v1 < v2) ? 0 : 1;
+      const l = b * d / gcd(b, d);
+      return qMC(4, `Welke breuk is het ${big ? "grootst" : "kleinst"}?`, [F(a, b), F(c, d)], ans,
+        `${F(a, b)} = ${F(a * l / b, l)} en ${F(c, d)} = ${F(c * l / d, l)} → ${[F(a, b), F(c, d)][ans]} is het ${big ? "grootst" : "kleinst"}`, TIP(4));
+    },
+    () => { let b = R(2, 9), a; do { a = R(1, 2 * b); } while (gcd(a, b) !== 1); const k = R(2, 6), N = b * k;
+      return qNum(4, `Maak gelijknamig: ${F(a, b)} = ${Fraw("?", N)}`, a * k, `${F(a, b)} = ${F(a * k, N)}  (teller en noemer · ${k})`, TIP(4)); },
+  ],
+  5: [
+    () => { const pc = pick([3, 5, 8, 12, 17, 25, 35, 40, 45, 60, 72, 99, 12.5, 37.5, 2.5, 150, 200]); const dec = com(String(+(pc / 100).toFixed(4)));
+      return qNum(5, `Schrijf als percentage: <b>${dec}</b> = ? %`, pc, `${dec} = ${com(pc)}%`, TIP(5), "%"); },
+    () => { const d = pick([2, 4, 5, 8, 10, 20, 25, 50]); let n; do { n = R(1, d - 1); } while (gcd(n, d) !== 1); const pc = n * 100 / d;
+      return qNum(5, `Schrijf als percentage: ${F(n, d)} = ? %`, pc, `${F(n, d)} = ${Fraw(com(pc), 100)} = ${com(pc)}%`, TIP(5), "%"); },
+    () => { const x = pick([10, 15, 20, 25, 30, 40, 50, 60, 75, 80]), y = 20 * R(2, 25), r = x * y / 100;
+      return qNum(5, `Reken uit: <b>${x}% van ${y}</b> = ?`, r, `${com(x / 100)} · ${y} = ${com(r)}`, TIP(5)); },
+    () => { const b = R(20, 250), a = R(1, b - 1), r = Math.round(a / b * 10000) / 100;
+      return qNum(5, `Hoeveel procent is <b>${a} van ${b}</b>? Rond af op 2 decimalen (rekentoestel).`, r, `${a} : ${b} · 100 ≈ ${com(r.toFixed(2))}%`, TIP(5), "%", 0.006); },
+  ],
+  6: [
+    () => { // punt op getallenas
+      const n = pick([2, 3, 4, 5]); let k; do { k = R(-2 * n, 3 * n); } while (k % n === 0);
+      const svg = axisSVG(-2, 3, n, k / n);
+      const [cn, cd] = red(k, n); const cand = [[k + 1, n], [k - 1, n], [-k, n], [k, n + 1]].map(([a, b]) => red(a, b))
+        .filter(([a, b]) => !(a === cn && b === cd));
+      const uniq = []; cand.forEach(c => { if (!uniq.some(u => u[0] === c[0] && u[1] === c[1])) uniq.push(c); });
+      const opts = [F(cn, cd), ...uniq.slice(0, 3).map(([a, b]) => F(a, b))];
+      return qMC(6, `Welk getal hoort bij punt <b>P</b>?<div class="axis">${svg}</div>`, opts, 0, `Elke eenheid is in ${n} stukjes verdeeld. P = ${F(k, n)}${cd !== n ? " = " + F(cn, cd) : ""}`, TIP(6));
+    },
+    () => { // kleinste
+      const vals = []; while (vals.length < 3) { const d = R(2, 6), n = R(-2 * d, 2 * d); if (n % d === 0) continue; const [a, b] = red(n, d); if (!vals.some(v => v[0] * b === a * v[1])) vals.push([a, b]); }
+      const small = R(0, 1) === 1; let idx = 0; vals.forEach((v, i) => { const c = v[0] / v[1], best = vals[idx][0] / vals[idx][1]; if (small ? c < best : c > best) idx = i; });
+      return qMC(6, `Welk getal ligt het meest naar ${small ? "links" : "rechts"} op de getallenas?`, vals.map(v => F(v[0], v[1])), idx,
+        `${vals.slice().sort((p, q) => p[0] / p[1] - q[0] / q[1]).map(v => F(v[0], v[1])).join(" &lt; ")}`, TIP(6));
+    },
+  ],
+  7: [
+    () => { let b = R(2, 12), d = R(2, 12), a = R(1, b - 1), c = R(1, d - 1); const plus = R(0, 2) > 0;
+      if (!plus && a * d < c * b) { [a, b, c, d] = [c, d, a, b]; }
+      if (!plus && a * d === c * b) { if (a < b - 1) a++; else c = Math.max(1, c - 1); if (a * d === c * b) return GEN[7][0](); }
+      const l = b * d / gcd(b, d), A = a * l / b, C = c * l / d, n = plus ? A + C : A - C; const [rn, rd] = red(n, l);
+      return qFrac(7, `Reken uit: ${F(a, b)} ${plus ? "+" : "−"} ${F(c, d)} = ?`, n, l, `${F(A, l)} ${plus ? "+" : "−"} ${F(C, l)} = ${F(n, l)}${(rd !== l) ? " = " + F(rn, rd) : ""}`, TIP(7)); },
+    () => { const g = R(1, 5); let b = R(2, 9), a; do { a = R(1, b - 1); } while (gcd(a, b) !== 1); const plus = R(0, 1) === 1;
+      const n = plus ? g * b + a : g * b - a;
+      return qFrac(7, `Reken uit: ${g} ${plus ? "+" : "−"} ${F(a, b)} = ?`, n, b, `${F(g * b, b)} ${plus ? "+" : "−"} ${F(a, b)} = ${F(n, b)}`, TIP(7)); },
+  ],
+  8: [
+    () => { const b = R(2, 10), d = R(2, 10), a = R(1, 9), c = R(1, 9); const [rn, rd] = red(a * c, b * d);
+      return qFrac(8, `Reken uit: ${F(a, b)} · ${F(c, d)} = ?`, a * c, b * d, `${Fraw(a + "·" + c, b + "·" + d)} = ${F(a * c, b * d)}${rd !== b * d ? " = " + F(rn, rd) : ""}`, TIP(8)); },
+    () => { const b = R(2, 10), d = R(2, 10), a = R(1, 9), c = R(1, 9);
+      return qFrac(8, `Reken uit: ${F(a, b)} : ${F(c, d)} = ?`, a * d, b * c, `${F(a, b)} · ${F(d, c)} = ${F(a * d, b * c)}`, TIP(8)); },
+    () => { const g = R(2, 6), b = R(2, 9), a = R(1, 8); const t = R(0, 2);
+      if (t === 0) return qFrac(8, `Reken uit: ${g} · ${F(a, b)} = ?`, g * a, b, `${F(g, 1)} · ${F(a, b)} = ${F(g * a, b)}`, TIP(8));
+      if (t === 1) return qFrac(8, `Reken uit: ${F(a, b)} : ${g} = ?`, a, b * g, `${F(a, b)} · ${F(1, g)} = ${F(a, b * g)}`, TIP(8));
+      return qFrac(8, `Reken uit: ${g} : ${F(a, b)} = ?`, g * b, a, `${F(g, 1)} · ${F(b, a)} = ${F(g * b, a)}`, TIP(8)); },
+  ],
+  9: [
+    () => { let a = R(1, 5), b = R(2, 6); while (gcd(a, b) !== 1) b++; const e = R(2, 3);
+      return qFrac(9, `Reken uit: ${pw(par(F(a, b)), e)} = ?`, a ** e, b ** e, `${Fraw(pw(a, e), pw(b, e))} = ${F(a ** e, b ** e)}`, TIP(9)); },
+    () => { let a = R(1, 5), b = R(2, 6); while (gcd(a, b) !== 1) b++; const e = R(1, 3);
+      return qFrac(9, `Reken uit: ${pw(par(F(a, b)), -e)} = ?`, b ** e, a ** e, `${Fraw(pw(b, e), pw(a, e))} = ${F(b ** e, a ** e)}`, TIP(9)); },
+    () => { const a = R(2, 10), e = a > 4 ? 2 : R(2, 3);
+      return qFrac(9, `Reken uit: ${pw(a, -e)} = ?`, 1, a ** e, `${Fraw(1, pw(a, e))} = ${F(1, a ** e)}`, TIP(9)); },
+    () => { let a = R(1, 10), b = R(2, 12); while (gcd(a, b) !== 1) b++;
+      return qFrac(9, `Reken uit: <span class="sqrt">√</span><span class="rad">${F(a * a, b * b)}</span> = ?`, a, b, `${Fraw("√" + a * a, "√" + b * b)} = ${F(a, b)}`, TIP(9)); },
+  ],
+  10: [
+    () => { const base = pick(["x", "5", "a", par(F(2, 3)), par(F(3, 4)), "7"]); const m = R(2, 9), n = R(2, 9), t = R(0, 2);
+      if (t === 0) return qNum(10, `Schrijf als één macht: ${pw(base, m)} · ${pw(base, n)} = ${pw(base, "?")}`, m + n, `${pw(base, m + n)}  (exponenten optellen)`, TIP(10));
+      if (t === 1) { const M = m + n; return qNum(10, `Schrijf als één macht: ${pw(base, M)} : ${pw(base, n)} = ${pw(base, "?")}`, m, `${pw(base, m)}  (exponenten aftrekken)`, TIP(10)); }
+      const a = R(2, 5), b = R(2, 4);
+      return qNum(10, `Schrijf als één macht: ${pw(par(pw(base, a)), b)} = ${pw(base, "?")}`, a * b, `${pw(base, a * b)}  (exponenten vermenigvuldigen)`, TIP(10)); },
+    () => { let a = R(1, 7), b = R(2, 9); while (gcd(a, b) !== 1) b++; const t = R(0, 1);
+      if (t === 0) return qFrac(10, `Reken uit: ${pw(par(F(a, b)), 0)} = ?`, 1, 1, `${pw(par(F(a, b)), 0)} = 1  (nulde macht)`, TIP(10));
+      return qFrac(10, `Reken uit: ${pw(par(F(a, b)), 1)} = ?`, a, b, `${pw(par(F(a, b)), 1)} = ${F(a, b)}  (eerste macht)`, TIP(10)); },
+    () => { const b = R(2, 3), m = R(3, 6), n = R(1, m - 1), k = R(1, Math.min(3, m - n + 2)); const e = m - n - k;
+      const [nn, dd] = e >= 0 ? [b ** e, 1] : [1, b ** -e];
+      return qFrac(10, `Reken uit: ${pw(b, m)} : ${pw(b, n)} : ${pw(b, k)} = ?`, nn, dd, `${pw(b, e)} = ${F(nn, dd)}`, TIP(10)); },
+  ],
+  11: [
+    () => { const ip = R(0, 25), k = R(1, 3); let dec; do { dec = R(1, 10 ** k - 1); } while (dec % 10 === 0);
+      const neg = R(0, 4) === 0, den = 10 ** k, num = ip * den + dec, ds = String(dec).padStart(k, "0");
+      const [rn, rd] = red(num, den);
+      return qFrac(11, `Schrijf als onvereenvoudigbare breuk: <b>${neg ? MIN : ""}${ip},${ds}</b>`, neg ? -num : num, den, `${F(neg ? -num : num, den)}${rd !== den ? " = " + F(neg ? -rn : rn, rd) : ""}`, TIP(11)); },
+    () => { const c = pick([[1, 3], [2, 3], [7, 3], [4, 9], [13, 9], [4, 11], [16, 11], [1, 6], [5, 6], [7, 12], [73, 30], [1, 15], [19, 22], [5, 18], [137, 110], [28, 9], [7, 45]]);
+      const L = longDiv(c[0], c[1]); const s = `${L.ip},${L.pre}${L.per}${L.per}…`;
+      const a = 10 ** (L.pre.length + L.per.length), b = 10 ** L.pre.length;
+      return qFrac(11, `Schrijf als onvereenvoudigbare breuk: <b>${s}</b>`, c[0], c[1],
+        `${a}x − ${b}x = ${a - b}x → x = ${F(Math.round(c[0] / c[1] * (a - b)), a - b)} = ${F(c[0], c[1])}`, TIP(11)); },
+  ],
+  12: [
+    () => { const P = 20 * R(2, 10), p = pick([10, 15, 20, 25, 30, 40, 50]), k = P * p / 100, N = P - k;
+      const it = pick(["Een jas", "Een paar schoenen", "Een spelconsole", "Een fiets", "Een gsm"]);
+      return qNum(12, `${it} kost normaal € ${P}. In de solden betaal je € ${N}. Met hoeveel procent is de prijs gedaald?`, p,
+        `Korting: ${P} − ${N} = € ${k}. Verhoudingstabel: € ${P} ↔ 100%, € ${k} ↔ <b>${p}%</b>`, TIP(12), "%"); },
+    () => { const x = pick([10, 20, 25, 30, 40, 60, 75]), T = 20 * R(3, 40), r = x * T / 100;
+      const ctx = pick([["leerlingen", "van de", "komt met de fiets"], ["plaatsen", "van de", "is gereserveerd"], ["deelnemers", "van de", "is jonger dan 18"]]);
+      return qNum(12, `${x}% ${ctx[1]} ${T} ${ctx[0]} ${ctx[2]}. Hoeveel ${ctx[0]} zijn dat?`, r,
+        `${T} ↔ 100%  →  : ${100 / gcd(100, x)} en · ${x / gcd(100, x)}  →  <b>${r}</b> ↔ ${x}%`, TIP(12)); },
+    () => { const p = pick([6, 12, 21]), P = 100 * R(1, 9), M = P * (100 + p) / 100;
+      return qNum(12, `Een toestel kost € ${P} zonder btw en € ${com(M)} met btw. Hoeveel procent btw?`, p,
+        `Btw: ${com(M)} − ${P} = € ${com(M - P)}. € ${P} ↔ 100%, € ${com(M - P)} ↔ <b>${p}%</b>`, TIP(12), "%"); },
+  ],
+  13: [
+    () => { const u = pick([2, 3, 4, 5, 6]), per = R(2, 15), m = R(2, 9) * (R(0, 1) ? 1 : 1); let c; do { c = R(2, 12); } while (c === u);
+      const t = pick([["kg appels", "kost", "€", "Hoeveel kost"], ["schriften", "kosten", "€", "Hoeveel kosten"], ["uur", "rijdt een auto", "km", "Hoeveel km in"]]);
+      const tot = u * per;
+      if (t[0] === "uur") return qNum(13, `In ${u} uur rijdt een auto ${tot} km. Hoeveel km rijdt hij in ${c} uur (zelfde snelheid)?`, per * c, `Recht: ${u} uur ↔ ${tot} km, 1 uur ↔ ${per} km, ${c} uur ↔ <b>${per * c} km</b>`, TIP(13));
+      return qNum(13, `${u} ${t[0]} ${t[1]} € ${tot}. ${t[3]} ${c} ${t[0]}?`, per * c, `Recht: ${u} ↔ € ${tot}, 1 ↔ € ${per}, ${c} ↔ <b>€ ${per * c}</b>`, TIP(13)); },
+    () => { // omgekeerd
+      const total = pick([12, 24, 36, 48, 60, 72]); const divs = []; for (let i = 2; i <= total / 2; i++) if (total % i === 0) divs.push(i);
+      const w1 = pick(divs); let w2; do { w2 = pick(divs); } while (w2 === w1);
+      const ctx = pick([["werkers", "klaren een klus in", "dagen"], ["schilders", "schilderen een gebouw in", "dagen"], ["kraantjes", "vullen een zwembad in", "uur"]]);
+      return qNum(13, `${w1} ${ctx[0]} ${ctx[1]} ${total / w1} ${ctx[2]}. Hoeveel ${ctx[2]} met ${w2} ${ctx[0]}?`, total / w2,
+        `Omgekeerd: ${w1} ↔ ${total / w1} ${ctx[2]}, 1 ↔ ${total} ${ctx[2]}, ${w2} ↔ <b>${total / w2} ${ctx[2]}</b>`, TIP(13)); },
+  ],
+};
+function makeQ(sec) { return pick(GEN[sec])(); }
+
+/* getallenas als SVG */
+function axisSVG(a, b, sub, p) {
+  const W = 560, H = 80, x0 = 30, x1 = W - 30, u = (x1 - x0) / (b - a), X = v => x0 + (v - a) * u;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="getallenas"><line x1="${x0 - 10}" y1="40" x2="${x1 + 14}" y2="40" stroke="currentColor" stroke-width="2"/><path d="M${x1 + 14} 40 l-9 -5 v10z" fill="currentColor"/>`;
+  for (let k = a; k <= b; k++) {
+    s += `<line x1="${X(k)}" y1="30" x2="${X(k)}" y2="50" stroke="currentColor" stroke-width="2"/><text x="${X(k)}" y="70" text-anchor="middle" font-size="15" fill="currentColor">${sgn(k)}</text>`;
+    if (k < b) for (let j = 1; j < sub; j++) s += `<line x1="${X(k + j / sub)}" y1="35" x2="${X(k + j / sub)}" y2="45" stroke="currentColor" stroke-width="1" opacity=".6"/>`;
+  }
+  s += `<circle cx="${X(p)}" cy="40" r="7" fill="var(--neg)"/><text x="${X(p)}" y="22" text-anchor="middle" font-size="16" font-weight="700" fill="var(--neg)">P</text></svg>`;
+  return s;
+}
+
+/* ===== Gedeelde vraag-weergave ===== */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+/* toont vraag q in el; roept done(ok) op na "Volgende" */
+function askQuestion(el, q, done, label = "") {
+  el.innerHTML = `<div class="card">
+    ${label ? `<div class="eyebrow">${label}</div>` : ""}
+    <div class="qtext">${q.q}</div>
+    ${q.kind === "mc" ? `<div class="mc">${q.opts.map((o, i) => `<button data-i="${i}">${o}</button>`).join("")}</div>`
+      : `<form class="answer" autocomplete="off"><input inputmode="text" aria-label="Jouw antwoord">${q.unit ? `<span class="unit">${q.unit}</span>` : ""}<button class="btn" type="submit">Controleer</button></form><div class="hint">${q.hint}</div>`}
+    <div class="fbslot"></div></div>`;
+  const slot = $(".fbslot", el);
+  let answered = false;
+  function finish(res) {
+    if (answered) return; answered = true;
+    slot.innerHTML = `<div class="fb ${res.ok ? "ok" : "no"}">
+      <b>${res.ok ? pick(["Juist!", "Knap!", "Helemaal goed!", "Prima!"]) : (res.msg ? "Bijna… " + esc(res.msg) : "Niet juist.")}</b>
+      ${res.ok ? "" : `<div class="sol">Oplossing: ${q.sol}</div><div class="tip">💡 ${esc(q.tip)}</div>`}
+      <div class="row"><button class="btn next" type="button">Volgende ›</button></div></div>`;
+    const nb = $(".next", slot); nb.focus(); nb.onclick = () => done(res.ok);
+  }
+  if (q.kind === "mc") {
+    el.querySelectorAll(".mc button").forEach(b => b.onclick = () => {
+      if (answered) return; const i = +b.dataset.i, res = q.check(i);
+      el.querySelectorAll(".mc button").forEach(x => { x.disabled = true; if (+x.dataset.i === q.correctIdx) x.classList.add("good"); });
+      if (!res.ok) b.classList.add("bad"); finish(res);
+    });
+  } else {
+    const f = $("form", el), inp = $("input", el); inp.focus();
+    f.onsubmit = e => { e.preventDefault(); if (answered) return; if (!inp.value.trim()) { inp.focus(); return; }
+      const res = q.check(inp.value);
+      if (!res.ok && res.msg && /Typ /.test(res.msg)) { $(".hint", el).innerHTML = `<b style="color:var(--neg)">${esc(res.msg)}</b>`; return; }
+      inp.disabled = true; $("button", f).disabled = true; finish(res); };
+  }
+}
+
+/* ===== Oefenarena ℚ ===== */
+const KEY = "oefenarena-q-v1";
+let S = store.get(KEY, { sel: [], n: 10 });
+const save = () => store.set(KEY, S);
+const app = $("#app");
+let game = null;
+
+function start() {
+  app.innerHTML = `<div class="hero card"><div class="eyebrow">Wiskunde 7VJHO · Rationale getallen</div>
+    <h1>Oefenarena <span class="q">ℚ</span></h1>
+    <p class="muted">Kies zelf welke onderdelen je wil oefenen. Bij een fout zie je meteen de oplossing en de regel uit de theorie.</p></div>
+    <div class="card"><div class="row" style="justify-content:space-between"><div class="eyebrow">Onderdelen</div>
+      <div class="row"><button class="btn ghost" id="all" type="button">Alles</button><button class="btn ghost" id="none" type="button">Niets</button></div></div>
+    <div class="topics">${SECTIONS.map(s => `<label class="topic"><input type="checkbox" value="${s.id}" ${S.sel.includes(s.id) ? "checked" : ""}><span><b>3.${s.id} ${esc(s.t)}</b><small>${esc(s.s)}</small></span></label>`).join("")}</div></div>
+    <div class="card"><div class="eyebrow">Aantal vragen</div><div class="row seg">${[10, 20, 30].map(n => `<button class="btn ${S.n === n ? "" : "ghost"}" data-n="${n}" type="button">${n}</button>`).join("")}</div>
+    <div class="row" style="margin-top:16px"><button class="btn gold" id="go">Start met oefenen</button><span class="muted" id="warn"></span></div></div>`;
+  const boxes = () => [...app.querySelectorAll(".topic input")];
+  $("#all").onclick = () => boxes().forEach(b => b.checked = true);
+  $("#none").onclick = () => boxes().forEach(b => b.checked = false);
+  app.querySelectorAll(".seg button").forEach(b => b.onclick = () => { S.n = +b.dataset.n; app.querySelectorAll(".seg button").forEach(x => x.classList.toggle("ghost", x !== b)); });
+  $("#go").onclick = () => {
+    const sel = boxes().filter(b => b.checked).map(b => +b.value);
+    if (!sel.length) { $("#warn").textContent = "Kies minstens één onderdeel."; return; }
+    S.sel = sel; save(); begin(sel, S.n);
+  };
+}
+function begin(sel, n) {
+  let order = []; while (order.length < n) order = order.concat(shuffle(sel));
+  game = { sel, n, order: order.slice(0, n), i: 0, score: {}, wrong: [] };
+  sel.forEach(s => game.score[s] = { ok: 0, tot: 0 });
+  next();
+}
+function next() {
+  if (game.i >= game.n) return end();
+  const sec = game.order[game.i], q = makeQ(sec), good = Object.values(game.score).reduce((a, b) => a + b.ok, 0);
+  app.innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><b>Vraag ${game.i + 1} van ${game.n}</b><span class="muted">score: ${good}</span></div>
+    <div class="progress" style="margin-top:8px"><div style="width:${game.i / game.n * 100}%"></div></div></div><div id="qa"></div>
+    <div class="row"><button class="btn ghost" id="stop" type="button">Stoppen</button></div>`;
+  $("#stop").onclick = end;
+  askQuestion($("#qa"), q, ok => { const sc = game.score[sec]; sc.tot++; if (ok) sc.ok++; else game.wrong.push(sec); game.i++; next(); }, `3.${sec} ${SECTIONS[sec - 1].t}`);
+}
+function end() {
+  const tot = Object.values(game.score).reduce((a, b) => a + b.tot, 0), ok = Object.values(game.score).reduce((a, b) => a + b.ok, 0);
+  if (tot && window.SpelVolg) SpelVolg.resultaat({ juist: ok, totaal: tot, per: game.score }); // leerpaden: ronde bewaren
+  const weak = game.sel.filter(s => game.score[s].tot && game.score[s].ok / game.score[s].tot < 0.75);
+  app.innerHTML = `<div class="card hero"><div class="eyebrow">Resultaat</div><h1>${ok} / ${tot}</h1>
+    <p class="muted" style="margin-top:6px">${tot ? (ok / tot >= .8 ? "Sterk gedaan! 💪" : ok / tot >= .5 ? "Goed bezig, oefen nog wat verder." : "Blijf oefenen, je komt er wel!") : ""}</p></div>
+    <div class="card"><table><tr><th>Onderdeel</th><th>Juist</th></tr>${game.sel.filter(s => game.score[s].tot).map(s => {
+      const sc = game.score[s]; return `<tr><td>3.${s} ${esc(SECTIONS[s - 1].t)}</td><td><b style="color:${sc.ok / sc.tot >= .75 ? "var(--pos)" : "var(--neg)"}">${sc.ok} / ${sc.tot}</b></td></tr>`; }).join("")}</table></div>
+    <div class="row">${weak.length ? `<button class="btn gold" id="weak">Oefen mijn zwakke punten (${weak.length})</button>` : ""}
+      <button class="btn" id="again">Opnieuw, zelfde keuze</button><button class="btn ghost" id="home">Andere onderdelen</button></div>`;
+  if (weak.length) $("#weak").onclick = () => begin(weak, Math.max(10, weak.length * 4));
+  $("#again").onclick = () => begin(game.sel, game.n); $("#home").onclick = start;
+}
+start();
+
+</script>
+</body>
+</html>

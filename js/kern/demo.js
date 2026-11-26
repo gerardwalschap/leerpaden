@@ -138,6 +138,45 @@ const Demo = (() => {
         if (!p_aan) db.inschrijvingen = db.inschrijvingen.filter(i => !(i.ll === id && i.prog === p_programma));
       });
     },
+    // ---------- spellen: toestand per leerling en actieve speeltijd per dag
+    ll_spel_start(db, { p_token, p_spel }) {
+      const l = leerling(db, p_token); ingeschreven(db, l.id, p_spel);
+      db.spelstaat ||= []; db.speltijd ||= [];
+      const st = db.spelstaat.find(x => x.ll === l.id && x.spel === p_spel), dag = new Date().toLocaleDateString('sv-SE');
+      const t = db.speltijd.find(x => x.ll === l.id && x.spel === p_spel && x.dag === dag);
+      return { staat: st ? st.staat : {}, vandaag: t ? t.seconden : 0, voornaam: l.voornaam };
+    },
+    ll_spel_bewaar(db, { p_token, p_spel, p_seconden, p_staat, p_samenvatting }) {
+      const l = leerling(db, p_token); ingeschreven(db, l.id, p_spel);
+      db.spelstaat ||= []; db.speltijd ||= [];
+      const s = Math.max(0, Math.min(300, Math.round(p_seconden || 0))), dag = new Date().toLocaleDateString('sv-SE');
+      if (s) {
+        let t = db.speltijd.find(x => x.ll === l.id && x.spel === p_spel && x.dag === dag);
+        if (!t) { t = { ll: l.id, spel: p_spel, dag, seconden: 0 }; db.speltijd.push(t); }
+        t.seconden += s;
+      }
+      let st = db.spelstaat.find(x => x.ll === l.id && x.spel === p_spel);
+      if (!st) { st = { ll: l.id, spel: p_spel, staat: {}, samenvatting: null, bijgewerkt: null }; db.spelstaat.push(st); }
+      if (p_staat) { st.staat = p_staat; st.samenvatting = p_samenvatting || null; }
+      st.bijgewerkt = nu();
+    },
+    lk_spellen(db, { p_token }) {
+      leerkracht(db, p_token);
+      const d = new Date(), dag = d.toLocaleDateString('sv-SE');
+      const ma = new Date(d); ma.setDate(d.getDate() - ((d.getDay() + 6) % 7)); const week = ma.toLocaleDateString('sv-SE');
+      const rijen = new Map(), rij = (ll, spel) => { const k = ll + '|' + spel; if (!rijen.has(k)) rijen.set(k, { leerling: ll, spel, vandaag: 0, week: 0, totaal: 0, dagen: 0, samenvatting: null, laatst: null }); return rijen.get(k); };
+      (db.speltijd || []).forEach(t => { const r = rij(t.ll, t.spel); r.totaal += t.seconden; r.dagen++; if (t.dag === dag) r.vandaag += t.seconden; if (t.dag >= week) r.week += t.seconden; });
+      (db.spelstaat || []).forEach(s => { const r = rij(s.ll, s.spel); r.samenvatting = s.samenvatting; r.laatst = s.bijgewerkt; });
+      return [...rijen.values()];
+    },
+    lk_spel_dagen(db, { p_token, p_id, p_spel }) {
+      leerkracht(db, p_token);
+      return (db.speltijd || []).filter(t => t.ll === p_id && t.spel === p_spel).map(t => ({ dag: t.dag, seconden: t.seconden })).sort((a, b) => b.dag.localeCompare(a.dag));
+    },
+    lk_spel_wissen(db, { p_token, p_id, p_spel }) {
+      leerkracht(db, p_token);
+      db.spelstaat = (db.spelstaat || []).filter(s => !(s.ll === p_id && s.spel === p_spel));
+    },
     lk_backup(db, { p_token }) {
       leerkracht(db, p_token);
       const { sessies, ...rest } = db; void sessies;

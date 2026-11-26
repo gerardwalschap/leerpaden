@@ -19,7 +19,9 @@
   const vandaag = () => new Date().toLocaleDateString('sv-SE');
   const bestandsnaam = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
   const gebruikersnaamVoor = (vn, n) => (n ? vn + '.' + n : vn).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9.]/g, '');
-  const progTitel = (code) => { const P = Leerpaden.vind(code); const d = S.dbProgs.find(x => x.code === code); return P ? P.titel : d ? d.titel : code; };
+  const SPELLEN = () => typeof Spellen !== 'undefined' ? Spellen.lijst : [];
+  const spelVind = (code) => typeof Spellen !== 'undefined' ? Spellen.vind(code) : null;
+  const progTitel = (code) => { const P = Leerpaden.vind(code) || spelVind(code); const d = S.dbProgs.find(x => x.code === code); return P ? (P.icoon ? P.icoon + ' ' : '') + P.titel : d ? d.titel : code; };
 
   function info(st, nr) {
     const geslaagd = st.geslaagd.includes(nr);
@@ -88,13 +90,15 @@
     const progs = Leerpaden.lijst;
     return `${API.DEMO ? '<div class="demo-band">DEMO — gegevens blijven enkel in deze browser · leerkracht-wachtwoord: demo · <a href="index.html">naar de leerlingenpagina</a></div>' : ''}
       <header class="balk"><div class="schoollogo" role="img" aria-label="De Resonant"></div>
-        <div class="logo">${esc(CONFIG.TITEL || 'Leerpaden')}<small>Leerkracht${S.P && !['alle', 'boom', 'afdruk'].includes(S.view) ? ' · ' + esc(S.P.titel) : ''}</small></div>
+        <div class="logo">${esc(CONFIG.TITEL || 'Leerpaden')}<small>Leerkracht${S.P && !['alle', 'boom', 'afdruk', 'spellen', 'spel'].includes(S.view) ? ' · ' + esc(S.P.titel) : ''}</small></div>
         ${S.token ? `<div class="rechts"><button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>
       ${S.token && S.view !== 'login' ? `<nav class="progtabs">
         <button class="ptab ${S.view === 'boom' ? 'actief' : ''}" data-a="boom" data-niveau="${S.boomVak ? 'vak' : S.boomKlas ? 'klas' : 'klassen'}" data-klas="${esc(S.boomKlas || '')}" data-vak="${esc(S.boomVak || '')}">🏫 Klassen en leerpaden</button>
-        ${S.P && !['boom', 'alle', 'afdruk'].includes(S.view) ? `<button class="ptab actief" data-a="overzicht">${esc(S.P.titel)}</button>` : ''}
+        ${S.P && !['boom', 'alle', 'afdruk', 'spellen', 'spel'].includes(S.view) ? `<button class="ptab actief" data-a="overzicht">${esc(S.P.titel)}</button>` : ''}
+        ${S.view === 'spel' && spelVind(S.spel) ? `<button class="ptab actief" data-a="openspel" data-code="${esc(S.spel)}">${esc(progTitel(S.spel))}</button>` : ''}
         <button class="ptab ${S.view === 'alle' ? 'actief' : ''}" data-a="alle">👥 Alle leerlingen</button>
+        ${SPELLEN().length ? `<button class="ptab ${S.view === 'spellen' ? 'actief' : ''}" data-a="spellen">🎮 Spellen</button>` : ''}
         <button class="ptab ${S.view === 'afdruk' ? 'actief' : ''}" data-a="afdruk">🖨️ Afdrukcentrum</button></nav>` : ''}`;
   }
   function render() {
@@ -106,6 +110,8 @@
     if (S.view === 'alle') h = vAlle();
     if (S.view === 'boom') h = vBoom();
     if (S.view === 'afdruk') h = vAfdruk();
+    if (S.view === 'spellen') h = vSpellen();
+    if (S.view === 'spel') h = vSpel();
     app.innerHTML = kop() + `<main class="breed">${S.melding ? `<div class="melding ok">${S.melding}</div>` : ''}${h}</main>`;
     S.melding = '';
     W.renderIn(app);
@@ -323,7 +329,7 @@
       return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> › ${esc(klas.code)}</p>
         <h1>${esc(klas.code)}</h1><p>Kies een vak.</p>
         <div class="tegels">${klas.vakken.map(v => {
-          const V = C.vakken[v], hs = V.hoofdstukken, met = hs.filter(h => (h.leerpaden || []).some(bestaat) || (h.extern || []).length).length;
+          const V = C.vakken[v], hs = V.hoofdstukken, met = hs.filter(h => (h.leerpaden || []).some(bestaat) || (h.extern || []).length || (h.spellen || []).some(spelVind)).length;
           return `<button class="tegel" data-a="boom" data-niveau="vak" data-klas="${esc(klas.code)}" data-vak="${esc(v)}">
             <div class="tegel-titel">${esc(V.naam)}</div><div class="klein">map ${esc(V.map)}</div>
             <div class="klein">${hs.length} hoofdstukken · ${met} met leerpad</div></button>`;
@@ -350,6 +356,16 @@
               <span class="vul"></span>
               ${ll.length && g < ll.length ? `<button class="licht klein-knop" data-a="klaskoppel" data-code="${esc(code)}" data-klas="${esc(klas.code)}">Hele ${esc(klas.code)} koppelen</button>` : ''}
               <button class="licht klein-knop" data-a="openlp" data-code="${esc(code)}" data-klas="${esc(klas.code)}" data-vak="${esc(vak)}">Opvolgen →</button></div>`;
+          }),
+          ...(h.spellen || []).filter(spelVind).map(code => {
+            const SP = spelVind(code), g = gekoppeld(code, ll), tot = (S.alle || []).filter(l => l.programmas.includes(code)).length;
+            return `<div class="lp-regel">
+              <button class="link vet" data-a="openspel" data-code="${esc(code)}">${SP.icoon} ${esc(SP.titel)}</button>
+              <span class="etiket ${g ? 'groen' : 'grijs'}">${g ? `${g}/${ll.length} van ${esc(klas.code)} gekoppeld` : `niemand van ${esc(klas.code)} gekoppeld`}</span>
+              ${tot > g ? `<span class="klein">(${tot} in totaal)</span>` : ''}
+              <span class="vul"></span>
+              ${ll.length && g < ll.length ? `<button class="licht klein-knop" data-a="klaskoppel" data-code="${esc(code)}" data-klas="${esc(klas.code)}">Hele ${esc(klas.code)} koppelen</button>` : ''}
+              <button class="licht klein-knop" data-a="openspel" data-code="${esc(code)}">Speeltijd →</button></div>`;
           }),
           ...(h.extern || []).map(e => `<div class="lp-regel"><a href="${esc(e.url)}" target="_blank" rel="noopener" class="vet">${esc(e.titel)}</a>
               <span class="etiket oranje">oud platform</span> <span class="klein">${esc(e.opm || '')}</span></div>`),
@@ -457,6 +473,107 @@
   }
 
   // Leerpaden gegroepeerd per vak (volgens de catalogus), eventueel eerst de vakken van één klas.
+  // ---------- spellen: speeltijd en voortgang
+  const spelData = () => S.spelData || [];
+  const spelRij = (id, code) => spelData().find(r => r.leerling === id && r.spel === code) || null;
+  const tijd = (sec) => { sec = sec || 0; if (sec < 60) return sec ? '< 1 min' : '—'; const m = Math.round(sec / 60); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} u ${String(m % 60).padStart(2, '0')}`; };
+  const balk = (pct) => `<span class="spelbalk" title="${pct}%"><i style="width:${Math.max(0, Math.min(100, pct || 0))}%"></i></span>`;
+  // leerlingen die aan het spel gekoppeld zijn, of er (vroeger) gegevens in hebben
+  const spelLeerlingen = (code) => (S.alle || []).filter(l => l.programmas.includes(code) || spelRij(l.id, code));
+  async function laadSpellen() { await laadAlle(); S.spelData = await roep('lk_spellen', {}); }
+  const SPELSTIJL = `<style>.spelbalk{display:inline-block;width:70px;height:8px;border-radius:4px;background:#e3e8ef;vertical-align:middle;overflow:hidden;margin-right:6px}
+    .spelbalk i{display:block;height:100%;background:var(--groen)} table.spelmatrix td.cel{cursor:pointer;white-space:nowrap} table.spelmatrix td.cel:hover{background:#f1f5fa}
+    table.spelmatrix th button.link{white-space:normal;text-align:left} a.knop.licht{background:transparent;color:var(--blauw);text-decoration:none}</style>`;
+
+  function vSpellen() {
+    const codes = SPELLEN().map(x => x.code);
+    const alle = (S.alle || []).filter(l => codes.some(c => l.programmas.includes(c) || spelRij(l.id, c)));
+    const ll = filter(alle);
+    const kol = SPELLEN().filter(x => ll.some(l => l.programmas.includes(x.code) || spelRij(l.id, x.code)));
+    const wk = (l) => kol.reduce((a, x) => a + ((spelRij(l.id, x.code) || {}).week || 0), 0);
+    const tt = (l) => kol.reduce((a, x) => a + ((spelRij(l.id, x.code) || {}).totaal || 0), 0);
+    return `${SPELSTIJL}<div class="werkbalk"><h1 class="vul" style="margin:0">🎮 Spellen <span class="klein">(${alle.length} leerlingen gekoppeld)</span></h1>
+        <button class="licht" data-a="alle">Leerlingen koppelen</button>
+        <button class="licht" data-a="spellen">Vernieuwen</button>
+        ${ll.length ? '<button class="licht" data-a="spelcsv">Overzicht (Excel)</button>' : ''}</div>
+      <p class="klein">Actieve speeltijd: enkel de tijd waarin het spel op het scherm staat én de leerling iets doet (na 2 minuten niets doen stopt de klok).
+        Per cel: speeltijd <b>deze week</b> / <b>totaal</b> en hoever de leerling geraakt is. Klik op een cel voor de details per dag, of op een spel voor de volledige lijst.
+        Koppelen doe je bij <button class="link" data-a="boom" data-niveau="klassen">Klassen en leerpaden</button> (7VJHO › Wiskunde › Spellen) of bij <button class="link" data-a="alle">Alle leerlingen</button>.</p>
+      ${alle.length ? filterbalk(alle) : ''}
+      ${!alle.length ? '<div class="kaart"><p>Nog niemand is aan een spel gekoppeld.</p></div>' : !ll.length ? '<div class="kaart"><p>Geen leerlingen voor deze filter.</p></div>' : `
+      <div class="kaart tabelwrap"><table class="lijst spelmatrix">
+        <tr><th>Leerling</th>${kol.map(x => `<th><button class="link vet" data-a="openspel" data-code="${esc(x.code)}">${x.icoon} ${esc(x.titel)}</button></th>`).join('')}<th>Samen<div class="klein">week / totaal</div></th></tr>
+        ${ll.map(l => `<tr><td><b>${esc(l.naam)} ${esc(l.voornaam)}</b><div class="klein">${esc(l.klas)}</div></td>
+          ${kol.map(x => {
+            const r = spelRij(l.id, x.code), gk = l.programmas.includes(x.code);
+            if (!gk && !r) return '<td class="klein">—</td>';
+            const sv = r && r.samenvatting;
+            return `<td class="cel" data-a="speldagen" data-id="${l.id}" data-code="${esc(x.code)}" title="${esc(sv ? sv.tekst : 'nog niet gespeeld')}">
+              <b>${tijd(r && r.week)}</b> / ${tijd(r && r.totaal)}${gk ? '' : ' <span class="etiket grijs">ontkoppeld</span>'}<br>${balk(sv ? sv.pct : 0)}<span class="klein">${sv ? sv.pct + '%' : 'niet gespeeld'}</span></td>`;
+          }).join('')}
+          <td><b>${tijd(wk(l))}</b> / ${tijd(tt(l))}</td></tr>`).join('')}
+      </table></div>
+      <p class="klein legende">${balk(60)} = hoever de leerling geraakt is in het spel (zalen, zones of delen gehaald; bij de oefenarena's: aandeel onderdelen geoefend; bij de grafiekdetective: % juist).</p>`}`;
+  }
+
+  function vSpel() {
+    const SP = spelVind(S.spel); if (!SP) return '<p>Onbekend spel.</p>';
+    const alle = spelLeerlingen(S.spel), ll = filter(alle);
+    const som = (k) => ll.reduce((a, l) => a + ((spelRij(l.id, S.spel) || {})[k] || 0), 0);
+    return `${SPELSTIJL}<p class="klein"><button class="link" data-a="spellen">🎮 Spellen</button> › ${esc(SP.titel)}</p>
+      <div class="werkbalk"><h1 class="vul" style="margin:0">${SP.icoon} ${esc(SP.titel)} <span class="klein">(${alle.length} leerlingen)</span></h1>
+        <a class="knop licht" href="${esc(new URL((location.pathname.includes('/test/') ? '../' : '') + 'spellen/' + SP.map + '/?bekijk=1', location.href).href)}" target="_blank" rel="noopener">Spel bekijken ↗</a>
+        <button class="licht" data-a="alle">Leerlingen koppelen</button>
+        <button class="licht" data-a="openspel" data-code="${esc(S.spel)}">Vernieuwen</button>
+        ${ll.length ? '<button class="licht" data-a="spelcsv" data-code="' + esc(S.spel) + '">Overzicht (Excel)</button>' : ''}</div>
+      <p class="klein">${esc(SP.sub)}. Speeltijd = actieve tijd (spel op het scherm en de leerling doet iets). Deze week = vanaf maandag.</p>
+      ${alle.length ? filterbalk(alle) : ''}
+      ${!alle.length ? `<div class="kaart"><p>Nog niemand is aan dit spel gekoppeld. Koppel bij <button class="link" data-a="alle">Alle leerlingen</button> (+ leerpad → Spellen) of via Klassen en leerpaden → 7VJHO → Wiskunde → <i>Hele klas koppelen</i>.</p></div>` : `
+      <div class="kaart tabelwrap"><table class="lijst">
+        <tr><th>Leerling</th><th>Vandaag</th><th>Deze week</th><th>Totaal</th><th>Dagen</th><th>Hoever geraakt</th><th>Laatst gespeeld</th><th></th></tr>
+        ${ll.map(l => {
+          const r = spelRij(l.id, S.spel) || {}, sv = r.samenvatting, gk = l.programmas.includes(S.spel);
+          return `<tr class="klik" data-a="speldagen" data-id="${l.id}" data-code="${esc(S.spel)}">
+            <td><b>${esc(l.naam)} ${esc(l.voornaam)}</b><div class="klein">${esc(l.klas)}${gk ? '' : ' · <span class="etiket grijs">ontkoppeld</span>'}</div></td>
+            <td>${tijd(r.vandaag)}</td><td>${tijd(r.week)}</td><td><b>${tijd(r.totaal)}</b></td><td>${r.dagen || 0}</td>
+            <td>${sv ? `${balk(sv.pct)}<span class="klein">${esc(sv.tekst)}</span>` : '<span class="klein">nog niet gespeeld</span>'}</td>
+            <td class="klein">${datum(r.laatst)}</td>
+            <td><button class="licht klein-knop" data-a="speldagen" data-id="${l.id}" data-code="${esc(S.spel)}">Per dag</button></td></tr>`;
+        }).join('')}
+        <tr><td><b>Samen</b> <span class="klein">(${ll.length})</span></td><td>${tijd(som('vandaag'))}</td><td>${tijd(som('week'))}</td><td><b>${tijd(som('totaal'))}</b></td><td colspan="4"></td></tr>
+      </table></div>`}`;
+  }
+
+  async function spelDagen(id, code) {
+    const l = (S.alle || []).find(x => x.id === id), SP = spelVind(code); if (!l || !SP) return;
+    const dagen = await roep('lk_spel_dagen', { p_id: id, p_spel: code }), r = spelRij(id, code) || {}, sv = r.samenvatting;
+    const dg = (d) => new Date(d + 'T12:00:00').toLocaleDateString('nl-BE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const wis = await modaal(`${esc(l.voornaam)} ${esc(l.naam)} · ${SP.icoon} ${esc(SP.titel)}`, `${SPELSTIJL}
+      <p><b>Hoever geraakt:</b> ${sv ? `${balk(sv.pct)}${esc(sv.tekst)}` : 'nog niet gespeeld'}</p>
+      <p><b>Speeltijd:</b> vandaag ${tijd(r.vandaag)} · deze week ${tijd(r.week)} · totaal ${tijd(r.totaal)}${r.laatst ? ` · laatst gespeeld ${datum(r.laatst)}` : ''}</p>
+      ${dagen.length ? `<div class="tabelwrap" style="max-height:300px;overflow:auto"><table class="lijst"><tr><th>Dag</th><th>Speeltijd</th></tr>
+        ${dagen.map(d => `<tr><td>${dg(d.dag)}</td><td>${tijd(d.seconden)}</td></tr>`).join('')}</table></div>` : '<p class="klein">Nog geen speeltijd.</p>'}`,
+      [...(sv ? [['Voortgang wissen…', 'wis', 'licht']] : []), ['Sluiten', null]]);
+    if (wis !== 'wis') return;
+    const zeker = await modaal('Voortgang wissen?', `<p>De voortgang van <b>${esc(l.voornaam)} ${esc(l.naam)}</b> in <b>${esc(SP.titel)}</b> wordt gewist: de leerling begint opnieuw. De speeltijd blijft bewaard. Dit kan je niet ongedaan maken.</p>`,
+      [['Annuleren', 0, 'licht'], ['Wissen', 1, 'rood']]);
+    if (!zeker) return;
+    await roep('lk_spel_wissen', { p_id: id, p_spel: code });
+    await laadSpellen(); S.melding = `Voortgang van ${esc(l.voornaam)} ${esc(l.naam)} in ${esc(SP.titel)} gewist.`; render();
+  }
+  function spelCSV(code) {
+    const lijst = code ? [spelVind(code)] : SPELLEN();
+    const codes = lijst.map(x => x.code);
+    const ll = filter((S.alle || []).filter(l => codes.some(c => l.programmas.includes(c) || spelRij(l.id, c))));
+    const min = (s) => String(Math.round((s || 0) / 6) / 10).replace('.', ',');
+    const kop = ['Klas', 'Naam', 'Voornaam', ...lijst.flatMap(x => [`${x.titel}: min vandaag`, `${x.titel}: min deze week`, `${x.titel}: min totaal`, `${x.titel}: hoever (%)`, `${x.titel}: voortgang`])];
+    const rijen = ll.map(l => [l.klas, l.naam, l.voornaam, ...lijst.flatMap(x => {
+      const r = spelRij(l.id, x.code); if (!r && !l.programmas.includes(x.code)) return ['', '', '', '', ''];
+      const sv = r && r.samenvatting; return [min(r && r.vandaag), min(r && r.week), min(r && r.totaal), sv ? sv.pct : '', sv ? sv.tekst : 'nog niet gespeeld'];
+    })]);
+    download(`Speeltijd_${code ? bestandsnaam(lijst[0].titel) : 'spellen'}_${bestandsnaam(S.klas || 'alle')}_${vandaag()}.csv`, csv([kop, ...rijen]), 'text/csv;charset=utf-8');
+  }
+
   function lpGroepen(klasnaam) {
     const C = Catalogus.C, kl = klasnaamKlas(klasnaam), gezien = new Set(), groepen = [];
     const vakken = Object.keys(C.vakken).sort((x, y) => (kl && kl.vakken.includes(y) ? 1 : 0) - (kl && kl.vakken.includes(x) ? 1 : 0));
@@ -464,8 +581,11 @@
       const V = C.vakken[vak], codes = [];
       for (const h of V.hoofdstukken) for (const c of (h.leerpaden || [])) if (!gezien.has(c) && Leerpaden.vind(c)) { gezien.add(c); codes.push(c); }
       if (codes.length) groepen.push({ titel: `${V.naam} · ${Catalogus.klassenMetVak(vak).join(' · ')}`, eigen: !!(kl && kl.vakken.includes(vak)), codes });
+      const sp = [];
+      for (const h of V.hoofdstukken) for (const c of (h.spellen || [])) if (!gezien.has(c) && spelVind(c)) { gezien.add(c); sp.push(c); }
+      if (sp.length) groepen.push({ titel: `🎮 Spellen · ${Catalogus.klassenMetVak(vak).join(' · ')}`, eigen: !!(kl && kl.vakken.includes(vak)), codes: sp });
     }
-    const rest = Leerpaden.lijst.map(p => p.code).filter(c => !gezien.has(c));
+    const rest = [...Leerpaden.lijst, ...SPELLEN()].map(p => p.code).filter(c => !gezien.has(c));
     if (rest.length) groepen.push({ titel: 'Overige leerpaden', eigen: false, codes: rest });
     return groepen;
   }
@@ -846,7 +966,8 @@
 
   // ---------- laden
   async function laadProgrammas() {
-    S.dbProgs = await roep('lk_programmas', { p_lijst: Leerpaden.lijst.map(p => ({ code: p.code, titel: p.titel, eenmalig: !!p.eenmalig })) });
+    S.dbProgs = await roep('lk_programmas', { p_lijst: [...Leerpaden.lijst.map(p => ({ code: p.code, titel: p.titel, eenmalig: !!p.eenmalig })),
+      ...SPELLEN().map(p => ({ code: p.code, titel: 'Spel: ' + p.titel, eenmalig: false }))] });
     // Standaard-slaagdrempel van een nieuw leerpad (bv. drempel: 70 in het programmabestand), zolang er nog geen leerlingen gekoppeld zijn.
     for (const P of Leerpaden.lijst.filter(p => p.drempel)) {
       const db = S.dbProgs.find(x => x.code === P.code);
@@ -933,6 +1054,10 @@
           await laadAlle(); S.melding = `${nieuw.length} leerling(en) van ${esc(k)} gekoppeld aan ${esc(progTitel(code))}.`; return render();
         }
         if (a.startsWith('afd')) return afdActie(a, el);
+        if (a === 'spellen') { await laadSpellen(); S.view = 'spellen'; render(); return window.scrollTo(0, 0); }
+        if (a === 'openspel') { S.spel = el.dataset.code; API.sessie.set('lk-spel', S.spel); await laadSpellen(); S.view = 'spel'; render(); return window.scrollTo(0, 0); }
+        if (a === 'speldagen') return await spelDagen(el.dataset.id, el.dataset.code);
+        if (a === 'spelcsv') return spelCSV(el.dataset.code || null);
         if (a === 'prog') { S.prog = el.dataset.code; S.P = Leerpaden.vind(S.prog); API.sessie.set('lk-prog', S.prog); await naarOverzicht(); return render(); }
         if (a === 'overzicht') { await naarOverzicht(); return render(); }
         if (a === 'alle') { await laadAlle(); S.view = 'alle'; S.nieuw = null; return render(); }

@@ -1,0 +1,320 @@
+<meta charset="utf-8">
+<title>Grafiekdetective</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: one centred "dossier" column on millimeter paper; case card, graph, question, feedback stack vertically */
+:root{
+  --paper:#F7FAFD; --grid:#DCE7F2; --grid-strong:#C3D5E8;
+  --ink:#1F2A36; --muted:#5B6B7C; --navy:#1F4E79; --card:#FFFFFF; --line:#D3DEE9;
+  --marker:#E36C09; --marker-soft:#FDEBDC; --good:#1E7D4F; --good-soft:#E2F3EA; --bad:#B4322A; --bad-soft:#F8E3E1;
+  --curve:#1F4E79; --shadow:0 1px 2px rgba(31,78,121,.08),0 6px 20px rgba(31,78,121,.07);
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1822; --grid:#1A2735; --grid-strong:#243548; --ink:#E6EEF6; --muted:#97A9BB; --navy:#8DB8E3; --card:#152230; --line:#2A3B4E;
+  --marker:#F28A3A; --marker-soft:#3A2617; --good:#5CC891; --good-soft:#15321F; --bad:#F07B71; --bad-soft:#3A1A18; --curve:#8DB8E3;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F1822; --grid:#1A2735; --grid-strong:#243548; --ink:#E6EEF6; --muted:#97A9BB; --navy:#8DB8E3; --card:#152230; --line:#2A3B4E;
+  --marker:#F28A3A; --marker-soft:#3A2617; --good:#5CC891; --good-soft:#15321F; --bad:#F07B71; --bad-soft:#3A1A18; --curve:#8DB8E3;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+  linear-gradient(var(--grid-strong) 1px,transparent 1px),linear-gradient(90deg,var(--grid-strong) 1px,transparent 1px);
+  background-size:10px 10px,10px 10px,50px 50px,50px 50px}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,svg:focus-visible{outline:3px solid var(--marker);outline-offset:2px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;min-width:0}
+.eyebrow{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--marker)}
+.btn{border:0;border-radius:999px;padding:12px 26px;font-weight:700;background:var(--navy);color:var(--card);font-size:1rem}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--navy);border:2px solid var(--navy)}
+
+/* start */
+.hero{padding:28px 24px}
+.hero h1{font-size:clamp(2.4rem,7vw,3.6rem);font-weight:800;color:var(--navy);letter-spacing:-.02em}
+.hero h1 span{color:var(--marker)}
+.hero p{max-width:58ch;color:var(--ink);margin:12px 0 0}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:20px 0}
+.rule{border:1px dashed var(--grid-strong);border-radius:10px;padding:12px 14px;font-size:.95rem}
+.rule b{display:block;font-family:var(--f-display);font-size:1.05rem;color:var(--navy)}
+.startrow{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-weight:700}
+.chip[aria-pressed="true"]{border-color:var(--navy);background:var(--navy);color:var(--card)}
+.best{color:var(--muted);font-size:.95rem}
+
+/* hud */
+.hud{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.progress{flex:1 1 200px;height:10px;border-radius:99px;background:var(--grid-strong);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--marker);width:0;transition:width .4s}
+.stat{font-weight:700}.stat small{font-weight:400;color:var(--muted);margin-right:4px}
+.streak{color:var(--marker)}
+
+/* case */
+.case h2{font-size:1.45rem;color:var(--navy)}
+.case p{margin:6px 0 0}
+.formula{display:inline-block;margin-top:10px;font-weight:700;color:var(--navy);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-variant-numeric:tabular-nums}
+.graphbox{margin-top:14px;overflow-x:auto}
+svg.graph{display:block;width:100%;height:auto;max-width:100%;touch-action:manipulation;user-select:none}
+svg.graph.clickable{cursor:crosshair}
+.g-grid{stroke:var(--grid-strong);stroke-width:1}
+.g-axis{stroke:var(--muted);stroke-width:1.5}
+.g-tick{fill:var(--muted);font:13px var(--f-body);font-variant-numeric:tabular-nums}
+.g-lab{fill:var(--ink);font:600 13px var(--f-body)}
+.g-curve{fill:none;stroke:var(--curve);stroke-width:3;stroke-linejoin:round}
+.g-guide{stroke:var(--marker);stroke-width:1.5;stroke-dasharray:4 4}
+.g-dot{fill:var(--marker);stroke:var(--card);stroke-width:2}
+.g-ok{fill:var(--good);stroke:var(--card);stroke-width:2}
+.g-no{fill:var(--bad);stroke:var(--card);stroke-width:2}
+.g-mark{stroke:var(--marker);stroke-width:2;stroke-dasharray:6 4;fill:none}
+.g-seg{fill:none;stroke:var(--marker);stroke-width:7;stroke-linecap:round;opacity:.55}
+.g-band{fill:var(--marker);opacity:.2}
+.g-mlab{fill:var(--marker);font:700 13px var(--f-body);paint-order:stroke;stroke:var(--card);stroke-width:4px}
+
+/* question */
+.q h3{font-size:1.25rem;font-weight:700}
+.hint{color:var(--muted);font-size:.95rem;margin-top:6px}
+.opts{display:grid;gap:10px;margin-top:14px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px 14px;width:100%}
+.opt:hover:not(:disabled){border-color:var(--navy)}
+.opt .k{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--paper);color:var(--navy);border:1px solid var(--line);font-size:.9rem}
+.opt span:last-child{min-width:0}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.feedback{border-radius:12px;padding:14px 16px;margin-top:14px}
+.feedback.good{background:var(--good-soft);border:1px solid var(--good)}
+.feedback.bad{background:var(--bad-soft);border:1px solid var(--bad)}
+.feedback b.v{font-family:var(--f-display);font-size:1.15rem;display:block;margin-bottom:2px}
+.feedback.good b.v{color:var(--good)}.feedback.bad b.v{color:var(--bad)}
+.nextrow{display:flex;justify-content:flex-end;margin-top:14px}
+.pop{font-weight:700;color:var(--good);margin-left:6px}
+
+/* end */
+.end h2{font-size:2rem;color:var(--navy)}
+.rank{font-family:var(--f-display);font-weight:800;font-size:clamp(1.8rem,6vw,2.6rem);color:var(--marker);margin:6px 0}
+.big{display:flex;gap:28px;flex-wrap:wrap;margin:14px 0;font-variant-numeric:tabular-nums}
+.big div{font-size:.9rem;color:var(--muted)}
+.big b{display:block;font-family:var(--f-display);font-size:2.2rem;color:var(--ink);line-height:1}
+.review{display:grid;gap:10px;margin-top:10px}
+.review .item{border-left:0;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.95rem}
+.review .item b{color:var(--navy)}
+@media (max-width:520px){.g-tick{font-size:20px}.g-lab{font-size:20px}.g-mlab{font-size:20px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:shake .3s}
+</style>
+
+<div class="wrap" id="app"></div>
+
+<script src="../../js/config.js?v=2" charset="utf-8"></script>
+<script src="../../js/kern/api.js?v=5" charset="utf-8"></script>
+<script src="../../js/kern/demo.js?v=8" charset="utf-8"></script>
+<script src="../../js/spellen.js?v=1" charset="utf-8"></script>
+<script src="../spel-volg.js?v=1" charset="utf-8"></script> <!-- leerpaden: aanmelding, voortgang en speeltijd -->
+<script>
+(function(){
+const fmt=(v,d=1)=>{const r=Math.round(v*10**d)/10**d;return String(r).replace('.',',')};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* ---------- Situaties ---------- */
+const CASES=[
+{id:"park",title:"Pretpark op een zomerdag",intro:"Een pretpark gaat open om 10 u. Het aantal bezoekers B dat op dat moment in het park is, t uur na de opening:",
+ formula:"B(t) = 30t²(9 − t)   met 0 ≤ t ≤ 9",f:t=>30*t*t*(9-t),x:[0,9],y:[0,3600],xt:1,yt:500,xl:"t (uur na opening)",yl:"B (bezoekers)",
+ qs:[
+ {t:"mc",q:"Om hoe laat is het het drukst in het park?",o:["Om 16 u","Om 6 u","Om 15 u","Om 19 u"],u:"De top ligt bij t = 6. Het park opent om 10 u, dus 10 u + 6 u = 16 u.",m:[{k:"pt",x:6,l:"top: t = 6"}]},
+ {t:"click",q:"Klik op de grafiek op het moment waarop het park sluit.",ok:x=>x>8.6,u:"Om 19 u (t = 9) zijn er geen bezoekers meer: dat is het nulpunt aan het einde van het domein.",m:[{k:"pt",x:9,l:"t = 9 → 19 u"}]},
+ {t:"mc",q:"Wat betekent ber B = [0; 3240]?",o:["Er zijn op elk moment tussen 0 en 3240 bezoekers tegelijk in het park.","Er komen die dag in totaal 3240 bezoekers.","Het park is open van 10 u tot 19 u.","Het park is 3240 minuten open."],u:"Het bereik gaat over de functiewaarden: hoeveel bezoekers er tegelijk zijn. Over het totaal aantal bezoekers van de dag zegt de grafiek niets.",m:[{k:"h",y:3240,l:"3240"}]},
+ {t:"mc",q:"Hoeveel bezoekers zijn er ongeveer om 13 u?",o:["ongeveer 1600","ongeveer 2400","ongeveer 3200","ongeveer 400"],u:"13 u is 3 uur na de opening, dus t = 3. B(3) = 1620.",m:[{k:"pt",x:3,l:"B(3) = 1620"}]},
+ {t:"mc",q:"Lotte zegt: \"Het maximum is 6.\" Wat klopt er niet?",o:["6 is de t-waarde. Het maximum is 3240 bezoekers, bereikt na 6 uur (om 16 u).","Niets, het maximum is 6.","Het maximum is 9, want dan sluit het park.","Het maximum is 16 u."],u:"Een maximum is een functiewaarde (y). De t-waarde zegt wanneer het maximum bereikt wordt. Vermeld allebei.",m:[{k:"pt",x:6,l:"max = 3240"}]},
+ {t:"click",q:"Klik op een moment waarop het aantal bezoekers afneemt.",ok:x=>x>6.25&&x<=9,u:"Na de top (t = 6, 16 u) daalt de grafiek tot sluitingstijd: B is dalend op [6; 9].",m:[{k:"seg",a:6,b:9}]},
+ ]},
+{id:"kas",title:"De klaskas",intro:"Het bedrag S (in euro) in jullie klaskas, m maanden na 1 september. Een negatief bedrag is een tekort.",
+ formula:"S(m) = −5(m − 2)(m − 8)(m − 14)   met 0 ≤ m ≤ 12",f:m=>-5*(m-2)*(m-8)*(m-14),x:[0,12],y:[-600,1200],xt:1,yt:200,xl:"m (maanden na 1 september)",yl:"S (euro)",
+ qs:[
+ {t:"mc",q:"Wat betekenen de nulpunten 2 en 8?",o:["Op 1 november en op 1 mei staat er precies 0 euro in de klaskas.","Er staat 2 euro en 8 euro in de klaskas.","Tussen 2 en 8 euro is de klaskas leeg.","Op 2 en 8 september is de klaskas leeg."],u:"m = 2 is 2 maanden na 1 september (1 november), m = 8 is 1 mei. Op die momenten is het bedrag 0 euro.",m:[{k:"pt",x:2,l:"1 nov"},{k:"pt",x:8,l:"1 mei"}]},
+ {t:"click",q:"Klik op een moment waarop de klaskas een tekort heeft.",ok:x=>x>2.1&&x<7.9,u:"Een tekort betekent S(m) < 0: de grafiek ligt onder de m-as. Dat is tussen m = 2 en m = 8 (van november tot mei).",m:[{k:"band",a:2,b:8}]},
+ {t:"mc",q:"Hoe groot is het grootste tekort, en wanneer?",o:["ongeveer 416 euro, half januari","ongeveer 1120 euro, op 1 september","ongeveer 416 euro, half augustus","ongeveer 4,5 euro, half januari"],u:"Het minimum is ongeveer −416 voor m ≈ 4,5. Dat is 4,5 maanden na 1 september: half januari.",m:[{k:"pt",x:4.536,l:"min ≈ −416"}]},
+ {t:"mc",q:"Wat is het absolute maximum van S op [0; 12]?",o:["1120 euro, bij de start (m = 0)","ongeveer 416 euro, half augustus","400 euro, na 12 maanden","12 euro"],u:"De top bij m ≈ 11,5 is maar een lokaal maximum. Het grootste bedrag staat er bij de start: S(0) = 1120. Kijk altijd ook naar de randen van het domein!",m:[{k:"pt",x:0,l:"S(0) = 1120"},{k:"pt",x:11.46,l:"lokaal max"}]},
+ {t:"mc",q:"Wanneer neemt het bedrag in de klaskas toe?",o:["van half januari tot half augustus","van 1 november tot 1 mei","van 1 mei tot het einde","van 1 september tot half januari"],u:"S stijgt tussen het minimum (m ≈ 4,5) en het lokaal maximum (m ≈ 11,5). Opgelet: stijgen is iets anders dan positief zijn.",m:[{k:"seg",a:4.536,b:11.46}]},
+ {t:"mc",q:"S(m) > 0 voor m ∈ [0; 2[ ∪ ]8; 12]. Wat betekent dat?",o:["Dan staat er geld in de klaskas.","Dan stijgt het bedrag in de klaskas.","Dan is de klaskas leeg.","Dan geeft de klas geld uit."],u:"Het tekenschema zegt of S positief of negatief is: positief betekent dat er geld in de kas zit. Of het bedrag stijgt, zegt het verloopschema.",m:[{k:"band",a:0,b:2},{k:"band",a:8,b:12}]},
+ ]},
+{id:"food",title:"De foodtruck",intro:"De dagwinst W (in euro) van een foodtruck als die n hamburgers per dag verkoopt.",
+ formula:"W(n) = −0,01n² + 6n − 500   met 0 ≤ n ≤ 550",f:n=>-0.01*n*n+6*n-500,x:[0,550],y:[-600,500],xt:50,yt:100,xl:"n (aantal hamburgers)",yl:"W (euro)",
+ qs:[
+ {t:"mc",q:"Wat betekent W(0) = −500?",o:["Als er geen enkele hamburger verkocht wordt, maakt de foodtruck 500 euro verlies.","De foodtruck verkoopt 500 hamburgers.","De winst is hoogstens 500 euro.","Om middernacht heeft de foodtruck 500 euro."],u:"W(0) is de beginwaarde: de winst bij 0 hamburgers. De vaste kosten (500 euro) moeten dan toch betaald worden.",m:[{k:"pt",x:0,l:"W(0) = −500"}]},
+ {t:"click",q:"Klik op het punt waarop de foodtruck voor het eerst geen verlies meer maakt.",ok:x=>Math.abs(x-100)<14,u:"Het eerste nulpunt is n = 100. Vanaf 100 hamburgers is er geen verlies meer: dat is het break-evenpunt.",m:[{k:"pt",x:100,l:"n = 100"}]},
+ {t:"mc",q:"Hoeveel hamburgers moet de foodtruck verkopen om winst te maken?",o:["meer dan 100 en minder dan 500","meer dan 100","precies 300","minder dan 500"],u:"W(n) > 0 tussen de nulpunten 100 en 500. Wie meer dan 500 hamburgers verkoopt, maakt volgens dit model opnieuw verlies.",m:[{k:"band",a:100,b:500}]},
+ {t:"mc",q:"Bij hoeveel hamburgers is de winst het grootst, en hoe groot is ze dan?",o:["300 hamburgers, 400 euro","400 hamburgers, 300 euro","500 hamburgers, 0 euro","300 hamburgers, 300 euro"],u:"De top ligt bij n = 300 en W(300) = 400. Maximum = 400 euro, bereikt bij 300 hamburgers.",m:[{k:"pt",x:300,l:"max = 400"}]},
+ {t:"click",q:"Klik op een punt waar de foodtruck verlies maakt, terwijl de winst toch stijgt.",ok:x=>x>=0&&x<97,u:"Verlies: W(n) < 0. Stijgen: links van de top. Allebei tegelijk: tussen n = 0 en n = 100.",m:[{k:"seg",a:0,b:100}]},
+ ]},
+{id:"drone",title:"Een dronevlucht",intro:"Een drone stijgt op, maakt filmopnames en landt weer. De hoogte h (in meter), t minuten na de start:",
+ formula:"h(t) = 0,5t²(12 − t)   met 0 ≤ t ≤ 12",f:t=>0.5*t*t*(12-t),x:[0,12],y:[0,140],xt:1,yt:20,xl:"t (minuten na de start)",yl:"h (m)",
+ qs:[
+ {t:"mc",q:"Wat betekent dom h = [0; 12]?",o:["De vlucht duurt 12 minuten.","De drone vliegt hoogstens 12 meter hoog.","De drone vliegt tussen 0 en 128 meter hoog.","De drone landt na 128 minuten."],u:"Het domein gaat over de tijd t: we volgen de vlucht van de start tot de landing na 12 minuten. De hoogtes horen bij het bereik.",m:[{k:"seg",a:0,b:12}]},
+ {t:"click",q:"Klik op het moment waarop de drone het hoogst vliegt.",ok:x=>Math.abs(x-8)<0.5,u:"De top ligt bij t = 8: na 8 minuten vliegt de drone op 128 m, het maximum.",m:[{k:"pt",x:8,l:"max = 128 m"}]},
+ {t:"mc",q:"Hoe hoog vliegt de drone na 10 minuten?",o:["100 m","128 m","64 m","10 m"],u:"h(10) = 0,5 · 100 · 2 = 100. Na 10 minuten vliegt de drone op 100 m.",m:[{k:"pt",x:10,l:"h(10) = 100"}]},
+ {t:"mc",q:"Wanneer vliegt de drone op precies 64 m hoogte?",o:["na 4 minuten en na ongeveer 10,9 minuten","alleen na 4 minuten","na 4 minuten en na 8 minuten","na 64 minuten"],u:"De horizontale lijn h = 64 snijdt de grafiek twee keer: één keer tijdens het stijgen (t = 4) en één keer tijdens het dalen (t ≈ 10,9).",m:[{k:"h",y:64,l:"h = 64"},{k:"pt",x:4},{k:"pt",x:10.93}]},
+ {t:"mc",q:"Wat betekent h(0) = 0?",o:["Bij de start staat de drone op de grond.","De vlucht duurt 0 minuten.","Na 12 minuten is de drone geland.","De drone vertrekt om middernacht."],u:"t = 0 is het begin van de vlucht. h(0) = 0 betekent: hoogte 0 m bij de start. De landing hoort bij het andere nulpunt, t = 12.",m:[{k:"pt",x:0,l:"start"}]},
+ ]},
+{id:"kas2",title:"Tomaten in de serre",intro:"De temperatuur T (in °C) in een serre op een lentedag, x uur na middernacht:",
+ formula:"T(x) = −0,1(x − 14)² + 28   met 0 ≤ x ≤ 24",f:x=>-0.1*(x-14)**2+28,x:[0,24],y:[0,30],xt:2,yt:5,xl:"x (uur na middernacht)",yl:"T (°C)",
+ qs:[
+ {t:"click",q:"Klik op het moment waarop het in de serre het warmst is.",ok:x=>Math.abs(x-14)<0.7,u:"De top ligt bij x = 14: om 14 u is het 28 °C, het maximum.",m:[{k:"pt",x:14,l:"14 u: 28 °C"}]},
+ {t:"mc",q:"Waarom heeft T in deze situatie geen nulpunten?",o:["De temperatuur zakt nooit tot 0 °C: het vriest niet in de serre.","Omdat het om 0 u precies 0 °C is.","Omdat de temperatuur altijd stijgt.","Omdat de serre 24 uur open is."],u:"Een nulpunt zou betekenen dat T = 0 °C. De laagste temperatuur is 8,4 °C (om middernacht), dus dat gebeurt nooit.",m:[{k:"pt",x:0,l:"min 8,4 °C"}]},
+ {t:"mc",q:"Tomaten groeien het best vanaf 20 °C. Tussen welke uren is het minstens 20 °C?",o:["van ongeveer 5 u tot 23 u","van 14 u tot 24 u","van 0 u tot 14 u","van ongeveer 9 u tot 19 u"],u:"Teken de lijn T = 20 en lees de snijpunten af: x ≈ 5,1 en x ≈ 22,9. Daartussen ligt de grafiek boven de lijn.",m:[{k:"h",y:20,l:"T = 20"},{k:"seg",a:5.06,b:22.94}]},
+ {t:"mc",q:"Wat is het bereik van T en wat betekent het?",o:["[8,4; 28]: de temperatuur ligt tussen 8,4 °C en 28 °C.","[0; 24]: we volgen de temperatuur een hele dag.","[0; 28]: de temperatuur ligt tussen 0 °C en 28 °C.","[8,4; 18]: de temperatuur ligt tussen 8,4 °C en 18 °C."],u:"Het bereik loopt van de kleinste functiewaarde (T(0) = 8,4) tot de grootste (28). [0; 24] is het domein.",m:[{k:"pt",x:0,l:"8,4"},{k:"pt",x:14,l:"28"}]},
+ {t:"click",q:"Klik op een moment waarop de temperatuur daalt.",ok:x=>x>14.4,u:"Na de top om 14 u daalt de temperatuur: T is dalend op [14; 24].",m:[{k:"seg",a:14,b:24}]},
+ ]},
+{id:"peil",title:"Het waterpeil van een stuwmeer",intro:"Het verschil P (in cm) tussen het waterpeil en het normale peil van een stuwmeer, w weken na 1 maart. P < 0 betekent: lager dan normaal.",
+ formula:"P(w) = 0,5(w − 1)(w − 5)(w − 9)   met 0 ≤ w ≤ 10",f:w=>0.5*(w-1)*(w-5)*(w-9),x:[0,10],y:[-25,25],xt:1,yt:5,xl:"w (weken na 1 maart)",yl:"P (cm)",
+ qs:[
+ {t:"mc",q:"Wat betekent P(w) < 0?",o:["Het water staat lager dan het normale peil.","Het waterpeil daalt.","Het stuwmeer is leeg.","Er valt geen regen."],u:"Het teken van P zegt of het water boven of onder het normale peil staat. Of het peil daalt, lees je af aan het verloop.",m:[{k:"band",a:0,b:1},{k:"band",a:5,b:9}]},
+ {t:"click",q:"Klik op een moment waarop het water precies op het normale peil staat.",ok:x=>[1,5,9].some(z=>Math.abs(x-z)<0.3),u:"Op normaal peil betekent P(w) = 0: de nulpunten w = 1, w = 5 en w = 9.",m:[{k:"pt",x:1},{k:"pt",x:5},{k:"pt",x:9}]},
+ {t:"mc",q:"Hoeveel keer staat het water in deze 10 weken op het normale peil?",o:["3 keer","1 keer","2 keer","geen enkele keer"],u:"P heeft drie nulpunten: 1, 5 en 9. Het water staat dus drie keer precies op normaal peil.",m:[{k:"pt",x:1},{k:"pt",x:5},{k:"pt",x:9}]},
+ {t:"mc",q:"Wanneer staat het water het hoogst boven normaal?",o:["na 10 weken: 22,5 cm boven normaal","na ongeveer 2,7 weken: 12 cm boven normaal","na 5 weken","na 9 weken"],u:"De top bij w ≈ 2,7 is maar een lokaal maximum. Aan de rand, na 10 weken, is P(10) = 22,5: dat is het absolute maximum.",m:[{k:"pt",x:10,l:"22,5 cm"},{k:"pt",x:2.69,l:"lokaal max"}]},
+ {t:"click",q:"Klik op een moment waarop het water onder normaal peil staat, maar wel aan het stijgen is.",ok:x=>(x>=0&&x<0.95)||(x>7.4&&x<8.95),u:"Onder normaal: P(w) < 0. Stijgend: P neemt toe. Allebei tegelijk: van 0 tot 1 week en van ongeveer 7,3 tot 9 weken.",m:[{k:"seg",a:0,b:1},{k:"seg",a:7.31,b:9}]},
+ ]},
+];
+
+/* ---------- Grafiek ---------- */
+const W=640,H=380,M={l:62,r:18,t:16,b:50};
+function makeGraph(c){
+  const sx=x=>M.l+(x-c.x[0])/(c.x[1]-c.x[0])*(W-M.l-M.r);
+  const sy=y=>H-M.b-(y-c.y[0])/(c.y[1]-c.y[0])*(H-M.t-M.b);
+  const ix=px=>c.x[0]+(px-M.l)/(W-M.l-M.r)*(c.x[1]-c.x[0]);
+  let s=`<svg class="graph" viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafiek van ${c.formula}">`;
+  for(let x=c.x[0];x<=c.x[1]+1e-9;x+=c.xt){s+=`<line class="g-grid" x1="${sx(x)}" x2="${sx(x)}" y1="${sy(c.y[0])}" y2="${sy(c.y[1])}"/><text class="g-tick" x="${sx(x)}" y="${H-M.b+18}" text-anchor="middle">${fmt(x)}</text>`}
+  for(let y=c.y[0];y<=c.y[1]+1e-9;y+=c.yt){s+=`<line class="g-grid" x1="${sx(c.x[0])}" x2="${sx(c.x[1])}" y1="${sy(y)}" y2="${sy(y)}"/><text class="g-tick" x="${M.l-8}" y="${sy(y)+4}" text-anchor="end">${fmt(y)}</text>`}
+  const y0=Math.max(c.y[0],0);
+  s+=`<line class="g-axis" x1="${sx(c.x[0])}" x2="${sx(c.x[1])}" y1="${sy(y0)}" y2="${sy(y0)}"/><line class="g-axis" x1="${sx(c.x[0])}" x2="${sx(c.x[0])}" y1="${sy(c.y[0])}" y2="${sy(c.y[1])}"/>`;
+  s+=`<text class="g-lab" x="${(M.l+W-M.r)/2}" y="${H-10}" text-anchor="middle">${c.xl}</text>`;
+  s+=`<text class="g-lab" transform="translate(16 ${(M.t+H-M.b)/2}) rotate(-90)" text-anchor="middle">${c.yl}</text>`;
+  let d="";for(let i=0;i<=300;i++){const x=c.x[0]+i/300*(c.x[1]-c.x[0]);d+=(i?"L":"M")+sx(x).toFixed(1)+" "+sy(c.f(x)).toFixed(1)}
+  s+=`<g class="marks"></g><path class="g-curve" d="${d}"/><g class="over"></g>`;
+  s+=`<rect class="hit" x="${M.l}" y="${M.t}" width="${W-M.l-M.r}" height="${H-M.t-M.b}" fill="transparent"/></svg>`;
+  return {html:s,sx,sy,ix};
+}
+function curvePath(c,g,a,b){let d="";for(let i=0;i<=120;i++){const x=a+i/120*(b-a);d+=(i?"L":"M")+g.sx(x).toFixed(1)+" "+g.sy(c.f(x)).toFixed(1)}return d}
+function drawMarks(svg,c,g,marks){
+  const under=svg.querySelector(".marks"),over=svg.querySelector(".over");let u="",o="";
+  const base=g.sy(Math.max(c.y[0],0));
+  for(const m of marks){
+    if(m.k==="pt"){const y=c.f(m.x),X=g.sx(m.x),Y=g.sy(y);o+=`<circle class="g-dot" cx="${X}" cy="${Y}" r="7"/>`;
+      if(m.l){const right=X<W-170;o+=`<text class="g-mlab" x="${X+(right?12:-12)}" y="${Y-12}" text-anchor="${right?"start":"end"}">${m.l}</text>`}}
+    if(m.k==="h"){const Y=g.sy(m.y);u+=`<line class="g-mark" x1="${g.sx(c.x[0])}" x2="${g.sx(c.x[1])}" y1="${Y}" y2="${Y}"/>`;if(m.l)o+=`<text class="g-mlab" x="${g.sx(c.x[1])-4}" y="${Y-8}" text-anchor="end">${m.l}</text>`}
+    if(m.k==="seg"){o+=`<path class="g-seg" d="${curvePath(c,g,m.a,m.b)}"/>`}
+    if(m.k==="band"){u+=`<path class="g-band" d="${curvePath(c,g,m.a,m.b)}L${g.sx(m.b)} ${base}L${g.sx(m.a)} ${base}Z"/>`}
+  }
+  under.innerHTML=u;over.insertAdjacentHTML("beforeend",o);
+}
+
+/* ---------- Spel ---------- */
+const app=document.getElementById("app");
+const S={n:10,list:[],i:0,score:0,streak:0,right:0,log:[]};
+const RANKS=[[0,"Leerling-speurder"],[50,"Rechercheur"],[75,"Inspecteur"],[90,"Hoofdinspecteur"]];
+
+function startScreen(){
+  const best=+store.get("gd-best")||0;
+  app.innerHTML=`<section class="panel hero">
+    <div class="eyebrow">Wiskunde 5WW · Veeltermfuncties in context</div>
+    <h1>Grafiek<span>detective</span></h1>
+    <p>Elke grafiek vertelt een verhaal. Lees de kenmerken af en zoek uit wat ze betekenen in de situatie: een pretpark, een klaskas, een drone, een foodtruck …</p>
+    <div class="rules">
+      <div class="rule"><b>Kies het juiste antwoord</b>Welke uitleg past bij de grafiek en de situatie?</div>
+      <div class="rule"><b>Klik op de grafiek</b>Duid zelf het juiste moment of punt aan.</div>
+      <div class="rule"><b>Bouw een reeks op</b>100 punten per juist antwoord, plus een bonus voor elke reeks.</div>
+    </div>
+    <div class="startrow">
+      <div class="chips" role="group" aria-label="Aantal vragen">${[10,15,20].map(n=>`<button class="chip" id="n${n}" aria-pressed="${n===S.n}" data-n="${n}">${n} vragen</button>`).join("")}</div>
+      <button class="btn" id="go">Start het onderzoek</button>
+      ${best?`<span class="best">Jouw record: <b>${best}</b> punten</span>`:""}
+    </div></section>`;
+  app.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{S.n=+b.dataset.n;app.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  document.getElementById("go").onclick=newGame;
+}
+function newGame(){
+  // Spread questions over cases: round-robin through shuffled cases
+  const pools=shuffle(CASES).map(c=>shuffle(c.qs.map(q=>({c,q}))));let list=[];
+  while(list.length<S.n&&pools.some(p=>p.length))for(const p of pools){if(p.length&&list.length<S.n)list.push(p.pop())}
+  // keep questions of one case together where possible, case order random
+  const order=shuffle([...new Set(list.map(x=>x.c.id))]);
+  list.sort((a,b)=>order.indexOf(a.c.id)-order.indexOf(b.c.id));
+  Object.assign(S,{list,i:0,score:0,streak:0,right:0,log:[]});
+  showQuestion();
+}
+function hud(){
+  return `<div class="hud"><span class="stat"><small>Vraag</small>${S.i+1}/${S.list.length}</span>
+  <div class="progress" aria-hidden="true"><i style="width:${S.i/S.list.length*100}%"></i></div>
+  <span class="stat"><small>Punten</small><span id="pts">${S.score}</span></span>
+  <span class="stat streak">${S.streak>1?"reeks ×"+S.streak:""}</span></div>`;
+}
+function showQuestion(){
+  const {c,q}=S.list[S.i];const g=makeGraph(c);
+  const opts=q.t==="mc"?shuffle(q.o.map((t,i)=>({t,ok:i===0}))):null;
+  app.innerHTML=`${hud()}
+  <section class="panel case"><div class="eyebrow">Dossier</div><h2>${c.title}</h2><p>${c.intro}</p>
+   <span class="formula">${c.formula}</span><div class="graphbox">${g.html}</div></section>
+  <section class="panel q" id="q"><h3>${q.q}</h3>
+   ${q.t==="click"?`<p class="hint">Klik of tik op de grafiek. Met het toetsenbord: pijltjes om te verschuiven, Enter om te kiezen.</p>`:
+   `<div class="opts">${opts.map((o,i)=>`<button class="opt" data-i="${i}"><span class="k">${"ABCD"[i]}</span><span>${o.t}</span></button>`).join("")}</div>`}
+   <div id="fb"></div></section>`;
+  const svg=app.querySelector("svg.graph");
+  if(q.t==="mc"){
+    app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+      const o=opts[+b.dataset.i];app.querySelectorAll(".opt").forEach((x,i)=>{x.disabled=true;if(opts[i].ok)x.classList.add("right")});
+      if(!o.ok)b.classList.add("wrong");
+      answer(o.ok,svg,c,g,q,o.ok?null:o.t);
+    });
+    app.querySelector(".opt").focus({preventScroll:true});
+  }else{
+    svg.classList.add("clickable");svg.setAttribute("tabindex","0");
+    const over=svg.querySelector(".over");let gx=(c.x[0]+c.x[1])/2,done=false;
+    const guide=()=>{if(done)return;const X=g.sx(gx),Y=g.sy(c.f(gx));over.innerHTML=`<line class="g-guide" x1="${X}" x2="${X}" y1="${M.t}" y2="${H-M.b}"/><circle class="g-dot" cx="${X}" cy="${Y}" r="6"/>`};
+    const toX=e=>{const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const l=p.matrixTransform(svg.getScreenCTM().inverse());return Math.min(c.x[1],Math.max(c.x[0],g.ix(l.x)))};
+    const pick=x=>{if(done)return;done=true;svg.classList.remove("clickable");const ok=q.ok(x);
+      over.innerHTML=`<line class="g-guide" x1="${g.sx(x)}" x2="${g.sx(x)}" y1="${M.t}" y2="${H-M.b}"/><circle class="${ok?"g-ok":"g-no"}" cx="${g.sx(x)}" cy="${g.sy(c.f(x))}" r="8"/>`;
+      answer(ok,svg,c,g,q,null)};
+    svg.addEventListener("pointermove",e=>{gx=toX(e);guide()});
+    svg.addEventListener("pointerleave",()=>{if(!done)over.innerHTML=""});
+    svg.addEventListener("click",e=>pick(toX(e)));
+    svg.addEventListener("keydown",e=>{const st=(c.x[1]-c.x[0])/96;
+      if(e.key==="ArrowRight"||e.key==="ArrowUp"){gx=Math.min(c.x[1],gx+st);guide();e.preventDefault()}
+      if(e.key==="ArrowLeft"||e.key==="ArrowDown"){gx=Math.max(c.x[0],gx-st);guide();e.preventDefault()}
+      if(e.key==="Enter"||e.key===" "){pick(gx);e.preventDefault()}});
+    svg.addEventListener("focus",guide);
+  }
+}
+function answer(ok,svg,c,g,q,wrongText){
+  let gain=0;
+  if(ok){S.streak++;S.right++;gain=100+Math.min(S.streak-1,5)*20;S.score+=gain}else{S.streak=0;S.log.push({c,q,wrongText})}
+  drawMarks(svg,c,g,q.m);
+  const fb=document.getElementById("fb");const last=S.i===S.list.length-1;
+  fb.innerHTML=`<div class="feedback ${ok?"good":"bad"}" role="status"><b class="v">${ok?"Juist!":"Niet helemaal."}${ok?`<span class="pop">+${gain}</span>`:""}</b>${q.u}</div>
+   <div class="nextrow"><button class="btn" id="next">${last?"Bekijk je resultaat":"Volgende vraag"}</button></div>`;
+  document.getElementById("pts").textContent=S.score;
+  document.querySelector(".hud .streak").textContent=S.streak>1?"reeks ×"+S.streak:"";
+  if(!ok)document.getElementById("q").classList.add("shake");
+  const nb=document.getElementById("next");nb.onclick=()=>{S.i++;S.i<S.list.length?showQuestion():endScreen();window.scrollTo({top:0})};
+  nb.focus({preventScroll:true});fb.scrollIntoView({block:"nearest",behavior:"smooth"});
+}
+function endScreen(){
+  const pct=Math.round(S.right/S.list.length*100);const rank=RANKS.filter(r=>pct>=r[0]).pop()[1];
+  const best=+store.get("gd-best")||0;const rec=S.score>best;if(rec)store.set("gd-best",S.score);if(window.SpelVolg)SpelVolg.resultaat({juist:S.right,totaal:S.list.length,punten:S.score});
+  app.innerHTML=`<section class="panel end"><div class="eyebrow">Onderzoek afgerond</div><h2>Jouw rang</h2><div class="rank">${rank}</div>
+   <div class="big"><div><b>${S.score}</b>punten${rec?" · nieuw record!":""}</div><div><b>${S.right}/${S.list.length}</b>juist</div><div><b>${pct}%</b>score</div></div>
+   ${S.log.length?`<h3 style="margin-top:18px">Nog eens bekijken</h3><div class="review">${S.log.map(l=>`<div class="item"><b>${l.c.title}:</b> ${l.q.q}<br>${l.q.u}</div>`).join("")}</div>`:`<p>Alles juist. Knap speurwerk!</p>`}
+   <div class="startrow" style="margin-top:20px"><button class="btn" id="again">Nieuw onderzoek</button><button class="btn ghost" id="home">Naar het begin</button></div></section>`;
+  document.getElementById("again").onclick=newGame;document.getElementById("home").onclick=startScreen;
+}
+startScreen();
+})();
+</script>

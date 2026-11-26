@@ -62,6 +62,25 @@
 
   // ---------- programma's
   function beschikbaar() { return S.progs.filter(p => Leerpaden.vind(p.code)); }
+  const mijnSpellen = () => typeof Spellen !== 'undefined' ? Spellen.lijst.filter(sp => S.progs.some(p => p.code === sp.code)) : [];
+  // Spel openen: toestand uit de databank halen, in sessionStorage zetten (spellen/spel-volg.js leest ze) en het spel laden.
+  async function openSpel(code) {
+    const SP = Spellen.vind(code); if (!SP) return;
+    const r = await roep('ll_spel_start', { p_spel: code });
+    API.sessie.set('spel-staat:' + code, JSON.stringify(r.staat || {}));
+    API.sessie.set('spel-vandaag:' + code, String(r.vandaag || 0));
+    API.sessie.set('spel-naam', S.leerling ? S.leerling.voornaam : '');
+    API.sessie.set('spel-terug', location.href.split('#')[0]);
+    location.href = new URL((location.pathname.includes('/test/') ? '../' : '') + 'spellen/' + SP.map + '/', location.href).href;
+  }
+  function spellenBlok() {
+    const sp = mijnSpellen();
+    if (!sp.length) return '';
+    return `<h2 style="margin-top:26px">🎮 Spellen</h2>
+      <p class="klein">Oefen al spelend. Je voortgang wordt bewaard, ook als je op een andere computer verder speelt.</p>
+      <div class="tegels">${sp.map(x => `<button class="tegel" data-a="spel" data-code="${esc(x.code)}">
+        <div class="tegel-titel">${x.icoon} ${esc(x.titel)}</div><div class="klein">${esc(x.sub)}</div></button>`).join('')}</div>`;
+  }
   async function openProgramma(code) {
     const P = Leerpaden.vind(code);
     if (!P) return;
@@ -74,7 +93,7 @@
   async function naLogin() {
     const lijst = beschikbaar();
     const voorkeur = urlProg || API.sessie.get('ll-prog');
-    const keuze = lijst.find(p => p.code === voorkeur) || (lijst.length === 1 ? lijst[0] : null);
+    const keuze = lijst.find(p => p.code === voorkeur) || (lijst.length === 1 && !mijnSpellen().length ? lijst[0] : null);
     if (keuze) await openProgramma(keuze.code);
     else S.view = 'kies';
   }
@@ -89,7 +108,7 @@
         <div class="logo">${esc(titel)}<small>${esc(onder)}</small></div>
         ${S.leerling ? `<div class="rechts"><span>${naam}</span>
           ${S.view === 'deel' && !(S.P && S.P.instaptoets) ? '<button class="licht" data-a="pad">Leerpad</button>' : ''}
-          ${S.P && beschikbaar().length > 1 ? '<button class="licht" data-a="kies">Andere leerpaden</button>' : ''}
+          ${S.P && beschikbaar().length + mijnSpellen().length > 1 ? `<button class="licht" data-a="kies">${mijnSpellen().length ? 'Leerpaden en spellen' : 'Andere leerpaden'}</button>` : ''}
           <button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>`;
   }
@@ -142,15 +161,15 @@
     const kl = window.Catalogus && S.leerling ? Catalogus.klasVan(S.leerling.klas) : null;
     const klasTekst = S.leerling && S.leerling.klas ? ` <span class="klein">· klas ${esc(S.leerling.klas)}</span>` : '';
     if (!groepen.length) return `<h1>Dag ${esc(S.leerling.voornaam)}!${klasTekst}</h1>
-      <div class="kaart"><p>Je bent nog aan geen enkel leerpad gekoppeld. Vraag aan je leerkracht om je toe te voegen.</p></div>`;
+      ${mijnSpellen().length ? spellenBlok() : '<div class="kaart"><p>Je bent nog aan geen enkel leerpad gekoppeld. Vraag aan je leerkracht om je toe te voegen.</p></div>'}`;
     const g = groepen.length === 1 ? groepen[0] : groepen.find(x => x.vak === S.vak);
     if (!g) return `<h1>Dag ${esc(S.leerling.voornaam)}!${klasTekst}</h1><p>Kies een vak.</p>
       <div class="tegels">${groepen.map(x => `<button class="tegel" data-a="vak" data-vak="${esc(x.vak)}">
-        <div class="tegel-titel">${esc(x.titel)}</div><div class="klein">${x.items.length} leerpad${x.items.length === 1 ? '' : 'en'}</div></button>`).join('')}</div>`;
+        <div class="tegel-titel">${esc(x.titel)}</div><div class="klein">${x.items.length} leerpad${x.items.length === 1 ? '' : 'en'}</div></button>`).join('')}</div>${spellenBlok()}`;
     return `${groepen.length > 1 ? '<p class="klein"><button class="link" data-a="vak" data-vak="">← Alle vakken</button></p>' : ''}
       <h1>${groepen.length > 1 ? esc(g.titel) : `Dag ${esc(S.leerling.voornaam)}!`}${klasTekst}</h1>
       <p>Kies een leerpad${groepen.length > 1 ? '' : ` · ${esc(g.titel)}`}.</p>
-      <div class="pad">${g.items.map(leerpadKnop).join('')}</div>`;
+      <div class="pad">${g.items.map(leerpadKnop).join('')}</div>${groepen.length === 1 ? spellenBlok() : ''}`;
   }
 
   function stapKnop(d) {
@@ -616,6 +635,7 @@
         if (a === 'kies') { leesTestInvoer(); S.view = 'kies'; S.test = null; S.P = null; S.prog = null; API.sessie.del('ll-prog'); document.title = CONFIG.TITEL || 'Leerpaden'; return render(); }
         if (a === 'prog') { await openProgramma(el.dataset.code); return render(); }
         if (a === 'vak') { S.vak = el.dataset.vak || null; return render(); }
+        if (a === 'spel') { el.disabled = true; return await openSpel(el.dataset.code); }
         if (a === 'pad' && S.P && S.P.instaptoets) { leesTestInvoer(); Object.assign(S, { view: 'deel', deel: 1, tab: 'test' }); if (S.test && S.test.resultaat) S.test = null; render(); return window.scrollTo(0, 0); }
         if (a === 'pad') { leesTestInvoer(); S.view = 'pad'; if (S.test && S.test.resultaat) S.test = null; render(); return window.scrollTo(0, 0); }
         if (a === 'deel') { leesTestInvoer(); S.view = 'deel'; S.deel = +el.dataset.nr; S.tab = 'theorie'; if (S.test && (S.test.resultaat || S.test.deel !== S.deel)) S.test = null; render(); return window.scrollTo(0, 0); }
