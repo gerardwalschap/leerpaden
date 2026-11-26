@@ -101,7 +101,8 @@
         ${S.view === 'spel' && spelVind(S.spel) ? `<button class="ptab actief" data-a="openspel" data-code="${esc(S.spel)}">${esc(progTitel(S.spel))}</button>` : ''}
         <button class="ptab ${S.view === 'alle' ? 'actief' : ''}" data-a="alle">👥 Alle leerlingen</button>
         ${SPELLEN().length ? `<button class="ptab ${S.view === 'spellen' ? 'actief' : ''}" data-a="spellen">🎮 Spellen</button>` : ''}
-        <button class="ptab ${S.view === 'afdruk' ? 'actief' : ''}" data-a="afdruk">🖨️ Afdrukcentrum</button></nav>` : ''}`;
+        <button class="ptab ${S.view === 'afdruk' ? 'actief' : ''}" data-a="afdruk">🖨️ Afdrukcentrum</button>
+        ${window.Eindtermen ? Eindtermen.vakken().map(v => `<button class="ptab" data-eindtermen="${esc(v)}" title="Welke wiskundedoelen komen in welk leerpad aan bod?">🎯 Eindtermen ${esc((Catalogus.C.klassen.find(k => k.vakken.includes(v)) || {}).code || '')}</button>`).join('') : ''}</nav>` : ''}`;
   }
   function render() {
     let h = '';
@@ -462,7 +463,7 @@
         const nr = k.ster ? '★' : k.plus ? '+' : k.teken ? esc(k.teken) : String.fromCharCode(65 + (k.groep != null ? k.groep : i));
         return `<div class="stap hoofdstuk open${k.plus ? ' menu-knop plus' : ''}"><div class="nr">${nr}</div>
           <div class="vul"><div class="titel">${esc(titel)}${delen && delen.length ? ` <span class="klein">· deel ${delen.length > 1 ? `${delen[0]}–${delen[delen.length - 1]}` : delen[0]}</span>` : ''}</div>
-            ${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ''}${window.doelenHTML ? doelenHTML(k) : ''}<div class="lp-lijst">${regels.join('')}</div></div></div>`;
+            ${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ''}<div class="lp-lijst">${regels.join('')}</div></div></div>`;
       }).join('')}</div>
       <p class="klein legende">Een spel bij een onderwerp zetten of de indeling wijzigen: <code>js/menu.js</code>.</p>`;
   }

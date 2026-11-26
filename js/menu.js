@@ -14,39 +14,11 @@
 //      titel: '…', sub: '…',            // (optioneel) anders: titel van het leerpad
 //      plus: true / ster: true,         // (optioneel) +-versie of ★-knop
 //      spellen: ['spel-…'] }            // spellen bij deze knop (mag leeg: later aan te vullen)
-//      doelen: ['BV3_06.01', …]         // (optioneel) eindtermen/wiskundedoelen: klein onder de titel (namen: DOELEN hieronder)
+//      doelen: ['BV3_06.01', …]         // (optioneel) wiskundedoelen van deze knop → overzicht 🎯 Eindtermen (js/eindtermen.js)
 //  Een tegel met  direct: 'code'  heeft geen knoppen: klikken = meteen starten.
 //
 //  Een nieuw spel bij een onderwerp? Zet de code (zie js/spellen.js) bij de juiste knop.
 // ====================================================================
-// Wiskundedoelen 7VJHO (bestand 7_wiskundedoelen_VJHO.xlsx) — korte namen voor onder de titels.
-window.DOELEN = {
-  'BV3_06.01': 'Rekenen met reële getallen',
-  'BV3_06.02': 'Stelling van Pythagoras',
-  'BV3_06.03': 'Functies en hun representaties',
-  'BV3_06.04': 'Kenmerken van een functie in een situatie',
-  'BV3_06.05': 'Eerstegraadsfunctie: voorschrift, grafiek, tabel, verwoording',
-  'BV3_06.06': 'Eerstegraadsfunctie: nulwaarde, tekenverloop, stijgen/dalen',
-  'BV3_06.07': 'Vergelijkingen en ongelijkheden grafisch oplossen',
-  'BV3_06.08': 'Eerstegraadsvergelijkingen algebraïsch oplossen',
-  'BV3_06.09': 'Exponentiële groei',
-  'BV3_06.10': 'Telproblemen',
-  'BV3_06.11': 'Kansen bepalen',
-  'BV3_06.12': 'Steekproeven en representativiteit',
-  'BV3_06.13': 'De normale verdeling als model',
-  'BV3_06.14': 'Kansen bij een normale verdeling',
-  'BV3_06.15': 'Fenomenen beschrijven met wiskunde',
-  'BV3_06.16': 'Vraagstukken oplossen',
-  'BV3_06.17': 'ICT gebruiken',
-};
-// Regel met de doelen van een knop (HTML, klein onder de titel), of '' als er geen zijn.
-window.doelenHTML = (k) => {
-  const d = (k && k.doelen) || [];
-  if (!d.length) return '';
-  const e = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  return `<div class="doelen">🎯 ${d.map(c => `<span class="doel"><b>${e(c)}</b> ${e(window.DOELEN[c] || '')}</span>`).join(' · ')}</div>`;
-};
-
 window.MENUS = {
 
   'wisk-7vjho': {
