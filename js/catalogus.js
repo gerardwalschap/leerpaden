@@ -93,7 +93,7 @@ window.CATALOGUS = {
         { nr: 0, titel: 'Instaptoets', sub: 'Eerste schooldag · niveau bepalen in getallenleer (ℕ, ℤ, ℚ, ℝ) · beginner of gevorderd',
           leerpaden: ['instaptoets-7vjho'] },
         { nr: 1, titel: 'Getallenleer', sub: 'Rekenen in ℕ, ℤ, ℚ en ℝ',
-          leerpaden: ['getallenleer-n', 'getallenleer-n-plus', 'getallenleer-z', 'getallenleer-q', 'reele-getallen'] },
+          leerpaden: ['getallenleer-n', 'getallenleer-n-plus', 'getallenleer-z', 'getallenleer-z-plus', 'getallenleer-q', 'getallenleer-q-plus', 'reele-getallen', 'reele-getallen-plus'] },
         // ster: true = blok zonder hoofdstuknummer (★); nr 1.5 = tussen getallenleer en functieleer
         { nr: 1.5, ster: true, titel: 'Proeftoets getallenleer', sub: 'Rekenen in ℕ, ℤ, ℚ en ℝ · alle soorten oefeningen · in 5 stukken, over meerdere dagen',
           leerpaden: ['proeftoets-getallenleer'] },
