@@ -30,7 +30,7 @@ K.WERELDEN[1] = (() => {
       const st = c; vlak(13);
       const muur = st + 11, poort = { col: muur, open: false, actief: false, q: null, nr: p };
       for (let r = 0; r < GROND; r++) zet(muur, r, 'W');
-      [st + 2, st + 5, st + 8].forEach(bc => blokken.push({ x: bc * TS - 12, y: (GROND - 4) * TS - 40, w: 64, h: 40, tekst: '?', goed: false, poort, weg: 0, bots: 0 }));
+      [st + 2, st + 5, st + 8].forEach(bc => blokken.push({ x: bc * TS - 12, y: (GROND - 3) * TS - 40, w: 64, h: 40, tekst: '?', goed: false, poort, weg: 0, bots: 0 }));
       poorten.push(poort);
       vlak(3);
     }
@@ -83,9 +83,9 @@ K.WERELDEN[1] = (() => {
     P.vx = klem(P.vx, -MAX, MAX);
     P.coyote = P.grond ? 0.1 : Math.max(0, P.coyote - dt);
     if (K.gedrukt(' ', 'ArrowUp', 'w', 'z')) P.buffer = 0.14; else P.buffer = Math.max(0, P.buffer - dt);
-    if (P.buffer > 0 && P.coyote > 0) { P.vy = -700; P.buffer = 0; P.coyote = 0; K.SFX.sprong(); }
+    if (P.buffer > 0 && P.coyote > 0) { P.vy = -790; P.buffer = 0; P.coyote = 0; K.SFX.sprong(); }
     const houd = K.toets[' '] || K.toets.ArrowUp || K.toets.w || K.toets.z;
-    P.vy += (P.vy < 0 && !houd ? 3600 : 1800) * dt; P.vy = Math.min(P.vy, 900);
+    P.vy += (P.vy < 0 && !houd ? 2300 : 1700) * dt; P.vy = Math.min(P.vy, 900);
     // x-beweging
     P.x += P.vx * dt;
     botsTegels(P, true);
