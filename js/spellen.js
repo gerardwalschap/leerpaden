@@ -60,6 +60,8 @@ const Spellen = (() => {
       voortgang: (st) => expeditie(st, 'expeditie-r-v1', 10) },
     { code: 'spel-oefenarena-r', map: 'oefenarena-r', titel: 'Oefenarena ℝ', sub: 'Zelf onderdelen kiezen en oefenen', icoon: '🏋️',
       voortgang: (st) => arena(st, 10) },
+    // Grafiekdetective: hoort bij het 5de jaar, komt later in een andere klas (map spellen/grafiekdetective blijft staan).
+    /*
     { code: 'spel-grafiekdetective', map: 'grafiekdetective', titel: 'Grafiekdetective', sub: 'Grafieken lezen en interpreteren', icoon: '🔎',
       voortgang(st) {
         const r = rondes(st), best = +(st && st['gd-best']) || 0;
@@ -67,6 +69,7 @@ const Spellen = (() => {
         const j = r.reduce((a, x) => a + (x.juist || 0), 0), n = r.reduce((a, x) => a + (x.totaal || 0), 0), l = r[r.length - 1];
         return { tekst: `${r.length} onderzoek${r.length === 1 ? '' : 'en'} · record ${best} punten · ${procent(j, n)}% juist · laatste ${l.juist}/${l.totaal}`, pct: procent(j, n) };
       } },
+    */
   ];
   const vind = (code) => lijst.find(s => s.code === code) || null;
   return { lijst, vind, RES };
