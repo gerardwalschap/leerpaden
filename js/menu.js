@@ -77,17 +77,17 @@ window.MENUS = {
 
       { id: 'kansrekenen', nr: 4, icoon: '🎲', titel: 'Telproblemen en kansrekenen', sub: 'Tellen · Kansen bepalen',
         knoppen: [
-          { leerpad: 'telproblemen-kansen', groep: 0, titel: 'Telproblemen', sub: 'Boomdiagram · Product-, som- en complementregel · Venndiagram', spellen: [] },
-          { leerpad: 'telproblemen-kansen', groep: 1, titel: 'Kansrekenen', sub: 'Wet van Laplace · Kansboom', spellen: [] },
-          { leerpad: 'telproblemen-kansen', groep: 2, titel: 'Eindtest', sub: 'Alles door elkaar', ster: true, spellen: [] },
+          { leerpad: 'telproblemen-kansen', groep: 0, titel: 'Telproblemen', sub: 'Boomdiagram · Product-, som- en complementregel · Venndiagram', doelen: ['BV3_06.10', 'BV3_06.16'], spellen: [] },
+          { leerpad: 'telproblemen-kansen', groep: 1, titel: 'Kansrekenen', sub: 'Wet van Laplace · Kansboom', doelen: ['BV3_06.11', 'BV3_06.16'], spellen: [] },
+          { leerpad: 'telproblemen-kansen', groep: 2, titel: 'Eindtest', sub: 'Alles door elkaar', ster: true, doelen: ['BV3_06.10', 'BV3_06.11', 'BV3_06.16'], spellen: [] },
         ] },
 
       { id: 'statistiek', nr: 5, icoon: '📊', titel: 'Statistiek', sub: 'Steekproeven · Gegevens verwerken · Normale verdeling',
         knoppen: [
-          { leerpad: 'statistiek', groep: 0, titel: 'Steekproeven', spellen: [] },
-          { leerpad: 'statistiek', groep: 1, titel: 'Gegevens verwerken', sub: 'Frequentietabel · Histogram · Gemiddelde en standaardafwijking', spellen: [] },
-          { leerpad: 'statistiek', groep: 2, titel: 'De normale verdeling', spellen: [] },
-          { leerpad: 'statistiek', groep: 3, titel: 'Eindtest', sub: 'Alles door elkaar', ster: true, spellen: [] },
+          { leerpad: 'statistiek', groep: 0, titel: 'Steekproeven', doelen: ['BV3_06.12'], spellen: [] },
+          { leerpad: 'statistiek', groep: 1, titel: 'Gegevens verwerken', sub: 'Frequentietabel · Histogram · Gemiddelde en standaardafwijking', doelen: ['BV3_06.13', 'BV3_06.17'], spellen: [] },
+          { leerpad: 'statistiek', groep: 2, titel: 'De normale verdeling', doelen: ['BV3_06.13', 'BV3_06.14', 'BV3_06.17'], spellen: [] },
+          { leerpad: 'statistiek', groep: 3, titel: 'Eindtest', sub: 'Alles door elkaar', ster: true, doelen: ['BV3_06.12', 'BV3_06.13', 'BV3_06.14', 'BV3_06.17'], spellen: [] },
         ] },
     ],
   },
