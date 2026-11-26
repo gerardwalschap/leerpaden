@@ -366,3 +366,10 @@ De instaptoets start meteen. Een leerling ziet enkel tegels en knoppen waaraan j
 
 * Indeling aanpassen of een spel bij een onderwerp zetten: enkel `js/menu.js` (uitleg bovenaan dat bestand).
 * Actief op de echte site en in `test/`.
+
+## Galaxie ℝ (spellen/galaxie) — grote getallenleer-game (nov 2026)
+- Ruimteshooter (canvas) met vier stelsels ℕ, ℤ, ℚ, ℝ; nu speelbaar: **stelsel ℕ** (normaal en + gevorderd). ℤ, ℚ en ℝ: in `vragen.js` bij `STELSELS` het leerpad invullen (`lp: { normaal, plus }`).
+- Vragen komen rechtstreeks uit de leerpaden (`programmas/…`): `vragen.js` zet ze om naar spelvormen — asteroïden (schiet het juiste antwoord), poorten (keuzevragen), verzamelen (oplossingsverzameling), meteorenregen (ontwijken) en per stelsel een eindbaas (moederschip: de tussenstappen van een berekening uit deel 1).
+- Sector = deel van het leerpad; de laatste sector (eindtest) = eindbaas. Sterren: 0 fouten ★★★, ≤ 2 fouten ★★, anders ★. Hangar met upgrades (kristallen).
+- Fout antwoord → schade + na de vraag de uitleg uit het leerpad.
+- Menu: eigen knop 🚀 onderaan Getallenleer (js/menu.js). Databank: programma `spel-galaxie` (koppelen zoals de andere spellen). `?test=1` zet een testhaakje (`window.__galaxie`) aan.

@@ -37,6 +37,7 @@ window.MENUS = {
           { leerpad: 'reele-getallen',      teken: 'ℝ', doelen: ['BV3_06.01', 'BV3_06.02', 'BV3_06.08', 'BV3_06.16', 'BV3_06.17'], spellen: ['spel-expeditie-r', 'spel-oefenarena-r'] },
           { leerpad: 'reele-getallen-plus', teken: 'ℝ', plus: true, doelen: ['BV3_06.01', 'BV3_06.02', 'BV3_06.08', 'BV3_06.16', 'BV3_06.17'], spellen: ['spel-expeditie-r-plus', 'spel-oefenarena-r-plus'] },
           { leerpad: 'proeftoets-getallenleer', ster: true, doelen: ['BV3_06.01'], sub: 'Afsluiter · alle soorten oefeningen · over meerdere dagen', spellen: [] },
+          { titel: 'Galaxie ℝ', sub: 'De grote getallenleer-game · ruimteshooter door ℕ, ℤ, ℚ en ℝ', teken: '🚀', spellen: ['spel-galaxie'] },
         ] },
 
       { id: 'functieleer', nr: 3, icoon: '📈', titel: 'Functieleer', sub: 'Functies · ax + b · Exponentiële functies',

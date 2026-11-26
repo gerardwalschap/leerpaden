@@ -89,6 +89,19 @@ const Spellen = (() => {
       voortgang: (st) => expeditie(st, 'expeditie-r-plus-v1', 10) },
     { code: 'spel-oefenarena-r-plus', map: 'oefenarena-r-plus', titel: 'Oefenarena ℝ +', sub: 'Zelf delen kiezen · gevorderden', icoon: '💪',
       voortgang: (st) => arena(st, 10) },
+    // Galaxie ℝ: grote ruimtegame over heel de getallenleer (spellen/galaxie). Stelsel ℕ eerst; ℤ, ℚ en ℝ volgen.
+    { code: 'spel-galaxie', map: 'galaxie', titel: 'Galaxie ℝ', sub: 'Ruimtegame · heel de getallenleer', icoon: '🚀',
+      voortgang(st) {
+        const S = lees(st, 'galaxie-v1', null);
+        if (!S || !S.runs) return { tekst: 'nog niet gestart', pct: 0 };
+        const deel = (m) => Object.entries((S.vg && S.vg[m]) || {}).map(([id, v]) => {
+          const n = Object.values(v).filter(x => x > 0).length, ster = Object.values(v).reduce((a, x) => a + (x || 0), 0);
+          return n ? `${id}${m === 'plus' ? '+' : ''}: ${n} sector${n === 1 ? '' : 'en'}, ${ster} ★` : '';
+        }).filter(Boolean);
+        const lijst = [...deel('normaal'), ...deel('plus')], normaalN = Object.values((S.vg && S.vg.normaal && S.vg.normaal.N) || {}).filter(x => x > 0).length;
+        return { tekst: `${lijst.join(' · ') || 'nog geen sector gehaald'} · ${S.overwinningen || 0} moederschip${S.overwinningen === 1 ? '' : 'en'} · record ${(S.best || 0).toLocaleString('nl-BE')} · ${S.runs} vlucht${S.runs === 1 ? '' : 'en'}`,
+          pct: Math.round(100 * normaalN / 6) };
+      } },
     // Grafiekdetective: hoort bij het 5de jaar, komt later in een andere klas (map spellen/grafiekdetective blijft staan).
     /*
     { code: 'spel-grafiekdetective', map: 'grafiekdetective', titel: 'Grafiekdetective', sub: 'Grafieken lezen en interpreteren', icoon: '🔎',
