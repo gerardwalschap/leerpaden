@@ -144,7 +144,7 @@
     const sub = [k.sub, inhoud].filter(Boolean).map(esc).join(' · ');
     return `<button class="stap open menu-knop${k.plus ? ' plus' : ''}" data-a="knop" data-id="${esc(T.id)}" data-i="${i}">
       <div class="nr">${k.ster ? '★' : k.plus ? '+' : k.teken ? esc(k.teken) : String.fromCharCode(65 + (k.groep != null ? k.groep : i))}</div>
-      <div><div class="titel">${esc(knopTitel(k))}</div><div class="sub">${sub}</div></div>${etiketVoortgang(knopVoortgang(k))}</button>`;
+      <div><div class="titel">${esc(knopTitel(k))}</div><div class="sub">${sub}</div>${window.doelenHTML ? doelenHTML(k) : ''}</div>${etiketVoortgang(knopVoortgang(k))}</button>`;
   }
   // Menu voor groep g (een vak met een menu): niveau 1 (tegels) of 2 (knoppen), of een knop met enkel spellen.
   function vMenu(g, meerVakken) {
@@ -312,7 +312,7 @@
     const standaard = `<p>Werk de delen één voor één af: lees de theorie, bekijk de voorbeelden, oefen zoveel je wil en maak dan de test.
       Haal je <b>${st.drempel}%</b>, dan gaat het volgende deel open.</p>`;
     const sp = k ? knopSpellen(k) : '';
-    return `${c ? `${kruimel(c, k ? knopTitel(k) : P.titel)}<h1>${esc(k ? knopTitel(k) : P.titel)}</h1>` : `<h1>Dag ${esc(S.leerling.voornaam)}!</h1>`}
+    return `${c ? `${kruimel(c, k ? knopTitel(k) : P.titel)}<h1>${esc(k ? knopTitel(k) : P.titel)}</h1>${k && window.doelenHTML ? doelenHTML(k) : ''}` : `<h1>Dag ${esc(S.leerling.voornaam)}!</h1>`}
       ${k && k.groep ? standaard : (P.intro || standaard)}
       ${P.afspraken || ''}
       ${sp ? '<h2 class="menu-blok">📘 Leerpad</h2>' : ''}

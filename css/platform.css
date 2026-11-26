@@ -157,3 +157,10 @@ h2.menu-blok { margin-top: 26px; }
 .vb .vb-formule { margin-top: 8px; text-align: center; }
 ol.stappen-uitleg { text-align: left; margin: 6px 0 8px; padding-left: 1.4em; line-height: 1.5; }
 ol.stappen-uitleg li { margin: 3px 0; }
+
+/* wiskundedoelen onder de titel van een knop (js/menu.js) */
+.doelen { font-size: 11.5px; color: #6b7a8c; margin-top: 3px; line-height: 1.45; }
+.doelen .doel { white-space: nowrap; }
+.doelen b { font-weight: 600; color: #4e5d70; }
+h1 + .doelen { margin: -8px 0 12px; font-size: 12.5px; }
+@media (max-width: 600px) { .doelen .doel { white-space: normal; } }

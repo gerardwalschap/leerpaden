@@ -462,7 +462,7 @@
         const nr = k.ster ? '★' : k.plus ? '+' : k.teken ? esc(k.teken) : String.fromCharCode(65 + (k.groep != null ? k.groep : i));
         return `<div class="stap hoofdstuk open${k.plus ? ' menu-knop plus' : ''}"><div class="nr">${nr}</div>
           <div class="vul"><div class="titel">${esc(titel)}${delen && delen.length ? ` <span class="klein">· deel ${delen.length > 1 ? `${delen[0]}–${delen[delen.length - 1]}` : delen[0]}</span>` : ''}</div>
-            ${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ''}<div class="lp-lijst">${regels.join('')}</div></div></div>`;
+            ${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ''}${window.doelenHTML ? doelenHTML(k) : ''}<div class="lp-lijst">${regels.join('')}</div></div></div>`;
       }).join('')}</div>
       <p class="klein legende">Een spel bij een onderwerp zetten of de indeling wijzigen: <code>js/menu.js</code>.</p>`;
   }
