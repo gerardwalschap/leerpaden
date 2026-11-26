@@ -9,6 +9,8 @@
 // * Speeltijd: enkel tijd waarin het spel zichtbaar is én de leerling iets doet (klik, toets, scroll).
 //   Twee minuten niets gedaan = de klok staat stil.
 (() => {
+  // Vrije link (…/?vrij=1): iedereen mag spelen zonder aanmelding; voortgang enkel in de eigen browser, niets naar de databank.
+  if (/[?&]vrij=1\b/.test(location.search)) return;
   const delen = location.pathname.split('/').filter(Boolean);
   if (/\.html?$/.test(delen[delen.length - 1] || '')) delen.pop();
   const map = delen[delen.length - 1];
