@@ -697,7 +697,7 @@
         <select id="lpfilter" aria-label="Leerpad"><option value="">Alle leerpaden</option>${lpOpties(S.lpFilter, true)}</select></div>` : '<div class="kaart"><p>Nog geen accounts.</p></div>'}
       ${alle.length ? `<div class="werkbalk bulk">
         <span class="klein">${sel.length} geselecteerd</span>
-        <select id="bulkprog">${lpOpties(S.lpFilter && S.lpFilter !== '-' ? S.lpFilter : S.prog)}</select>
+        <select id="bulkprog">${lpOpties(S.bulkProg || (S.lpFilter && S.lpFilter !== '-' ? S.lpFilter : S.prog))}</select>
         <button class="licht" data-a="bulk" data-aan="1" ${sel.length ? '' : 'disabled'}>Koppelen</button>
         <button class="licht" data-a="bulk" data-aan="0" ${sel.length ? '' : 'disabled'}>Ontkoppelen</button>
         <button class="licht" data-a="bulkreset" ${sel.length ? '' : 'disabled'}>Nieuwe wachtwoorden + inlogbrieven</button>
@@ -1103,6 +1103,8 @@
     if (as) as.onchange = () => { filterAlle(S.alle).forEach(l => as.checked ? S.selectie.add(l.id) : S.selectie.delete(l.id)); render(); };
     const lf = document.getElementById('lpfilter');
     if (lf) lf.onchange = () => { S.lpFilter = lf.value; render(); };
+    const bp = document.getElementById('bulkprog');
+    if (bp) bp.onchange = () => { S.bulkProg = bp.value; }; // keuze onthouden: anders springt de lijst terug bij elk vinkje
     app.querySelectorAll('input.insch').forEach(c => c.onchange = async () => {
       c.disabled = true;
       try {
