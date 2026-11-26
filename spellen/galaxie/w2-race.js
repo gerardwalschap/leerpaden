@@ -2,7 +2,7 @@
 K.WERELDEN[2] = (() => {
   const { BW, BH, ctx, rand, klem } = K;
   const SEG = 200, ZICHT = 160, WEG = 2000, CAMH = 1000, DIEPTE = 1 / Math.tan((100 / 2) * Math.PI / 180);
-  const SPELERZ = CAMH * DIEPTE, MAX = 5200, VRAGEN = 4, LANES = [-0.66, 0, 0.66];
+  const SPELERZ = CAMH * DIEPTE, MAX = 3400, VRAGEN = 4, LANES = [-0.66, 0, 0.66];
   let segs, N, LENGTE, pos, snelheid, x, stuur, t, objecten, poortNr, opgelost, lucht, finish, poortActief;
 
   function bouw() {
@@ -26,17 +26,19 @@ K.WERELDEN[2] = (() => {
     }
     objecten.push({ z: LENGTE * 0.45, lane: 1, soort: 'hart' });
   }
+  // De opgave als gewone tekst (voor in het spelveld): (−3)², −19 − 11, …
+  const opgaveTekst = (q) => W.platteTekst(String(q.v.tex || '').replace(/\\dfrac/g, '\\frac')).replace(/\s*=\s*\?\s*$/, '').trim() + ' = ?';
   function nieuwePoort(z, q) {
     // geen obstakels rond de poort
     objecten = objecten.filter(o => !(o.soort === 'ijs' && Math.abs(o.z - z) < 4500));
-    const p = { z, soort: 'poort', q, opties: q.opties.slice() };
+    const p = { z, soort: 'poort', q, opties: q.opties.slice(), tekst: opgaveTekst(q) };
     objecten.push(p); poortActief = p;
     K.toonVraag(q, '🏎️ Rijd door de juiste poort');
   }
 
   function start() {
     bouw(); plaatsObjecten(); t = 0; pos = 0; snelheid = 0; x = 0; stuur = 0; lucht = 0; poortNr = 0; opgelost = 0; finish = null;
-    nieuwePoort(9000, K.vraag(2));
+    nieuwePoort(16000, K.vraag(2));
   }
   function update(dt) {
     t += dt;
@@ -58,17 +60,17 @@ K.WERELDEN[2] = (() => {
         const op = o.opties[lane];
         o.weg = true;
         if (op && op.goed) {
-          K.goed(BW / 2, BH - 160, 100); snelheid = MAX * 1.15; opgelost++;
+          K.goed(BW / 2, BH - 160, 100); snelheid = MAX * 1.1; opgelost++;
           if (opgelost >= VRAGEN) { poortActief = null; finish = { z: pos + 14000, soort: 'finish' }; objecten.push(finish); K.infoPaneel('🏁', 'Wereld ℤ — De IJsrace', 'Alle poorten gehaald! Rijd door naar de <b>finish</b> 🏁'); }
-          else nieuwePoort(pos + 26000, K.vraag(2));
+          else nieuwePoort(pos + 30000, K.vraag(2));
         } else if (op) {
           K.fout(BW / 2, BH - 160); snelheid *= 0.5;
           const rest = o.opties.map(q => (q === op ? null : q));
-          const p = { z: pos + 22000, soort: 'poort', q: o.q, opties: rest }; objecten.push(p); poortActief = p;
+          const p = { z: pos + 24000, soort: 'poort', q: o.q, opties: rest, tekst: o.tekst }; objecten.push(p); poortActief = p;
         } else {
           // door een lege doorgang: de poort komt terug
           K.popup(BW / 2, BH - 180, 'Gemist! Nog eens…', '#fff', 22);
-          const p = { z: pos + 22000, soort: 'poort', q: o.q, opties: o.opties }; objecten.push(p); poortActief = p;
+          const p = { z: pos + 24000, soort: 'poort', q: o.q, opties: o.opties, tekst: o.tekst }; objecten.push(p); poortActief = p;
         }
       } else if (Math.abs(LANES[o.lane] - x) < 0.36) {
         if (o.soort === 'munt') { o.weg = true; K.munt(BW / 2, BH - 140); }
@@ -124,12 +126,14 @@ K.WERELDEN[2] = (() => {
           const bh = sc * 200; for (let i = 0; i < 16; i++) for (let j = 0; j < 2; j++) { ctx.fillStyle = (i + j) % 2 ? '#111' : '#fff'; ctx.fillRect(p.x - hw * 1.1 + i * hw * 2.2 / 16, by - sc * 900 + j * bh / 2, hw * 2.2 / 16 + 1, bh / 2 + 1); }
           continue;
         }
+        if (o.tekst && sc > 0.04) { const top = by - sc * 1150; ctx.save(); ctx.translate(p.x, top); const f = Math.min(2, sc * 5.5); ctx.scale(f, f); K.bordje(0, 0, o.tekst, { kleur: '#7b3fe4', groot: 22, achter: 'rgba(255,253,245,.97)', tekst: '#1b1f3b' }); ctx.restore();
+          ctx.fillStyle = '#2b3a67'; ctx.fillRect(p.x - hw * 0.02, top + sc * 60, hw * 0.04, sc * 300); }
         LANES.forEach((l, i) => {
           const op = o.opties[i], cxp = p.x + l * hw, bw = hw * 0.55, top = by - sc * 700;
           if (!op) { ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(cxp - bw, top, bw * 2, sc * 40); return; }
           ctx.fillStyle = '#2b3a67'; ctx.fillRect(cxp - bw, top, sc * 50, by - top); ctx.fillRect(cxp + bw - sc * 50, top, sc * 50, by - top);
           ctx.fillStyle = ['#ff7b00', '#7b3fe4', '#00a86b'][i]; ctx.fillRect(cxp - bw, top - sc * 60, bw * 2, sc * 190);
-          if (sc > 0.05) { ctx.save(); ctx.translate(cxp, top + sc * 35); const f = Math.min(2.2, sc * 7); ctx.scale(f, f); K.bordje(0, 0, op.t, { kleur: '#fff', groot: 20, achter: 'rgba(15,20,45,.95)' }); ctx.restore(); }
+          if (sc > 0.02) { ctx.save(); ctx.translate(cxp, top + sc * 35); const f = Math.max(0.35, Math.min(2.2, sc * 7)); ctx.scale(f, f); K.bordje(0, 0, op.t, { kleur: '#fff', groot: 20, achter: 'rgba(15,20,45,.95)' }); ctx.restore(); }
         });
         continue;
       }
@@ -143,11 +147,26 @@ K.WERELDEN[2] = (() => {
         ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fillRect(ox - w * 0.3, p.y - h * 0.85, w * 0.15, h * 0.5);
       }
     }
+    // de opgave groot in beeld, in de lucht boven de weg
+    if (poortActief && poortActief.tekst) {
+      const tk = poortActief.tekst, afst = Math.max(0, poortActief.z - (pos + SPELERZ));
+      ctx.font = '900 40px "Lilita One", sans-serif'; const w = Math.max(260, ctx.measureText(tk).width + 60);
+      K.rr(BW / 2 - w / 2, 64, w, 70, 18); ctx.fillStyle = 'rgba(255,253,245,.96)'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = '#7b3fe4'; ctx.stroke();
+      ctx.fillStyle = '#1b1f3b'; ctx.textAlign = 'center'; ctx.fillText(tk, BW / 2, 113);
+      // de drie antwoorden in de kleur van hun poort (links · midden · rechts)
+      const KL = ['#ff7b00', '#7b3fe4', '#00a86b'], NM = ['links', 'midden', 'rechts'];
+      LANES.forEach((l, i) => { const op = poortActief.opties[i], cx = BW / 2 + (i - 1) * 150;
+        K.rr(cx - 66, 146, 132, 50, 12); ctx.fillStyle = op ? KL[i] : 'rgba(255,255,255,.25)'; ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = '700 11px "Atkinson Hyperlegible", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(NM[i], cx, 160);
+        ctx.fillStyle = '#fff'; ctx.font = '900 24px "Lilita One", sans-serif'; ctx.fillText(op ? op.t : '✖', cx, 188); });
+      ctx.font = '700 15px "Atkinson Hyperlegible", sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText(afst > 9000 ? 'Reken uit en kies je rijstrook' : 'Poort in zicht: stuur naar het juiste antwoord!', BW / 2, 220);
+    }
     // de racewagen met Pi
     tekenWagen(BW / 2 + stuur * 8, BH - 70);
     // snelheid
     ctx.fillStyle = 'rgba(10,14,34,.6)'; K.rr(BW - 170, BH - 50, 160, 38, 19); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = '900 18px "Lilita One", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`${Math.round(snelheid / MAX * 180)} km/u`, BW - 90, BH - 24);
+    ctx.fillStyle = '#fff'; ctx.font = '900 18px "Lilita One", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`${Math.round(snelheid / MAX * 110)} km/u`, BW - 90, BH - 24);
     ctx.fillStyle = 'rgba(10,14,34,.6)'; K.rr(10, BH - 50, 190, 38, 19); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText(`🏁 poort ${Math.min(VRAGEN, opgelost + 1)}/${VRAGEN}`, 105, BH - 24);
     K.tekenDeeltjes();
   }

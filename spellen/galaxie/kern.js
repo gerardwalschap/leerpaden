@@ -113,7 +113,7 @@ const K = (() => {
     if (m) { const kg = groot * 0.85; ctx.font = `700 ${kg}px "Atkinson Hyperlegible", sans-serif`; w = Math.max(ctx.measureText(m[2]).width, ctx.measureText(m[3]).width) + (m[1] ? 18 : 0) + 22; h = kg * 2 + 16; }
     else { w = Math.max(opt.minB || 46, ctx.measureText(tekst).width + 22); h = groot + 16; }
     rr(x - w / 2, y - h / 2, w, h, 10); ctx.fillStyle = achter; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = kleur; ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = opt.tekst || '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     if (m) {
       const kg = groot * 0.85, bx = x + (m[1] ? 7 : 0), bw = Math.max(ctx.measureText(m[2]).width, ctx.measureText(m[3]).width) + 6;
       if (m[1]) ctx.fillText('−', x - bw / 2 - 4, y);
