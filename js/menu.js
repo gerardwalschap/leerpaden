@@ -71,8 +71,8 @@ window.MENUS = {
         knoppen: [
           { leerpad: 'functieleer', groep: 0, titel: 'Wat is een functie?', sub: 'Functiewaarden · Domein en bereik · Tekentabel en verloop', doelen: ['BV3_06.03', 'BV3_06.04'], spellen: [] },
           { leerpad: 'functieleer', groep: 1, titel: 'Eerstegraadsfuncties', sub: 'f(x) = ax + b · Voorschrift opstellen · Grafisch oplossen · Helling', doelen: ['BV3_06.05', 'BV3_06.06', 'BV3_06.07', 'BV3_06.17'], spellen: [] },
-          { leerpad: 'functieleer', groep: 2, titel: 'Exponentiële functies', sub: 'Lineair of exponentieel', doelen: ['BV3_06.09', 'BV3_06.17'], spellen: [] },
-          { leerpad: 'functieleer', groep: 3, titel: 'Eindtest functieleer', sub: 'Alles door elkaar', ster: true, doelen: ['BV3_06.03', 'BV3_06.04', 'BV3_06.05', 'BV3_06.06', 'BV3_06.07', 'BV3_06.09', 'BV3_06.17'], spellen: [] },
+          { leerpad: 'functieleer', groep: 2, titel: 'Exponentiële functies', sub: 'Lineair of exponentieel', doelen: ['BV3_06.09', 'BV3_06.15', 'BV3_06.17'], spellen: [] },
+          { leerpad: 'functieleer', groep: 3, titel: 'Eindtest functieleer', sub: 'Alles door elkaar', ster: true, doelen: ['BV3_06.03', 'BV3_06.04', 'BV3_06.05', 'BV3_06.06', 'BV3_06.07', 'BV3_06.09', 'BV3_06.15', 'BV3_06.17'], spellen: [] },
         ] },
 
       { id: 'kansrekenen', nr: 4, icoon: '🎲', titel: 'Telproblemen en kansrekenen', sub: 'Tellen · Kansen bepalen',
@@ -86,8 +86,8 @@ window.MENUS = {
         knoppen: [
           { leerpad: 'statistiek', groep: 0, titel: 'Steekproeven', doelen: ['BV3_06.12'], spellen: [] },
           { leerpad: 'statistiek', groep: 1, titel: 'Gegevens verwerken', sub: 'Frequentietabel · Histogram · Gemiddelde en standaardafwijking', doelen: ['BV3_06.13', 'BV3_06.17'], spellen: [] },
-          { leerpad: 'statistiek', groep: 2, titel: 'De normale verdeling', doelen: ['BV3_06.13', 'BV3_06.14', 'BV3_06.17'], spellen: [] },
-          { leerpad: 'statistiek', groep: 3, titel: 'Eindtest', sub: 'Alles door elkaar', ster: true, doelen: ['BV3_06.12', 'BV3_06.13', 'BV3_06.14', 'BV3_06.17'], spellen: [] },
+          { leerpad: 'statistiek', groep: 2, titel: 'De normale verdeling', doelen: ['BV3_06.13', 'BV3_06.14', 'BV3_06.15', 'BV3_06.17'], spellen: [] },
+          { leerpad: 'statistiek', groep: 3, titel: 'Eindtest', sub: 'Alles door elkaar', ster: true, doelen: ['BV3_06.12', 'BV3_06.13', 'BV3_06.14', 'BV3_06.15', 'BV3_06.17'], spellen: [] },
         ] },
     ],
   },
