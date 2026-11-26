@@ -204,8 +204,8 @@ const D1 = {
       <p>woorden ↔ tabel ↔ voorschrift ↔ grafiek. Fietsverhuur: € 5 vaste huur en € 2 per uur, dus $f(x) = 5 + 2x$.</p>
       <p><b>Empirische functie:</b> de uitvoer wordt <b>gemeten</b>. <b>Wiskundige functie:</b> de uitvoer wordt <b>berekend</b> met een voorschrift.</p></div>`,
   voorbeelden: [
-    { tex: tabelTex([2, 4, 4, 6, 8], [1, 2, 3, 4, 5]), stappen: ['\\text{bij } x = 4 \\text{ horen twee uitvoerwaarden (2 en 3)}', '\\text{geen functie}'] },
-    { tex: tabelTex([6, 4, 3, 1, 0], [2, 3, 4, 12, null]), stappen: ['\\text{bij } x = 0 \\text{ hoort geen uitvoer: dat mag (hoogstens één)}', '\\text{functie}'] },
+    { vraag: 'Is dit een functie?', tex: tabelTex([2, 4, 4, 6, 8], [1, 2, 3, 4, 5]), stappen: ['\\text{bij } x = 4 \\text{ horen twee uitvoerwaarden (2 en 3)}', '\\text{geen functie}'] },
+    { vraag: 'Is dit een functie?', tex: tabelTex([6, 4, 3, 1, 0], [2, 3, 4, 12, null]), stappen: ['\\text{bij } x = 0 \\text{ hoort geen uitvoer: dat mag (hoogstens één)}', '\\text{functie}'] },
   ],
   soorten: {
     voorspel: { naam: 'Kan je het voorspellen?', gen() {
@@ -350,7 +350,7 @@ const D3 = {
     <div class="kader"><div class="kader-titel">Zo typ je</div><p><code>[-3, 4[</code> · <code>]-∞, 2] ∪ [3, +∞[</code> · <code>R</code> · <code>{3}</code> — of gebruik de knoppen.</p>
       <p class="klein">Tip: kijk eerst naar de uiteinden (vol of hol?). Het bereik vind je niet altijd aan de uiteinden: zoek ook het laagste en het hoogste punt!</p></div>`,
   voorbeelden: [
-    { html: fgraf({ stukken: [{ pts: [[-5, 1], [-2, -3], [2, 4], [5, 2]], begin: 'door', eind: 'hol' }], breed: 260 }), stappen: ['\\text{links loopt de grafiek door, rechts een hol bolletje}', '\\text{dom}\\, f = {]}-\\infty, 5{[}', '\\text{links stijgt de grafiek naar boven (naar links toe): } +\\infty', '\\text{laagste punt: } -3 \\Rightarrow \\text{ber}\\, f = [-3, +\\infty['] },
+    { vraag: 'Bepaal het domein en het bereik van $f$.', html: fgraf({ stukken: [{ pts: [[-5, 1], [-2, -3], [2, 4], [5, 2]], begin: 'door', eind: 'hol' }], breed: 260 }), stappen: ['\\text{links loopt de grafiek door, rechts een hol bolletje}', '\\text{dom}\\, f = {]}-\\infty, 5{[}', '\\text{links stijgt de grafiek naar boven (naar links toe): } +\\infty', '\\text{laagste punt: } -3 \\Rightarrow \\text{ber}\\, f = [-3, +\\infty['] },
   ],
   soorten: {
     lees: { naam: 'Domein en bereik aflezen', gen() {
@@ -488,7 +488,7 @@ const D5 = {
       <li>$\\text{dom}\\, f = \\mathbb{R}$, $\\text{ber}\\, f = \\mathbb{R}$, nulwaarde $x = 0$, nulpunt $(0, 0)$.</li></ul>
       <p class="midden">$a > 0: \\; ${tekenAx(1).teken} \\qquad a < 0: \\; ${tekenAx(-1).teken}$</p></div>`,
   voorbeelden: [
-    { tex: 'g(x) = -2x', stappen: ['\\text{eerste graad, } a = -2 < 0', '\\text{dalend}'] },
+    { vraag: 'Is $g$ stijgend of dalend?', tex: 'g(x) = -2x', stappen: ['\\text{eerste graad, } a = -2 < 0', '\\text{dalend}'] },
     { tex: '\\text{Een rechte door de oorsprong gaat door } (4, -2). \\; a = ?', stappen: ['a \\cdot 4 = -2', 'a = -0{,}5'] },
   ],
   soorten: {
@@ -613,8 +613,8 @@ const D7 = {
       <p class="klein">Uit een grafiek: $b$ = snijpunt met de $y$-as, $a$ met twee duidelijke punten.</p></div>
     <div class="kader"><div class="kader-titel">Zo typ je</div><p>Typ enkel het rechterlid: <code>2x + 1</code> of <code>7/5x + 19/5</code>.</p></div>`,
   voorbeelden: [
-    { tex: 'A(-1, 3) \\text{ en } B(3, -5)', stappen: ['a = \\frac{-5 - 3}{3 - (-1)} = \\frac{-8}{4} = -2', 'y - 3 = -2(x + 1)', 'y = -2x - 2 + 3', 'f(x) = -2x + 1', '\\text{controle: } -2 \\cdot 3 + 1 = -5 \\;\\checkmark'] },
-    { tex: tabelTex([-10, -6, -2, 2, 6], [9, 7, 5, 3, 1]), stappen: ['\\Delta x = +4, \\; \\Delta y = -2 \\text{ (overal)}', 'a = \\frac{-2}{4} = -0{,}5'] },
+    { vraag: 'Stel het functievoorschrift op van de rechte door $A$ en $B$.', tex: 'A(-1, 3) \\text{ en } B(3, -5)', stappen: ['a = \\frac{-5 - 3}{3 - (-1)} = \\frac{-8}{4} = -2', 'y - 3 = -2(x + 1)', 'y = -2x - 2 + 3', 'f(x) = -2x + 1', '\\text{controle: } -2 \\cdot 3 + 1 = -5 \\;\\checkmark'] },
+    { vraag: 'Bepaal de richtingscoëfficiënt $a$ uit de tabel.', tex: tabelTex([-10, -6, -2, 2, 6], [9, 7, 5, 3, 1]), stappen: ['\\Delta x = +4, \\; \\Delta y = -2 \\text{ (overal)}', 'a = \\frac{-2}{4} = -0{,}5'] },
   ],
   soorten: {
     a: { naam: 'Toenamegetal uit twee punten', gen() {
@@ -698,8 +698,8 @@ const D8 = {
       <p class="klein">Vergelijking → één getal: $V = \\{2\\}$. Ongelijkheid → een halfrechte: $V = \\,]2, +\\infty[$.</p></div>
     <div class="kader"><div class="kader-titel">Zo typ je</div><p><code>{4}</code> &nbsp; · &nbsp; <code>]4, +∞[</code> &nbsp; · &nbsp; <code>]-∞, 4]</code>. Gebruik de knoppen $-\\infty$ en $+\\infty$ onder het invulvak.</p></div>`,
   voorbeelden: [
-    { html: fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: 0.5, b: 1, label: 'f' }, { a: 0, b: 3, label: 'y = 3', kleur: ORANJE }], punten: [{ x: 4, y: 3, label: '(4, 3)' }] }), tex: '\\tfrac12 x + 1 = 3', stappen: ['\\text{teken } y = 3', '\\text{snijpunt } (4, 3)', 'V = \\{4\\}'] },
-    { html: fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: -1, b: 2, label: 'f' }], punten: [{ x: 2, y: 0, label: '(2, 0)', hol: true }] }), tex: '-x + 2 < 0', stappen: ['< 0: \\text{ onder de } x\\text{-as}', '\\text{de rechte daalt: onder de } x\\text{-as rechts van } x = 2', '2 \\text{ hoort er niet bij: } V = \\,]2, +\\infty['] },
+    { vraag: 'Los grafisch op.', html: fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: 0.5, b: 1, label: 'f' }, { a: 0, b: 3, label: 'y = 3', kleur: ORANJE }], punten: [{ x: 4, y: 3, label: '(4, 3)' }] }), tex: '\\tfrac12 x + 1 = 3', stappen: ['\\text{teken } y = 3', '\\text{snijpunt } (4, 3)', 'V = \\{4\\}'] },
+    { vraag: 'Los grafisch op.', html: fgraf({ x: [-6, 6], y: [-6, 6], rechten: [{ a: -1, b: 2, label: 'f' }], punten: [{ x: 2, y: 0, label: '(2, 0)', hol: true }] }), tex: '-x + 2 < 0', stappen: ['< 0: \\text{ onder de } x\\text{-as}', '\\text{de rechte daalt: onder de } x\\text{-as rechts van } x = 2', '2 \\text{ hoort er niet bij: } V = \\,]2, +\\infty['] },
   ],
   soorten: {
     vgl: { naam: 'Vergelijking: f(x) = getal', gen() {
@@ -821,7 +821,7 @@ const D10 = {
     <div class="kader werk"><div class="kader-titel">Rekenen met het model</div>
       <p>Een stad telt 20 000 inwoners en groeit met 3 % per jaar: $N(t) = 20\\,000 \\cdot 1{,}03^t$ en $N(10) = 20\\,000 \\cdot 1{,}03^{10} \\approx 26\\,878$ inwoners. Rekenmachine: de macht met ^ (of $x^y$).</p></div>`,
   voorbeelden: [
-    { tex: 'W(t) = 30\\,000 \\cdot 0{,}85^t', stappen: ['b = 30\\,000, \\; g = 0{,}85', '\\text{daling, want } g < 1 \\; (-15\\,\\%)', 'W(5) = 30\\,000 \\cdot 0{,}85^5 \\approx 13\\,311{,}16'] },
+    { vraag: 'Lees de beginwaarde $b$ en de groeifactor $g$ af. Is dit groei of daling, en met hoeveel procent? Bereken $W(5)$.', tex: 'W(t) = 30\\,000 \\cdot 0{,}85^t', stappen: ['b = 30\\,000, \\; g = 0{,}85', '\\text{daling, want } g < 1 \\; (-15\\,\\%)', 'W(5) = 30\\,000 \\cdot 0{,}85^5 \\approx 13\\,311{,}16'] },
   ],
   soorten: {
     herken: { naam: 'Lineair, exponentieel of geen van beide?', gen() {

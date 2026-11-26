@@ -345,7 +345,7 @@
       d.voorbeelden.map((v, i) => {
         const k = S.prog + '-' + d.nr + '-' + i, n = vbStap[k] || 0;
         const stap = (s) => typeof s === 'object' ? s.html : T(s);
-        return `<div class="vb"><div class="opgave"><b>Voorbeeld ${i + 1}.</b> &nbsp; ${W.opgave(v)}</div>
+        return `<div class="vb"><div class="opgave"><b>Voorbeeld ${i + 1}.</b> &nbsp; ${v.vraag ? `${v.vraag}<div class="vb-formule">${W.opgave(v)}</div>` : W.opgave(v)}</div>
           <div class="stappen">${v.stappen.slice(0, n).map(s => `<div>${stap(s)}</div>`).join('')}</div>
           ${n < v.stappen.length ? `<div style="margin-top:8px"><button class="licht" data-a="vbstap" data-k="${k}">${n === 0 ? 'Toon de oplossing' : 'Volgende stap'}</button>
             ${n === 0 && v.stappen.length > 1 ? `<button class="link klein" data-a="vballes" data-k="${k}" data-n="${v.stappen.length}">alles tonen</button>` : ''}</div>` : ''}

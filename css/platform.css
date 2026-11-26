@@ -154,3 +154,4 @@ button.icoon-knop { padding: 4px 8px; line-height: 1; }
 h2.menu-blok { margin-top: 26px; }
 @media (max-width: 560px) { .menu-knop.plus { margin-left: 14px; } .menu-tegel { min-height: 0; } }
 .grijs-tekst { color: var(--grijs, #778); }
+.vb .vb-formule { margin-top: 8px; text-align: center; }
