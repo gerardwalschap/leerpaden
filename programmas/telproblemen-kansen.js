@@ -21,6 +21,8 @@ const kTex = (texen) => texen.map((t, i) => ({ k: String(i), l: t }));
 const kZin = (zinnen) => zinnen.map((t, i) => ({ k: String(i), l: t, html: true }));
 const delen = (...d) => ({ soort: 'delen', delen: d.map(([label, antw]) => ({ label, antw })) });
 const opgave = (t) => `<p class="opgave-tekst">${t}</p>`;
+// uitleg stap voor stap in gewone zinnen (komt in de feedback boven de berekening)
+const stappen = (...z) => `<ol class="stappen-uitleg">${z.filter(Boolean).map(x => `<li>${x}</li>`).join('')}</ol>`;
 const tekst = (x) => String(x).replace('.', ',');
 const duiz = (x) => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');          // 10 000 (gewone tekst)
 const tgd = (x) => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, '\\,');          // 10\,000 (TeX)
@@ -229,15 +231,27 @@ const D1 = {
       <li>Handig als het aantal keuzes <b>afhangt van de vorige keuze</b>.</li></ul>
       <p class="klein">Voorgerecht soep (S) of salade (L), daarna pasta (P), vol-au-vent (V) of vis (F): 6 paden, dus 6 menu's.</p>
       ${boom(boomVan([['S', 'L'], ['P', 'V', 'F']]), { uitkomst: true, dy: 22 })}</div>
+    <div class="kader"><div class="kader-titel">Zo teken je een boomdiagram</div>
+      <ol><li>Welke keuzes maak je <b>na elkaar</b>? Elke keuze krijgt een eigen kolom in de boom.</li>
+        <li>Teken vanaf het beginpunt een tak voor elke mogelijkheid van de <b>1ste keuze</b>.</li>
+        <li>Teken aan het einde van <b>elke</b> tak de takken van de <b>volgende keuze</b>. Kan iets niet meer (een knikker is op, de match is al gedaan)? Dan teken je daar geen tak.</li>
+        <li>Schrijf bij elk eindpunt het pad, bv. SP = soep en pasta.</li>
+        <li>Tel de eindpunten. Wordt er iets speciaals gevraagd? Tel dan alleen de paden die passen bij de vraag.</li></ol></div>
     <div class="kader eig"><div class="kader-titel">Niet elke tak splitst even veel</div>
       <p>In een zakje zitten 2 rode (R) en 1 blauwe (B) knikker. Je neemt er 2 uit zonder terug te leggen.
       Na B kan er enkel nog R volgen: er zijn maar <b>3</b> kleurencombinaties (RR, RB, BR).</p>
-      ${boom(boomZakje({ R: 2, B: 1 }, 2), { uitkomst: true })}</div>`,
+      ${boom(boomZakje({ R: 2, B: 1 }, 2), { uitkomst: true })}</div>
+    <div class="kader"><div class="kader-titel">Woorden die je in de vragen tegenkomt</div>
+      <ul><li><b>Uitkomst</b> of <b>mogelijkheid</b>: één pad in de boom, bv. KMK.</li>
+        <li><b>Precies 2 keer</b>: exact 2 keer, niet meer en niet minder.</li>
+        <li><b>Minstens één keer</b>: één keer of meer.</li>
+        <li><b>Zonder terugleggen</b>: wat je uit het zakje neemt, gaat er niet meer in. Het kan dus niet nog eens volgen als het op is.</li>
+        <li><b>Verloop</b> (van een match): de volgorde waarin de sets gewonnen worden. MTM betekent: Mila wint de 1ste set, Tom de 2de, Mila de 3de.</li></ul></div>`,
   voorbeelden: [
     { html: `${opgave('Je gooit 3 keer met een muntstuk: kop (K) of munt (M). Bij hoeveel uitkomsten gooi je precies 2 keer kop?')}${boom(boomVan([['K', 'M'], ['K', 'M'], ['K', 'M']]), { uitkomst: true, dy: 22 })}`,
-      stappen: ['\\text{8 eindpunten, dus 8 uitkomsten}', '\\text{precies 2 keer kop: KKM, KMK en MKK}', '\\text{3 uitkomsten}'] },
-    { html: `${opgave('Mila en Tom spelen een match. Wie eerst 2 sets wint, wint de match. Hoeveel verlopen zijn er?')}${boom(matchBoom('M', 'T'), { uitkomst: true })}`,
-      stappen: ['\\text{na MM of TT is de match al gedaan: daar splitst de boom niet meer}', '\\text{eindpunten: MM, MTM, MTT, TMM, TMT, TT}', '\\text{6 verlopen}'] },
+      stappen: ['\\text{3 worpen na elkaar, bij elke worp 2 takken: K of M}', '\\text{8 eindpunten, dus 8 uitkomsten}', '\\text{precies 2 keer kop = exact 2 keer K: KKM, KMK en MKK}', '\\text{3 uitkomsten}'] },
+    { html: `${opgave('Mila en Tom spelen een match. Wie eerst 2 sets wint, wint de match. Hoeveel verlopen zijn er?')}<p class="klein">💡 Een verloop is de volgorde waarin de sets gewonnen worden, bv. MTM.</p>${boom(matchBoom('M', 'T'), { uitkomst: true })}`,
+      stappen: ['\\text{1ste set: Mila (M) of Tom (T) wint}', '\\text{na MM of TT heeft iemand al 2 sets: de match is gedaan, daar splitst de boom niet meer}', '\\text{na MT of TM staat het 1-1: er volgt een 3de set}', '\\text{eindpunten: MM, MTM, MTT, TMM, TMT, TT}', '\\text{6 verlopen}'] },
   ],
   soorten: {
     keuzes: { naam: 'Keuzes na elkaar', gen() {
@@ -245,61 +259,90 @@ const D1 = {
       const zin = `${S.t} ${st.map(s => s.length === 2 ? `${s[0]} of ${s[1]}` : `${s.slice(0, -1).join(', ')} of ${s[s.length - 1]}`).join(', daarna ')}.`;
       const toon = tot <= 12, v = kies(st.length === 3 ? ['tot', 'met', 'zonder'] : ['tot', 'met']);
       const fig = toon ? boom(boomVan(S.afk), { dy: 20, dx: 70 }) : '';
+      const opties = (s) => s.length === 2 ? `${s[0]} of ${s[1]}` : `${s.slice(0, -1).join(', ')} of ${s[s.length - 1]}`;
+      const rang = (k) => k === 0 ? '1ste' : `${k + 1}de`;
+      const perKeuze = (vast) => st.map((s, k) => vast.includes(k) ? `${rang(k)} keuze: ligt vast → <b>1</b> mogelijkheid` : `${rang(k)} keuze: ${opties(s)} → <b>${s.length}</b> mogelijkheden`).join('<br>');
       if (v === 'tot') return { soort: 'keuzes', opdracht: 'Hoeveel mogelijkheden zijn er?', html: opgave(zin) + fig, sleutel: zin + v, rapport: zin,
-        antw: aantal(tot), uitleg: [`\\text{aantal eindpunten: } ${st.map(s => s.length).join(' \\cdot ')} = ${tot}`] };
+        antw: aantal(tot), uitlegHtml: stappen(`Je maakt ${st.length} keuzes na elkaar. Elke keuze is een kolom in de boom.`, perKeuze([]),
+          'Elk pad in de boom is één mogelijkheid. Splitst elke tak telkens even veel, dan tel je de eindpunten snel door te vermenigvuldigen.'),
+        uitleg: [`${st.map(s => s.length).join(' \\cdot ')} = ${tot} \\text{ mogelijkheden}`] };
       const i = rnd(0, st.length - 1), j = rnd(0, st[i].length - 1), w = st[i][j], r = tot / st[i].length;
-      if (v === 'met') return { soort: 'keuzes', opdracht: `Hoeveel mogelijkheden zijn er met ${w}?`, html: opgave(zin) + fig, sleutel: zin + w, rapport: `${zin} (met ${w})`,
-        antw: aantal(r), uitleg: [`\\text{${w} ligt vast: tel enkel de paden met ${w}}`, st.length > 2 ? `${st.filter((_, k) => k !== i).map(s => s.length).join(' \\cdot ')} = ${r}` : `\\text{${r} paden}`] };
+      if (v === 'met') return { soort: 'keuzes', opdracht: `Bij hoeveel mogelijkheden kies je „${w}”?`, html: opgave(zin) + fig, sleutel: zin + w, rapport: `${zin} (met ${w})`,
+        antw: aantal(r), uitlegHtml: stappen(`„${w}” ligt vast. Bij die keuze heb je dus maar 1 mogelijkheid: in de boom tel je alleen de paden met „${w}”.`, perKeuze([i]), 'Vermenigvuldig wat overblijft.'),
+        uitleg: [`${st.map((s, k) => k === i ? 1 : s.length).join(' \\cdot ')} = ${r} \\text{ mogelijkheden}`] };
       const i2 = (i + 1) % st.length, w2 = st[i2][rnd(0, st[i2].length - 1)], r2 = tot / st[i].length / st[i2].length;
-      return { soort: 'keuzes', opdracht: `Je kiest zeker ${i < i2 ? w : w2} en ${i < i2 ? w2 : w}. Hoeveel keuzes heb je nog?`, html: opgave(zin) + fig, sleutel: zin + w + w2, rapport: `${zin} (${w}, ${w2})`,
-        antw: aantal(r2), uitleg: [`\\text{twee keuzes liggen vast}`, `\\text{er blijven ${r2} paden over}`] };
+      const [eerst, dan] = i < i2 ? [w, w2] : [w2, w];
+      return { soort: 'keuzes', opdracht: `Je hebt al gekozen voor „${eerst}” en „${dan}”. Hoeveel mogelijkheden blijven er nog over?`, html: opgave(zin) + fig, sleutel: zin + w + w2, rapport: `${zin} (${w}, ${w2})`,
+        antw: aantal(r2), uitlegHtml: stappen(`„${eerst}” en „${dan}” liggen vast: bij die twee keuzes heb je maar 1 mogelijkheid.`, perKeuze([i, i2]), 'Alleen de keuze die nog open is, bepaalt het aantal.'),
+        uitleg: [`${st.map((s, k) => k === i || k === i2 ? 1 : s.length).join(' \\cdot ')} = ${r2} \\text{ mogelijkheden}`] };
     } },
     munt: { naam: 'Muntstuk of kinderen', gen() {
       const ctx = kies([
-        { t: 'Je gooit {n} keer met een muntstuk: kop (K) of munt (M).', a: 'K', b: 'M', u: 'uitkomsten', pr: (k) => `gooi je precies ${k} keer kop`, mi: 'gooi je minstens één keer munt' },
-        { t: 'Een gezin krijgt {n} kinderen: een jongen (J) of een meisje (M). We letten op de volgorde.', a: 'J', b: 'M', u: 'volgordes', pr: (k) => `zijn er precies ${k} ${k === 1 ? 'jongen' : 'jongens'}`, mi: 'is er minstens één meisje' },
-        { t: 'Je beantwoordt {n} waar-of-niet-waarvragen met waar (W) of niet waar (N).', a: 'W', b: 'N', u: 'manieren', pr: (k) => `antwoord je precies ${k} keer waar`, mi: 'antwoord je minstens één keer niet waar' },
+        { t: 'Je gooit {n} keer met een muntstuk: kop (K) of munt (M).', a: 'K', b: 'M', an: 'kop', bn: 'munt', keer: 'worp', u: 'uitkomsten', pr: (k) => `gooi je precies ${k} keer kop`, mi: 'gooi je minstens één keer munt' },
+        { t: 'Een gezin krijgt {n} kinderen: een jongen (J) of een meisje (M). We letten op de volgorde.', a: 'J', b: 'M', an: 'jongen', bn: 'meisje', keer: 'kind', u: 'volgordes', pr: (k) => `zijn er precies ${k} ${k === 1 ? 'jongen' : 'jongens'}`, mi: 'is er minstens één meisje' },
+        { t: 'Je beantwoordt {n} waar-of-niet-waarvragen met waar (W) of niet waar (N).', a: 'W', b: 'N', an: 'waar', bn: 'niet waar', keer: 'vraag', u: 'manieren', pr: (k) => `antwoord je precies ${k} keer waar`, mi: 'antwoord je minstens één keer niet waar' },
       ]);
       const n = kies([2, 3, 3]), zin = ctx.t.replace('{n}', n), fig = boom(boomVan(Array(n).fill([ctx.a, ctx.b])), { uitkomst: true, dy: 20 });
       const v = kies(n === 2 ? ['tot', 'precies', 'minstens'] : ['tot', 'precies', 'precies', 'minstens', 'afwisselend']);
       const p = paden(boomVan(Array(n).fill([ctx.a, ctx.b])));
       const tel = (f) => p.filter(f).length, cnt = (s) => s.split('').filter(c => c === ctx.a).length;
-      if (v === 'tot') return { soort: 'munt', opdracht: `Hoeveel ${ctx.u} zijn er?`, html: opgave(zin) + fig, sleutel: zin + v, rapport: zin, antw: aantal(2 ** n), uitleg: [`\\text{tel de eindpunten: } ${Array(n).fill(2).join(' \\cdot ')} = ${2 ** n}`] };
+      const boomZin = `Bij elke ${ctx.keer} zijn er 2 takken: ${ctx.a} (${ctx.an}) of ${ctx.b} (${ctx.bn}). Met ${n} keer na elkaar heeft de boom ${2 ** n} eindpunten: ${p.join(', ')}.`;
+      if (v === 'tot') return { soort: 'munt', opdracht: `Hoeveel ${ctx.u} zijn er?`, html: opgave(zin) + fig, sleutel: zin + v, rapport: zin, antw: aantal(2 ** n),
+        uitlegHtml: stappen(boomZin, 'Elk eindpunt is één mogelijkheid: tel de eindpunten.'), uitleg: [`${Array(n).fill(2).join(' \\cdot ')} = ${2 ** n} \\text{ ${ctx.u}}`] };
       if (v === 'precies') { const k = rnd(1, n - 1), m = p.filter(s => cnt(s) === k);
-        return { soort: 'munt', opdracht: `Bij hoeveel ${ctx.u} ${ctx.pr(k)}?`, html: opgave(zin) + fig, sleutel: zin + v + k, rapport: `${zin} ${ctx.pr(k)}`, antw: aantal(m.length), uitleg: [`\\text{${m.join(', ')}}`, `\\text{${m.length} ${ctx.u}}`] }; }
+        return { soort: 'munt', opdracht: `${ctx.u === 'manieren' ? 'Op' : 'Bij'} hoeveel ${ctx.u} ${ctx.pr(k)}?`, html: opgave(zin) + fig, sleutel: zin + v + k, rapport: `${zin} ${ctx.pr(k)}`, antw: aantal(m.length),
+          uitlegHtml: stappen(boomZin, `Precies ${k} keer ${ctx.an} betekent: exact ${k} keer ${ctx.a}, niet meer en niet minder.`, `Overloop alle eindpunten en tel de letters ${ctx.a}: ${m.map(s => `<b>${s}</b>`).join(', ')}.`),
+          uitleg: [`\\text{${m.length} ${ctx.u}}`] }; }
       if (v === 'minstens') { const m = p.filter(s => s.includes(ctx.b));
-        return { soort: 'munt', opdracht: `Bij hoeveel ${ctx.u} ${ctx.mi}?`, html: opgave(zin) + fig, sleutel: zin + v, rapport: `${zin} ${ctx.mi}`, antw: aantal(m.length), uitleg: [`\\text{enkel ${ctx.a.repeat(n)} valt weg}`, `${2 ** n} - 1 = ${m.length}`] }; }
+        return { soort: 'munt', opdracht: `${ctx.u === 'manieren' ? 'Op' : 'Bij'} hoeveel ${ctx.u} ${ctx.mi}?`, html: opgave(zin) + fig, sleutel: zin + v, rapport: `${zin} ${ctx.mi}`, antw: aantal(m.length),
+          uitlegHtml: stappen(boomZin, `Minstens één keer ${ctx.bn} = één keer of meer ${ctx.b}. Alleen het pad zonder ${ctx.b} past niet: <b>${ctx.a.repeat(n)}</b>.`, `Alle andere eindpunten tellen mee: alle ${2 ** n} min dat ene pad.`),
+          uitleg: [`${2 ** n} - 1 = ${m.length} \\text{ ${ctx.u}}`] }; }
       const m = p.filter(s => [...s].every((c, i) => !i || c !== s[i - 1]));
-      return { soort: 'munt', opdracht: `Bij hoeveel ${ctx.u} zijn twee opeenvolgende nooit gelijk?`, html: opgave(zin) + fig, sleutel: zin + v, rapport: `${zin} afwisselend`, antw: aantal(tel(s => m.includes(s))), uitleg: [`\\text{${m.join(' en ')}}`, `\\text{${m.length} ${ctx.u}}`] };
+      return { soort: 'munt', opdracht: `${ctx.u === 'manieren' ? 'Op' : 'Bij'} hoeveel ${ctx.u} is het nooit twee keer na elkaar hetzelfde?`, html: opgave(zin) + fig, sleutel: zin + v, rapport: `${zin} afwisselend`, antw: aantal(tel(s => m.includes(s))),
+        uitlegHtml: stappen(boomZin, `Nooit twee keer na elkaar hetzelfde: ${ctx.a} en ${ctx.b} moeten elkaar telkens afwisselen.`, `Begin je met ${ctx.a}, dan ligt de rest vast: <b>${m[0]}</b>. Begin je met ${ctx.b}: <b>${m[1]}</b>.`),
+        uitleg: [`\\text{${m.length} ${ctx.u}}`] };
     } },
     zakje: { naam: 'Knikkers zonder terugleggen', gen() {
       const Z = kies(ZAKJES), B = boomZakje(Z.zak, Z.k), p = paden(B), tot = Object.values(Z.zak).reduce((a, b) => a + b, 0);
       const alle = Z.k === tot;
       const zin = `In een zakje zitten ${zakTekst(Z.zak)} knikker${tot > 1 ? 's' : ''}. Je neemt er ${alle ? 'alle ' + tot : Z.k} na elkaar uit, zonder terug te leggen.`;
       const v = kies(['aantal', 'aantal', 'waarom', 'kleur']);
+      const enkel = Object.entries(Z.zak).filter(([, n]) => n === 1).map(([c]) => `${KLEURNAAM[c]} (${c})`);
+      const zonder = `Zonder terugleggen: een knikker die je genomen hebt, zit niet meer in het zakje.${enkel.length ? ` Er is maar 1 ${enkel.join(' en 1 ')} knikker: is die genomen, dan kan die kleur niet meer volgen.` : ' Zijn alle knikkers van een kleur genomen, dan kan die kleur niet meer volgen.'}`;
+      const teken = `Teken de boom met ${Z.k} trekkingen na elkaar. Bij elke trekking teken je alleen de kleuren die nog in het zakje zitten.`;
       if (v === 'waarom') {
         const k = Object.keys(Z.zak).length;
         return { soort: 'zakje', opdracht: `Waarom mag je het aantal kleurvolgordes hier niet berekenen als ${Array(Z.k).fill(k).join(' · ')}?`, html: opgave(zin), sleutel: zin + v, rapport: zin + ' (waarom)',
           antw: zinKeuze('Wat je al genomen hebt, zit niet meer in het zakje: het aantal keuzes hangt af van de vorige keuze.',
             ['Omdat je bij elke trekking altijd evenveel keuzes hebt.', 'Omdat je dan moet optellen in plaats van vermenigvuldigen.', 'Omdat de volgorde van de kleuren geen rol speelt.']),
-          uitleg: ['\\text{zonder terugleggen: een kleur die op is, kan niet meer volgen}', `\\text{teken een boomdiagram: er zijn maar ${p.length} kleurvolgordes}`] };
+          uitlegHtml: stappen(`${Array(Z.k).fill(k).join(' · ')} zou betekenen: bij elke trekking kan je opnieuw alle ${k} kleuren nemen.`, zonder, `Het aantal takken hangt dus af van wat je al genomen hebt. Teken een boom: er zijn maar ${p.length} kleurvolgordes.`) + boom(B, { uitkomst: true, dy: 20 }),
+          uitleg: [] };
       }
       if (v === 'kleur') {
         const c = kies(Object.keys(Z.zak)), m = p.filter(s => s[0] === c);
         return { soort: 'zakje', opdracht: `Hoeveel kleurvolgordes beginnen met een ${KLEURNAAM[c]} knikker (${c})?`, html: opgave(zin) + boom(B, { uitkomst: true, dy: 20 }), sleutel: zin + v + c, rapport: zin + ' begint met ' + c,
-          antw: aantal(m.length), uitleg: [`\\text{${m.join(', ')}}`, `\\text{${m.length} kleurvolgordes}`] };
+          antw: aantal(m.length), uitlegHtml: stappen(`Kijk alleen naar de tak die begint met ${c}.`, `Volg die tak tot aan de eindpunten: ${m.map(s => `<b>${s}</b>`).join(', ')}.`), uitleg: [`\\text{${m.length} kleurvolgordes}`] };
       }
       return { soort: 'zakje', opdracht: 'Hoeveel kleurvolgordes zijn er? Teken eerst een boomdiagram.', html: opgave(zin), sleutel: zin + v, rapport: zin,
-        antw: aantal(p.length), uitleg: [`\\text{eindpunten: ${p.join(', ')}}`, `\\text{${p.length} kleurvolgordes}`], uitlegHtml: boom(B, { uitkomst: true, dy: 20 }) };
+        antw: aantal(p.length), uitlegHtml: stappen(zonder, teken, `Lees de eindpunten af: ${p.map(s => `<b>${s}</b>`).join(', ')}.`) + boom(B, { uitkomst: true, dy: 20 }),
+        uitleg: [`\\text{${p.length} kleurvolgordes}`] };
     } },
     match: { naam: 'Een match tot 2 gewonnen sets', gen() {
       const [a, b, wat, sets] = kies(MATCHES), A = a.replace(/^de /, '')[0].toUpperCase(), Bk = b.replace(/^de /, '')[0].toUpperCase() === A ? 'X' : b.replace(/^de /, '')[0].toUpperCase();
+      const enk = { sets: 'set', potjes: 'potje', partijen: 'partij' }[sets] || sets;
       const zin = `${a[0].toUpperCase() + a.slice(1)} (${A}) en ${b} (${Bk}) spelen ${wat}. Wie eerst 2 ${sets} wint, wint. Er wordt dus niet altijd een derde gespeeld.`;
+      const uitleg1 = `<p class="klein">💡 Een <b>verloop</b> is de volgorde waarin de ${sets} gewonnen worden. ${A}${Bk}${A} betekent: ${a} wint de 1ste, ${b} de 2de en ${a} de 3de.</p>`;
       const B = matchBoom(A, Bk), p = paden(B), v = kies(['tot', 'wint', 'drie', 'twee']);
-      const vraag = { tot: ['Hoeveel verlopen zijn er?', p], wint: [`In hoeveel verlopen wint ${a}?`, p.filter(s => s.split('').filter(c => c === A).length === 2)],
-        drie: [`In hoeveel verlopen worden er 3 ${sets} gespeeld?`, p.filter(s => s.length === 3)], twee: [`In hoeveel verlopen is het na 2 ${sets} al gedaan?`, p.filter(s => s.length === 2)] }[v];
-      return { soort: 'match', opdracht: vraag[0] + ' Teken een boomdiagram.', html: opgave(zin), sleutel: zin + v, rapport: zin + ' ' + v,
-        antw: aantal(vraag[1].length), uitleg: [`\\text{alle verlopen: ${p.join(', ')}}`, `\\text{${vraag[0].replace('?', '')}: ${vraag[1].join(', ')} → ${vraag[1].length}}`], uitlegHtml: boom(B, { uitkomst: true }) };
+      const vraag = { tot: ['Hoeveel verlopen zijn er?', p, 'Elk eindpunt is één verloop: tel ze allemaal.'],
+        wint: [`In hoeveel verlopen wint ${a}?`, p.filter(s => s.split('').filter(c => c === A).length === 2), `${a} wint als er 2 keer ${A} in het verloop staat.`],
+        drie: [`In hoeveel verlopen worden er 3 ${sets} gespeeld?`, p.filter(s => s.length === 3), '3 gespeeld = verlopen met 3 letters.'],
+        twee: [`In hoeveel verlopen is het na 2 ${sets} al gedaan?`, p.filter(s => s.length === 2), 'Na 2 al gedaan = verlopen met maar 2 letters.'] }[v];
+      return { soort: 'match', opdracht: vraag[0] + ' Teken een boomdiagram.', html: opgave(zin) + uitleg1, sleutel: zin + v, rapport: zin + ' ' + v,
+        antw: aantal(vraag[1].length),
+        uitlegHtml: stappen(`De 1ste ${enk} kan ${a} (${A}) of ${b} (${Bk}) winnen: 2 takken.`,
+          `Na ${A}${A} of ${Bk}${Bk} heeft iemand al 2 gewonnen: de match is gedaan, daar teken je geen tak meer. Na ${A}${Bk} of ${Bk}${A} staat het 1-1: er volgt nog een 3de ${enk}.`,
+          `Alle verlopen (eindpunten): ${p.join(', ')}.`, `${vraag[2]} ${v === 'tot' ? '' : `Dat zijn: ${vraag[1].map(s => `<b>${s}</b>`).join(', ')}.`}`) + boom(B, { uitkomst: true }),
+        uitleg: [`\\text{${vraag[1].length} verlopen}`] };
     } },
   },
   oefenMix: [['keuzes', 2], ['munt', 2], ['zakje', 2], ['match', 1]],
@@ -312,69 +355,93 @@ function matchBoom(A, B) {
 
 // ---- 2. De productregel ---------------------------------------------------------------------
 const OUTFITS = [
-  ['Lars', 'pulls', 'jeansbroeken', 'paar sneakers', 'pull'], ['Amira', 'kleedjes', 'jasjes', 'paar sandalen', 'kleedje'], ['Kobe', 'petten', 'T-shirts', 'shorts', 'pet'],
-  ['Elif', 'sjaals', 'mutsen', 'paar handschoenen', 'sjaal'], ['Wout', 'hemden', 'dassen', 'kostuums', 'hemd'],
+  ['Lars', 'pulls', 'jeansbroeken', 'paar sneakers', 'pull', 'jeansbroek', 'paar sneakers', 'Hij'], ['Amira', 'kleedjes', 'jasjes', 'paar sandalen', 'kleedje', 'jasje', 'paar sandalen', 'Ze'], ['Kobe', 'petten', 'T-shirts', 'shorts', 'pet', 'T-shirt', 'short', 'Hij'],
+  ['Elif', 'sjaals', 'mutsen', 'paar handschoenen', 'sjaal', 'muts', 'paar handschoenen', 'Ze'], ['Wout', 'hemden', 'dassen', 'kostuums', 'hemd', 'das', 'kostuum', 'Hij'],
 ];
 const MENU3 = [
   ['In het schoolrestaurant kies je', 'soepen', 'hoofdgerechten', 'desserts'], ['Bij de pitazaak kies je', 'soorten brood', 'soorten vlees', 'sauzen'],
   ['In de ijssalon kies je', 'soorten bekers', 'smaken', 'toppings'], ['Voor een ontbijtpakket kies je', 'koffiekoeken', 'soorten brood', 'soorten sap'],
 ];
+// uitleg volgens de werkwijze van de productregel: 1 keuzes na elkaar · 2 mogelijkheden per keuze · 3 vermenigvuldigen
+const werkwijze = (keuzes, regels, slot = '') => stappen(
+  `Welke keuzes maak je na elkaar? ${keuzes}`,
+  `Hoeveel mogelijkheden heb je bij elke keuze?<br>${regels.join('<br>')}`,
+  `Keuzes na elkaar (EN) → vermenigvuldigen.${slot ? ' ' + slot : ''}`);
+const rangTxt = (k) => k === 1 ? '1ste' : `${k}de`;
 const D2 = {
   nr: 2, titel: 'De productregel', kort: 'Na elkaar kiezen (EN) → vermenigvuldigen.', rekenmachine: true,
   theorie: `<div class="kader def"><div class="kader-titel">Productregel</div>
       <p>Kies je na elkaar uit $a$ mogelijkheden <b>EN</b> daarna uit $b$ mogelijkheden (EN uit $c$ …), dan zijn er $$a \\cdot b \\cdot c \\cdot \\ldots$$ mogelijkheden.</p>
       <p class="midden"><b>Woordje EN → vermenigvuldigen</b></p>
-      <p class="klein">Lili kiest een frisdrank (3 soorten), een hamburger (5 soorten) en een frietsaus (4 soorten): $3 \\cdot 5 \\cdot 4 = 60$ mogelijkheden.</p></div>
+      <p class="klein">Lili kiest een frisdrank (3 soorten), een hamburger (5 soorten) en een frietsaus (4 soorten): $3 \\cdot 5 \\cdot 4 = 60$ mogelijkheden.</p>
+      <p class="klein">Waarom vermenigvuldigen? In een boomdiagram krijgt elk van de 3 frisdranken 5 takken voor de hamburger, en elk daarvan nog eens 4 takken voor de saus: $3 \\cdot 5 \\cdot 4$ eindpunten. Zo hoef je de boom niet te tekenen.</p></div>
     <div class="kader eig"><div class="kader-titel">Herhaling of niet?</div>
       <p>Een pincode van 4 cijfers (0 tot en met 9): $10 \\cdot 10 \\cdot 10 \\cdot 10 = 10\\,000$ pincodes.</p>
       <p>Moeten alle cijfers <b>verschillend</b> zijn? Een cijfer dat al gebruikt is, valt weg: elke stap één keuze minder. $10 \\cdot 9 \\cdot 8 \\cdot 7 = 5040$.</p></div>
     <div class="kader"><div class="kader-titel">Werkwijze</div>
-      <ol><li>Hoeveel keuzes (plaatsen, stappen) maak je na elkaar?</li><li>Hoeveel mogelijkheden heb je bij elke keuze? Let op: mag iets twee keer?</li><li>Vermenigvuldig.</li></ol></div>`,
+      <ol><li>Hoeveel keuzes (plaatsen, stappen) maak je na elkaar?</li><li>Hoeveel mogelijkheden heb je bij elke keuze? Let op: mag iets twee keer?</li><li>Vermenigvuldig.</li></ol></div>
+    <div class="kader"><div class="kader-titel">Lees de vraag goed</div>
+      <ul><li><b>Mag meer dan één keer</b> (herhaling): bij elke keuze evenveel mogelijkheden, bv. $10 \\cdot 10 \\cdot 10$.</li>
+        <li><b>Verschillend</b> of <b>niet dezelfde persoon</b>: wat al gekozen is, valt weg, bv. $10 \\cdot 9 \\cdot 8$.</li>
+        <li><b>Ligt al vast</b> (bv. „Lotte wint zeker goud”): op die plaats is er maar <b>1</b> mogelijkheid.</li>
+        <li><b>Iets is kwijt</b>: tel eerst hoeveel er nog over zijn, dan vermenigvuldig je.</li></ul></div>`,
   voorbeelden: [
-    { tex: '\\text{Een fietsslot heeft 3 ringen met de cijfers 0 tot en met 9. Hoeveel codes?}', stappen: ['10 \\cdot 10 \\cdot 10', '= 1000 \\text{ codes}'] },
-    { tex: '\\text{12 leerlingen. Op hoeveel manieren kies je een klasverantwoordelijke en een vervanger?}', stappen: ['\\text{eerst 12 keuzes, daarna nog 11 (niet dezelfde persoon)}', '12 \\cdot 11 = 132'] },
+    { tex: '\\text{Een fietsslot heeft 3 ringen met de cijfers 0 tot en met 9. Hoeveel codes?}', stappen: ['\\text{3 ringen na elkaar instellen (EN)}', '\\text{elke ring: 10 cijfers, een cijfer mag opnieuw}', '10 \\cdot 10 \\cdot 10 = 1000 \\text{ codes}'] },
+    { tex: '\\text{12 leerlingen. Op hoeveel manieren kies je een klasverantwoordelijke en een vervanger?}', stappen: ['\\text{2 keuzes na elkaar: eerst de klasverantwoordelijke, dan de vervanger}', '\\text{klasverantwoordelijke: 12 keuzes}', '\\text{vervanger: niet dezelfde persoon, dus nog 11}', '12 \\cdot 11 = 132 \\text{ manieren}'] },
     { html: `${opgave('Van Brugge naar Gent zijn er 3 wegen, van Gent naar Antwerpen 4. Op hoeveel manieren rij je van Brugge naar Antwerpen (langs Gent)?')}${wegen({ Br: [40, 85], G: [180, 85], A: [320, 85] }, [['Br', 'G', 3], ['G', 'A', 4]])}`,
-      stappen: ['\\text{Brugge → Gent EN Gent → Antwerpen}', '3 \\cdot 4 = 12 \\text{ manieren}'] },
+      stappen: ['\\text{2 stukken na elkaar: Brugge → Gent EN Gent → Antwerpen}', '\\text{eerste stuk: 3 wegen, tweede stuk: 4 wegen}', '3 \\cdot 4 = 12 \\text{ manieren}'] },
   ],
   soorten: {
     outfit: { naam: 'Samenstellen', gen() {
       if (kies([true, false])) {
-        const [n, a, b, c, enk] = kies(OUTFITS), x = rnd(3, 7), y = rnd(2, 5), z = rnd(2, 4), was = kies([true, false]);
+        const [n, a, b, c, enk, enkB, enkC, hij] = kies(OUTFITS), x = rnd(3, 7), y = rnd(2, 5), z = rnd(2, 4), was = kies([true, false]);
         const zin = `${n} heeft ${x} ${a}, ${y} ${b} en ${z} ${c}.`;
-        if (!was) return { soort: 'outfit', opdracht: 'Hoeveel verschillende combinaties kan je samenstellen?', html: opgave(zin), sleutel: zin, rapport: zin, antw: aantal(x * y * z), uitleg: [`${x} \\cdot ${y} \\cdot ${z} = ${x * y * z}`] };
+        const kz = `${n} kiest een ${enk}, een ${enkB} en een ${enkC}: 3 keuzes na elkaar.`, elk = `(${hij} draagt telkens één ${enk}, één ${enkB} en één ${enkC}.)`;
+        if (!was) return { soort: 'outfit', opdracht: `Hoeveel verschillende combinaties kan ${n} maken? ${elk}`, html: opgave(zin), sleutel: zin, rapport: zin, antw: aantal(x * y * z),
+          uitlegHtml: werkwijze(kz, [`${a}: ${x}`, `${b}: ${y}`, `${c}: ${z}`]), uitleg: [`${x} \\cdot ${y} \\cdot ${z} = ${x * y * z} \\text{ combinaties}`] };
         const k = rnd(1, Math.min(2, x - 1));
-        return { soort: 'outfit', opdracht: `${k === 1 ? `Eén ${enk} is` : `${k} ${a} zijn`} kwijt. Hoeveel combinaties zijn er nog?`, html: opgave(zin), sleutel: zin + k, rapport: zin + ` (${k} kwijt)`, antw: aantal((x - k) * y * z), uitleg: [`\\text{nog ${x - k} ${a}}`, `${x - k} \\cdot ${y} \\cdot ${z} = ${(x - k) * y * z}`] };
+        return { soort: 'outfit', opdracht: `${k === 1 ? `Eén ${enk} is` : `${k} ${a} zijn`} kwijt. Hoeveel combinaties kan ${n} nog maken? ${elk}`, html: opgave(zin), sleutel: zin + k, rapport: zin + ` (${k} kwijt)`, antw: aantal((x - k) * y * z),
+          uitlegHtml: werkwijze(kz, [`${a}: ${x} − ${k} kwijt = <b>${x - k}</b>`, `${b}: ${y}`, `${c}: ${z}`]), uitleg: [`${x - k} \\cdot ${y} \\cdot ${z} = ${(x - k) * y * z} \\text{ combinaties}`] };
       }
       const [t, a, b, c] = kies(MENU3), x = rnd(2, 5), y = rnd(3, 8), z = rnd(2, 6), zin = `${t} uit ${x} ${a}, ${y} ${b} en ${z} ${c}. Je neemt van elk één.`;
-      return { soort: 'outfit', opdracht: 'Hoeveel mogelijkheden zijn er?', html: opgave(zin), sleutel: zin, rapport: zin, antw: aantal(x * y * z), uitleg: [`${x} \\cdot ${y} \\cdot ${z} = ${x * y * z}`] };
+      return { soort: 'outfit', opdracht: 'Hoeveel mogelijkheden zijn er?', html: opgave(zin), sleutel: zin, rapport: zin, antw: aantal(x * y * z),
+        uitlegHtml: werkwijze(`Je neemt van elk één: 3 keuzes na elkaar.`, [`${a}: ${x}`, `${b}: ${y}`, `${c}: ${z}`]), uitleg: [`${x} \\cdot ${y} \\cdot ${z} = ${x * y * z} \\text{ mogelijkheden}`] };
     } },
     code: { naam: 'Codes', gen() {
       const C = kies([
-        () => { const n = kies([3, 4, 5]); return { zin: `Een cijferslot heeft ${n} ringen met de cijfers 0 tot en met 9.`, pl: Array(n).fill(10), dif: Array.from({ length: n }, (_, i) => 10 - i), w: 'codes' }; },
-        () => ({ zin: 'Een lockercode bestaat uit 2 letters (26 mogelijkheden) gevolgd door 2 cijfers, bv. KM38.', pl: [26, 26, 10, 10], dif: [26, 25, 10, 9], w: 'codes' }),
-        () => ({ zin: 'Een wifi-code bestaat uit 1 letter (26 mogelijkheden) gevolgd door 3 cijfers, bv. Q507.', pl: [26, 10, 10, 10], dif: [26, 10, 9, 8], w: 'codes' }),
-        () => { const k = kies([4, 5, 6]), n = 3, L = 'ABCDEF'.slice(0, k).split('').join(', '); return { zin: `Je maakt een code van ${n} letters met de letters ${L}.`, pl: Array(n).fill(k), dif: Array.from({ length: n }, (_, i) => k - i), w: 'codes' }; },
-        () => { const k = kies([3, 4]), n = kies([3, 4]); return { zin: `Een lampje kan ${k} kleuren geven. Een signaal bestaat uit ${n} flitsen na elkaar.`, pl: Array(n).fill(k), dif: n <= k ? Array.from({ length: n }, (_, i) => k - i) : null, w: 'signalen', tv: 'alle flitsen een andere kleur hebben' }; },
+        () => { const n = kies([3, 4, 5]); return { zin: `Een cijferslot heeft ${n} ringen met de cijfers 0 tot en met 9.`, pl: Array(n).fill(10), dif: Array.from({ length: n }, (_, i) => 10 - i), w: 'codes', nm: Array.from({ length: n }, (_, i) => `${rangTxt(i + 1)} ring`), wat: Array(n).fill('cijfers') }; },
+        () => ({ zin: 'Een lockercode bestaat uit 2 letters (26 mogelijkheden) gevolgd door 2 cijfers, bv. KM38.', pl: [26, 26, 10, 10], dif: [26, 25, 10, 9], w: 'codes', nm: ['1ste letter', '2de letter', '1ste cijfer', '2de cijfer'], wat: ['letters', 'letters', 'cijfers', 'cijfers'] }),
+        () => ({ zin: 'Een wifi-code bestaat uit 1 letter (26 mogelijkheden) gevolgd door 3 cijfers, bv. Q507.', pl: [26, 10, 10, 10], dif: [26, 10, 9, 8], w: 'codes', nm: ['letter', '1ste cijfer', '2de cijfer', '3de cijfer'], wat: ['letters', 'cijfers', 'cijfers', 'cijfers'] }),
+        () => { const k = kies([4, 5, 6]), n = 3, L = 'ABCDEF'.slice(0, k).split('').join(', '); return { zin: `Je maakt een code van ${n} letters met de letters ${L}.`, pl: Array(n).fill(k), dif: Array.from({ length: n }, (_, i) => k - i), w: 'codes', nm: Array.from({ length: n }, (_, i) => `${rangTxt(i + 1)} letter`), wat: Array(n).fill('letters') }; },
+        () => { const k = kies([3, 4]), n = kies([3, 4]); return { zin: `Een lampje kan ${k} kleuren geven. Een signaal bestaat uit ${n} flitsen na elkaar.`, pl: Array(n).fill(k), dif: n <= k ? Array.from({ length: n }, (_, i) => k - i) : null, w: 'signalen', tv: 'alle flitsen een andere kleur hebben', nm: Array.from({ length: n }, (_, i) => `${rangTxt(i + 1)} flits`), wat: Array(n).fill('kleuren') }; },
       ])();
       const p = (a) => a.reduce((x, y) => x * y, 1), verschil = C.dif && kies([true, false]);
-      if (!verschil) return { soort: 'code', opdracht: `Hoeveel ${C.w} zijn er mogelijk?`, html: opgave(C.zin), sleutel: C.zin, rapport: C.zin, antw: aantal(p(C.pl)), uitleg: [`${C.pl.join(' \\cdot ')} = ${tgd(p(C.pl))}`] };
-      const tekstV = C.tv ? C.tv : C.pl.length === 4 && C.pl[0] === 26 && C.pl[1] === 26 ? 'de 2 letters verschillend zijn en de 2 cijfers ook' : C.pl[0] === 26 ? 'de 3 cijfers verschillend moeten zijn' : 'alle tekens verschillend moeten zijn';
+      const kz = `${C.pl.length} tekens na elkaar: ${C.nm.join(', ')}.`;
+      if (!verschil) return { soort: 'code', opdracht: `Hoeveel ${C.w} zijn er mogelijk? (Een teken mag meer dan één keer voorkomen.)`, html: opgave(C.zin), sleutel: C.zin, rapport: C.zin, antw: aantal(p(C.pl)),
+        uitlegHtml: werkwijze(kz, C.nm.map((m, i) => `${m}: ${C.pl[i]} ${C.wat[i]}`), 'Er staat niet dat de tekens verschillend moeten zijn: elk teken mag opnieuw, dus telkens evenveel mogelijkheden.'),
+        uitleg: [`${C.pl.join(' \\cdot ')} = ${tgd(p(C.pl))} \\text{ ${C.w}}`] };
+      const tekstV = C.tv ? C.tv : C.pl.length === 4 && C.pl[0] === 26 && C.pl[1] === 26 ? 'de 2 letters verschillend zijn en de 2 cijfers ook verschillend zijn' : C.pl[0] === 26 ? 'de 3 cijfers verschillend moeten zijn' : 'alle tekens verschillend moeten zijn';
       return { soort: 'code', opdracht: `Hoeveel ${C.w} zijn er als ${tekstV}?`, html: opgave(C.zin), sleutel: C.zin + 'v', rapport: C.zin + ' (verschillend)', antw: aantal(p(C.dif)),
-        uitleg: ['\\text{wat al gebruikt is, valt weg: elke stap één keuze minder}', `${C.dif.join(' \\cdot ')} = ${tgd(p(C.dif))}`] };
+        uitlegHtml: werkwijze(kz, C.nm.map((m, i) => `${m}: ${C.dif[i]}${C.dif[i] < C.pl[i] ? ` (${C.pl[i]} ${C.wat[i]}, maar ${C.pl[i] - C.dif[i]} ${C.pl[i] - C.dif[i] === 1 ? 'is' : 'zijn'} al gebruikt)` : ` ${C.wat[i]}`}`), 'Verschillend: wat al gebruikt is, valt weg. Daarom telkens één minder.'),
+        uitleg: [`${C.dif.join(' \\cdot ')} = ${tgd(p(C.dif))} \\text{ ${C.w}}`] };
     } },
     rangschik: { naam: 'Plaatsen en functies verdelen', gen() {
       const C = kies([
-        () => { const n = rnd(6, 12); return { zin: `${n} zwemmers zwemmen een finale. Er zijn medailles voor goud, zilver en brons.`, n, k: 3, w: 'Op hoeveel manieren kan het podium eruitzien?', vast: 'Je weet al dat Lotte goud wint.' }; },
-        () => { const n = rnd(8, 15); return { zin: `In een jeugdbeweging met ${n} leiders kies je een hoofdleider, een kassier en een secretaris (drie verschillende personen).`, n, k: 3, w: 'Op hoeveel manieren kan dat?', vast: 'Ruben wordt zeker hoofdleider.' }; },
-        () => { const n = rnd(5, 9); return { zin: `${n} vrienden gaan naar de cinema. Er is nog een rij met ${Math.min(n, 4)} vrije stoelen.`, n, k: Math.min(n, 4), w: `Op hoeveel manieren kunnen ${Math.min(n, 4)} van hen op die stoelen gaan zitten?`, vast: 'Jana zit zeker op de eerste stoel.' }; },
-        () => { const n = rnd(4, 6); return { zin: `${n} boeken worden naast elkaar op een plank gezet.`, n, k: n, w: 'Op hoeveel manieren kan dat?', vast: 'Het woordenboek staat zeker helemaal links.' }; },
-        () => { const n = rnd(10, 20); return { zin: `In een quiz met ${n} ploegen krijgen de 1ste en de 2de plaats een prijs.`, n, k: 2, w: 'Op hoeveel manieren kunnen de prijzen verdeeld worden?', vast: 'Ploeg De Slimmeriken wordt zeker eerste.' }; },
+        () => { const n = rnd(6, 12); return { zin: `${n} zwemmers zwemmen een finale. Er zijn medailles voor goud, zilver en brons.`, n, k: 3, w: 'Op hoeveel manieren kan het podium eruitzien?', vast: 'Je weet al dat Lotte goud wint.', pl: ['goud', 'zilver', 'brons'], wie: 'zwemmers' }; },
+        () => { const n = rnd(8, 15); return { zin: `In een jeugdbeweging met ${n} leiders kies je een hoofdleider, een kassier en een secretaris (drie verschillende personen).`, n, k: 3, w: 'Op hoeveel manieren kan dat?', vast: 'Ruben wordt zeker hoofdleider.', pl: ['hoofdleider', 'kassier', 'secretaris'], wie: 'leiders' }; },
+        () => { const n = rnd(5, 9), k = Math.min(n, 4); return { zin: `${n} vrienden gaan naar de cinema. Er is nog een rij met ${k} vrije stoelen.`, n, k, w: `Op hoeveel manieren kunnen ${k} van hen op die stoelen gaan zitten?`, vast: 'Jana zit zeker op de eerste stoel.', pl: Array.from({ length: k }, (_, i) => `${rangTxt(i + 1)} stoel`), wie: 'vrienden' }; },
+        () => { const n = rnd(4, 6); return { zin: `${n} boeken worden naast elkaar op een plank gezet.`, n, k: n, w: 'Op hoeveel manieren kan dat?', vast: 'Het woordenboek staat zeker helemaal links.', pl: Array.from({ length: n }, (_, i) => i ? `${rangTxt(i + 1)} plaats` : '1ste plaats (links)'), wie: 'boeken' }; },
+        () => { const n = rnd(10, 20); return { zin: `In een quiz met ${n} ploegen krijgen de 1ste en de 2de plaats een prijs.`, n, k: 2, w: 'Op hoeveel manieren kunnen de prijzen verdeeld worden?', vast: 'Ploeg De Slimmeriken wordt zeker eerste.', pl: ['1ste plaats', '2de plaats'], wie: 'ploegen' }; },
       ])();
       const f = Array.from({ length: C.k }, (_, i) => C.n - i), p = f.reduce((a, b) => a * b, 1), v = kies([true, true, false]);
-      if (v) return { soort: 'rangschik', opdracht: C.w, html: opgave(C.zin), sleutel: C.zin, rapport: C.zin, antw: aantal(p), uitleg: ['\\text{wie al gekozen is, valt weg}', `${f.join(' \\cdot ')} = ${tgd(p)}`] };
+      const kz = `${C.k} plaatsen na elkaar invullen: ${C.pl.join(', ')}.`;
+      if (v) return { soort: 'rangschik', opdracht: C.w, html: opgave(C.zin), sleutel: C.zin, rapport: C.zin, antw: aantal(p),
+        uitlegHtml: werkwijze(kz, C.pl.map((m, i) => `${m}: ${f[i]}${i ? ` (wie al een plaats heeft, kan niet nog eens)` : ` ${C.wie}`}`), 'Niemand kan twee plaatsen hebben: daarom telkens één minder.'),
+        uitleg: [`${f.join(' \\cdot ')} = ${tgd(p)} \\text{ manieren}`] };
       const g = f.slice(1).map(x => x), q = g.reduce((a, b) => a * b, 1);
       return { soort: 'rangschik', opdracht: `${C.vast} ${C.w}`, html: opgave(C.zin), sleutel: C.zin + 'vast', rapport: C.zin + ' (één ligt vast)', antw: aantal(q),
-        uitleg: ['\\text{de eerste plaats ligt vast: 1 keuze}', `1 \\cdot ${g.join(' \\cdot ')} = ${tgd(q)}`] };
+        uitlegHtml: werkwijze(kz, C.pl.map((m, i) => i ? `${m}: ${g[i - 1]} (de anderen, min wie al een plaats heeft)` : `${m}: ligt al vast → <b>1</b>`)),
+        uitleg: [`1 \\cdot ${g.join(' \\cdot ')} = ${tgd(q)} \\text{ manieren}`] };
     } },
     route: { naam: 'Routes', gen() {
       const [p1, p2, p3] = kies([['thuis', 'station', 'school'], ['Lier', 'Mechelen', 'Leuven'], ['camping', 'dorp', 'strand'], ['hotel', 'markt', 'museum']]);
@@ -382,21 +449,33 @@ const D2 = {
       const fig = wegen({ [A]: [40, 85], [B]: [180, 85], [C]: [320, 85] }, [[A, B, a], [B, C, b]]);
       const zin = `Van ${p1} (${A}) naar ${p3} (${C}) ga je altijd langs ${p2} (${B}). Je ziet hoeveel wegen er zijn.`;
       const v = kies(['heen', 'heenterug', 'anders']), r = a * b;
-      if (v === 'heen') return { soort: 'route', opdracht: `Op hoeveel manieren ga je van ${p1} naar ${p3}?`, html: opgave(zin) + fig, sleutel: zin + v + a + b, rapport: zin, antw: aantal(r), uitleg: [`${a} \\cdot ${b} = ${r}`] };
-      if (v === 'heenterug') return { soort: 'route', opdracht: 'Op hoeveel manieren ga je heen en terug?', html: opgave(zin) + fig, sleutel: zin + v + a + b, rapport: zin + ' heen en terug', antw: aantal(r * r), uitleg: [`\\text{heen: } ${a} \\cdot ${b} = ${r}`, `\\text{heen EN terug: } ${r} \\cdot ${r} = ${r * r}`] };
-      return { soort: 'route', opdracht: 'Op hoeveel manieren ga je heen en terug, als je terug een andere route wil nemen dan heen?', html: opgave(zin) + fig, sleutel: zin + v + a + b, rapport: zin + ' andere route terug', antw: aantal(r * (r - 1)),
-        uitleg: [`\\text{heen: } ${a} \\cdot ${b} = ${r} \\text{ routes}`, `\\text{terug: één route minder, dus } ${r - 1}`, `${r} \\cdot ${r - 1} = ${r * (r - 1)}`] };
+      const kz = `2 stukken na elkaar: ${p1} → ${p2} EN ${p2} → ${p3}.`, rg = [`${p1} → ${p2}: ${a} wegen`, `${p2} → ${p3}: ${b} wegen`];
+      if (v === 'heen') return { soort: 'route', opdracht: `Op hoeveel manieren ga je van ${p1} naar ${p3}?`, html: opgave(zin) + fig, sleutel: zin + v + a + b, rapport: zin, antw: aantal(r),
+        uitlegHtml: werkwijze(kz, rg), uitleg: [`${a} \\cdot ${b} = ${r} \\text{ routes}`] };
+      if (v === 'heenterug') return { soort: 'route', opdracht: `Op hoeveel manieren ga je van ${p1} naar ${p3} en weer terug?`, html: opgave(zin) + fig, sleutel: zin + v + a + b, rapport: zin + ' heen en terug', antw: aantal(r * r),
+        uitlegHtml: stappen(`Heen: ${a} · ${b} = ${r} routes (2 stukken na elkaar: vermenigvuldigen).`, `Terug: dezelfde wegen in de andere richting, dus ook ${r} routes. Een route mag opnieuw.`, 'Heen EN terug → vermenigvuldigen.'),
+        uitleg: [`${r} \\cdot ${r} = ${r * r} \\text{ manieren}`] };
+      return { soort: 'route', opdracht: `Op hoeveel manieren ga je van ${p1} naar ${p3} en weer terug, als je terug een andere route wil nemen dan heen?`, html: opgave(zin) + fig, sleutel: zin + v + a + b, rapport: zin + ' andere route terug', antw: aantal(r * (r - 1)),
+        uitlegHtml: stappen(`Heen: ${a} · ${b} = ${r} routes.`, `Terug: de route van de heenweg mag niet meer, dus nog ${r} − 1 = ${r - 1} routes.`, 'Heen EN terug → vermenigvuldigen.'),
+        uitleg: [`${r} \\cdot ${r - 1} = ${r * (r - 1)} \\text{ manieren}`] };
     } },
     getallen: { naam: 'Getallen maken', gen() {
       const k = rnd(4, 7), d = kies([2, 3]), cij = Array.from({ length: k }, (_, i) => i + 1);
       const zin = `Met de cijfers 1 tot en met ${k} maak je een getal van ${d} cijfers.`;
       const v = kies(['herh', 'versch', 'even']);
-      if (v === 'herh') return { soort: 'getallen', opdracht: 'Hoeveel getallen kan je maken als een cijfer meer dan één keer mag voorkomen?', html: opgave(zin), sleutel: zin + v, rapport: zin + ' (herhaling)', antw: aantal(k ** d), uitleg: [`${Array(d).fill(k).join(' \\cdot ')} = ${k ** d}`] };
+      const pl = Array.from({ length: d }, (_, i) => `${rangTxt(i + 1)} cijfer`), kz = `${d} cijfers na elkaar: ${pl.join(', ')}.`;
+      if (v === 'herh') return { soort: 'getallen', opdracht: 'Hoeveel getallen kan je maken als een cijfer meer dan één keer mag voorkomen?', html: opgave(zin), sleutel: zin + v, rapport: zin + ' (herhaling)', antw: aantal(k ** d),
+        uitlegHtml: werkwijze(kz, pl.map(m => `${m}: ${k}`), 'Een cijfer mag opnieuw: telkens evenveel mogelijkheden.'), uitleg: [`${Array(d).fill(k).join(' \\cdot ')} = ${k ** d} \\text{ getallen}`] };
       const f = Array.from({ length: d }, (_, i) => k - i);
-      if (v === 'versch') return { soort: 'getallen', opdracht: 'Hoeveel getallen met allemaal verschillende cijfers kan je maken?', html: opgave(zin), sleutel: zin + v, rapport: zin + ' (verschillend)', antw: aantal(f.reduce((a, b) => a * b, 1)), uitleg: [`${f.join(' \\cdot ')} = ${f.reduce((a, b) => a * b, 1)}`] };
+      if (v === 'versch') return { soort: 'getallen', opdracht: 'Hoeveel getallen met allemaal verschillende cijfers kan je maken?', html: opgave(zin), sleutel: zin + v, rapport: zin + ' (verschillend)', antw: aantal(f.reduce((a, b) => a * b, 1)),
+        uitlegHtml: werkwijze(kz, pl.map((m, i) => `${m}: ${f[i]}${i ? ' (al gebruikte cijfers vallen weg)' : ''}`)), uitleg: [`${f.join(' \\cdot ')} = ${f.reduce((a, b) => a * b, 1)} \\text{ getallen}`] };
       const ev = cij.filter(c => c % 2 === 0), rest = Array.from({ length: d - 1 }, (_, i) => k - 1 - i), r = ev.length * rest.reduce((a, b) => a * b, 1);
       return { soort: 'getallen', opdracht: 'Hoeveel even getallen met verschillende cijfers kan je maken?', html: opgave(zin), sleutel: zin + v, rapport: zin + ' (even)', antw: aantal(r),
-        uitleg: [`\\text{begin bij het laatste cijfer: ${ev.join(' of ')}, dus ${ev.length} keuzes}`, `\\text{daarna voor de andere plaatsen: } ${rest.join(' \\cdot ')}`, `${ev.length} \\cdot ${rest.join(' \\cdot ')} = ${r}`] };
+        uitlegHtml: stappen(`Een getal is even als het <b>laatste cijfer</b> even is. Daar ligt dus een voorwaarde: begin bij die plaats.`,
+          `Laatste cijfer: ${ev.join(' of ')} → ${ev.length} mogelijkheden.`,
+          `De andere ${d - 1} plaats${d - 1 === 1 ? '' : 'en'}: alle cijfers behalve het al gebruikte → ${rest.join(', dan ')} mogelijkheden.`,
+          'Keuzes na elkaar (EN) → vermenigvuldigen.'),
+        uitleg: [`${ev.length} \\cdot ${rest.join(' \\cdot ')} = ${r} \\text{ getallen}`] };
     } },
   },
   oefenMix: [['outfit', 2], ['code', 2], ['rangschik', 2], ['route', 1], ['getallen', 1]],

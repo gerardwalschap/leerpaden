@@ -19,6 +19,8 @@ const kTex = (texen) => texen.map((t, i) => ({ k: String(i), l: t }));
 const kZin = (zinnen) => zinnen.map((t, i) => ({ k: String(i), l: t, html: true }));
 const delen = (...d) => ({ soort: 'delen', delen: d.map(([label, antw]) => ({ label, antw })) });
 const opgave = (t) => `<p class="opgave-tekst">${t}</p>`;
+// uitleg stap voor stap in gewone zinnen (komt in de feedback boven de berekening)
+const stappen = (...z) => `<ol class="stappen-uitleg">${z.filter(Boolean).map(x => `<li>${x}</li>`).join('')}</ol>`;
 const tekst = (x) => String(x).replace('.', ',');
 const duiz = (x) => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');          // 10 000 (gewone tekst)
 const tgd = (x) => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, '\\,');          // 10\,000 (TeX)
