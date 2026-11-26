@@ -30,7 +30,7 @@ const D1 = {
     ${LET_OP}
     <div class="kader werk"><div class="kader-titel">Uitgewerkt voorbeeld: taalcursus voor nieuwkomers</div>
       <p>Het aantal woorden $W$ dat een nieuwkomer kent, $w$ weken na de start van een taalcursus, is $W(w) = \\dfrac{1200w}{w + 8}$ met $0 \\leq w \\leq 52$.</p>
-      ${figuur(rgraf({ x: [0, 52], y: [0, 1400], xs: 4, ys: 200, xn: 'w (weken)', yn: 'aantal woorden', functies: [{ f: (w) => 1200 * w / (w + 8) }], ha: [1200] }))}
+      ${figuur(rgraf({ x: [0, 52], y: [0, 1400], xs: 4, ys: 200, xn: 'w (weken)', yn: 'aantal woorden', functies: [{ f: (w) => 1200 * w / (w + 8), e: '1200*x/(x+8)' }], ha: [1200] }))}
       <table class="tabel"><tr><th>Kenmerk</th><th>Wiskundig</th><th>In de context</th></tr>
       <tr><td>Domein</td><td>$\\text{dom } W = [0 \\,;\\, 52]$</td><td>We volgen de nieuwkomer gedurende één jaar (52 weken).</td></tr>
       <tr><td>Bereik</td><td>$\\text{ber } W = [0 \\,;\\, 1040]$</td><td>Het aantal gekende woorden ligt tussen 0 en 1040.</td></tr>
@@ -151,7 +151,7 @@ const D2 = {
       <li><b>Gemiddelde verandering</b> tussen $a$ en $b$: $\\dfrac{f(b) - f(a)}{b - a}$.</li></ul></div>${GEOGEBRA}
     <div class="kader werk"><div class="kader-titel">Voorbeeld: een pijnstiller in het bloed</div>
       <p>$C(t) = \\dfrac{30t}{t^2 + 9}$ met $0 \\leq t \\leq 24$ ($C$ in mg/l, $t$ in uur na inname om 8 u).</p>
-      ${figuur(rgraf({ x: [0, 24], y: [0, 6], xs: 2, ys: 1, xn: 't (uur)', yn: 'concentratie (mg/l)', functies: [{ f: (t) => 30 * t / (t * t + 9) }] }))}
+      ${figuur(rgraf({ x: [0, 24], y: [0, 6], xs: 2, ys: 1, xn: 't (uur)', yn: 'concentratie (mg/l)', functies: [{ f: (t) => 30 * t / (t * t + 9), e: '30*x/(x*x+9)' }] }))}
       <ul><li>Beginwaarde $C(0) = 0$: bij inname zit er nog geen pijnstiller in het bloed.</li>
       <li>Maximum $(3 \\,;\\, 5)$: na 3 uur, om 11 u, is de concentratie het hoogst: 5 mg/l.</li>
       <li>$C(t) \\geq 3$ voor $1 \\leq t \\leq 9$: de pijnstiller werkt van 9 u tot 17 u, dus 8 uur lang.</li>
@@ -266,7 +266,7 @@ const D3 = {
       <li>Praktisch domein: $\\{1, 2, 3, \\ldots, 120\\}$: minstens 1 kind, maximaal 120, en een aantal is een natuurlijk getal. Dat is <b>geen interval</b>: de grafiek bestaat uit <b>losse punten</b>.</li>
       <li>Het bedrag ligt tussen 40 euro (bij 120 kinderen) en 4800 euro (bij 1 kind).</li>
       <li>Horizontale asymptoot $y = 0$: het bedrag per kind nadert 0, maar wordt nooit 0.</li></ul>
-      ${figuur(rgraf({ x: [0, 120], y: [0, 500], xs: 20, ys: 100, xn: 'n (kinderen)', yn: 'bedrag per kind (euro)', functies: [{ f: (n) => 4800 / n, van: 10, losse: true, stap: 2 }] }))}
+      ${figuur(rgraf({ x: [0, 120], y: [0, 500], xs: 20, ys: 100, xn: 'n (kinderen)', yn: 'bedrag per kind (euro)', functies: [{ f: (n) => 4800 / n, e: '4800/x', van: 10, losse: true, stap: 2 }] }))}
       <p class="klein midden">(enkel de punten vanaf 10 kinderen getekend)</p></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld: een geneesmiddel verdunnen</div>
       <p>500 mg in 20 ml water, daarna $w$ ml water erbij, het flesje kan 250 ml bevatten: $C(w) = \\dfrac{500}{w + 20}$.</p>
@@ -421,7 +421,7 @@ function andereSits(S, n) {
   for (const fam of schud(KOPPEL)) { if (uit.length >= n) break; const T = SITUATIES[fam](); if (vormen.has(VORM(T))) continue; vormen.add(VORM(T)); uit.push(T); }
   return uit;
 }
-const kaal = (S, klein) => rgraf({ x: S.graf.x, y: S.graf.y, functies: [{ f: S.f, van: S.dom[0], tot: S.fam === 'wacht' ? 99.6 : S.dom[1] }], klein, breed: klein ? 260 : 360, hoog: klein ? 160 : 230 });
+const kaal = (S, klein) => rgraf({ x: S.graf.x, y: S.graf.y, functies: [{ f: S.f, e: S.e, van: S.dom[0], tot: S.fam === 'wacht' ? 99.6 : S.dom[1] }], klein, breed: klein ? 260 : 360, hoog: klein ? 160 : 230 });
 function vraagGrafNaarSit() {
   const S = kiesSit(KOPPEL), A = andereSits(S, 3);
   const fout = A.map(korteSit); if (Math.random() < 0.3) fout[2] = 'De lichaamstemperatuur van een gezonde persoon, die de hele dag 37 °C blijft.';
@@ -457,9 +457,9 @@ const D5 = {
       <tr><td>${rgraf({ x: [0, 300], y: [-35, 15], xs: 50, ys: 10, functies: [{ f: (n) => (12 * n - 900) / n, van: 20 }], klein: true, breed: 200, hoog: 110 })}</td><td>gemiddelde winst per stuk</td><td>eerst negatief, nulwaarde 75, grenswaarde 12</td></tr></table>
       <p>Een constante temperatuur van 37 °C past bij geen enkele van die grafieken: daar hoort een horizontale rechte bij (geen rationale functie).</p></div>${AFSPRAAK}`,
   voorbeelden: [
-    { html: figuur(rgraf({ x: [0, 30], y: [0, 45], xs: 5, ys: 5, functies: [{ f: (t) => (40 * t + 20) / (t + 2) }] })),
+    { html: figuur(rgraf({ x: [0, 30], y: [0, 45], xs: 5, ys: 5, functies: [{ f: (t) => (40 * t + 20) / (t + 2), e: '(40*x+20)/(x+2)' }] })),
       stappen: ['\\text{Begint bij 10 en stijgt naar een grenswaarde 40.}', '\\text{Past bij: de temperatuur van een babyflesje in een flessenwarmer.}'] },
-    { html: figuur(rgraf({ x: [0, 24], y: [0, 6], xs: 4, ys: 1, functies: [{ f: (t) => 30 * t / (t * t + 9) }] })),
+    { html: figuur(rgraf({ x: [0, 24], y: [0, 6], xs: 4, ys: 1, functies: [{ f: (t) => 30 * t / (t * t + 9), e: '30*x/(x*x+9)' }] })),
       stappen: ['\\text{Begint bij 0, stijgt snel tot een maximum en daalt langzaam naar 0.}', '\\text{Past bij: de concentratie van een geneesmiddel in het bloed.}'] },
   ],
   soorten: {

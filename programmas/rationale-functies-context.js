@@ -42,7 +42,7 @@ const PIJL_OP = '↗', PIJL_NEER = '↘';
 // opt: { x:[X0,X1], y:[Y0,Y1], xs, ys (stappen), xn, yn (asnamen), functies:[{f, van, tot, kleur}], ha:[getal], va:[getal], breed, hoog, punten:[{x,y,hol}], losse: true (losse punten), klein }
 const top = (v) => { const s = nice(v / 5); return Math.ceil(v / s - 1e-9) * s; }; // nette bovengrens voor een as
 function nice(v) { const e = 10 ** Math.floor(Math.log10(v)), r = v / e; return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * e; }
-function rgraf(opt) {
+function rgrafKern(opt) {
   const [X0, X1] = opt.x, [Y0, Y1] = opt.y;
   const B = opt.breed || 360, H = opt.hoog || 230, ml = opt.klein ? 34 : 46, mr = 14, mt = 14, mb = opt.klein ? 26 : 38;
   const w = ml + B + mr, h = mt + H + mb;
@@ -60,26 +60,47 @@ function rgraf(opt) {
   let k = '';
   for (const a of opt.ha || []) if (a >= Y0 && a <= Y1) k += `<line x1="${X(X0)}" y1="${Y(a)}" x2="${X(X1)}" y2="${Y(a)}" stroke="${ORANJE}" stroke-width="1.6" stroke-dasharray="6 5"/>`;
   for (const a of opt.va || []) if (a >= X0 && a <= X1) k += `<line x1="${X(a)}" y1="${Y(Y0)}" x2="${X(a)}" y2="${Y(Y1)}" stroke="${ORANJE}" stroke-width="1.6" stroke-dasharray="6 5"/>`;
-  for (const fn of opt.functies || []) {
-    const van = Math.max(fn.van ?? X0, X0), tot = Math.min(fn.tot ?? X1, X1);
-    if (opt.losse || fn.losse) {
-      const st = fn.stap || 1;
-      for (let x = Math.ceil(van); x <= tot; x += st) { const y = fn.f(x); if (y >= Y0 && y <= Y1) k += `<circle cx="${X(x).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="1.8" fill="${fn.kleur || BLAUW}"/>`; }
-      continue;
-    }
+  const lijn = (f, van, tot, n) => {
     let d = '', aan = false;
-    for (let i = 0; i <= 600; i++) {
-      const x = van + (tot - van) * i / 600, y = fn.f(x);
+    for (let i = 0; i <= n; i++) {
+      const x = van + (tot - van) * i / n, y = f(x);
       if (!isFinite(y) || y < Y0 - (Y1 - Y0) || y > Y1 + (Y1 - Y0)) { aan = false; continue; }
       const yy = Math.max(Y0 - (Y1 - Y0) * 0.05, Math.min(Y1 + (Y1 - Y0) * 0.05, y));
       d += `${aan ? 'L' : 'M'}${X(x).toFixed(1)},${Y(yy).toFixed(1)} `; aan = true;
     }
-    k += `<path d="${d}" fill="none" stroke="${fn.kleur || BLAUW}" stroke-width="${opt.klein ? 2 : 2.4}"/>`;
+    return d;
+  };
+  for (const fn of opt.functies || []) {
+    const van = Math.max(fn.van ?? X0, X0), tot = Math.min(fn.tot ?? X1, X1);
+    // na in- of uitzoomen: de grafiek buiten het praktisch domein lichtgrijs en gestreept (zoals in het grafiekvenster)
+    if (opt.buiten) {
+      if (fn.van != null && fn.van > X0) k += `<path d="${lijn(fn.f, X0, Math.min(fn.van, X1), 400)}" fill="none" stroke="#b9c2cf" stroke-width="1.6" stroke-dasharray="4 4"/>`;
+      if (fn.tot != null && fn.tot < X1) k += `<path d="${lijn(fn.f, Math.max(fn.tot, X0), X1, 400)}" fill="none" stroke="#b9c2cf" stroke-width="1.6" stroke-dasharray="4 4"/>`;
+    }
+    if (van >= tot) continue;
+    if (opt.losse || fn.losse) {
+      const st = Math.max(fn.stap || 1, Math.ceil((tot - van) / 160));
+      for (let x = Math.ceil(van); x <= tot; x += st) { const y = fn.f(x); if (y >= Y0 && y <= Y1) k += `<circle cx="${X(x).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="1.8" fill="${fn.kleur || BLAUW}"/>`; }
+      continue;
+    }
+    k += `<path d="${lijn(fn.f, van, tot, 600)}" fill="none" stroke="${fn.kleur || BLAUW}" stroke-width="${opt.klein ? 2 : 2.4}"/>`;
   }
-  for (const p of opt.punten || []) k += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4" fill="${p.hol ? '#fff' : BLAUW}" stroke="${BLAUW}" stroke-width="2"/>`;
+  for (const p of opt.punten || []) if (p.x >= X0 && p.x <= X1 && p.y >= Y0 && p.y <= Y1) k += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4" fill="${p.hol ? '#fff' : BLAUW}" stroke="${BLAUW}" stroke-width="2"/>`;
   const id = 'c' + Math.random().toString(36).slice(2, 8);
   return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="grafiek" style="font-family:Verdana,sans-serif;max-width:100%;height:auto">
     <defs><clipPath id="${id}"><rect x="${ml}" y="${mt - 2}" width="${B}" height="${H + 4}"/></clipPath></defs>${g}<g clip-path="url(#${id})">${k}</g></svg>`;
+}
+// ---------- zoombare grafiek: elke functie heeft ook een formule e (bv. '1200*x/(x+8)') zodat de pagina
+// de grafiek zelf opnieuw kan tekenen bij in- en uitzoomen (ook na herladen of bij een bekeken test).
+// Kleine grafiekjes (klein: true, bv. in meerkeuzevragen) blijven gewoon vast.
+const rgFormule = (e) => { const body = String(e).replace(/\^/g, '**'); if (!/^[0-9a-z+\-*/(). ]*$/i.test(body)) return () => NaN;
+  const fn = new Function('x', `"use strict"; return (${body});`); return (x) => { const y = fn(x); return isFinite(y) ? y : NaN; }; };
+const ZOOM_KNOPPEN = (soort) => `<div class="zoom-tools"><button type="button" class="zoom-knop" data-zoom="in" data-zs="${soort}" title="Inzoomen">＋ Inzoomen</button><button type="button" class="zoom-knop" data-zoom="uit" data-zs="${soort}" title="Uitzoomen">− Uitzoomen</button><button type="button" class="zoom-knop licht" data-zoom="terug" data-zs="${soort}" title="Terug naar het beginbeeld">⟲ Beginbeeld</button><span class="zoom-hulp">sleep om te verschuiven</span></div>`;
+function rgraf(opt) {
+  const zoombaar = !opt.klein && (opt.functies || []).length && (opt.functies || []).every(fn => fn.e);
+  if (!zoombaar) return rgrafKern(opt);
+  const spec = { ...opt, functies: opt.functies.map(({ f, ...rest }) => rest) };
+  return `<div class="rg" data-rg='${String(JSON.stringify(spec)).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}'>${rgrafKern(opt)}${ZOOM_KNOPPEN('rg')}</div>`;
 }
 const figuur = (svg) => `<div class="figuur">${svg}</div>`;
 
@@ -343,7 +364,7 @@ function sitGraf(S, opt = {}) {
   const [a, b] = S.dom;
   const tot = S.domOpen && S.fam === 'wacht' ? 99.6 : b;
   let [Y0, Y1] = S.graf.y;
-  return rgraf({ x: opt.x || S.graf.x, y: [Y0, Y1], xn: `${S.x} (${S.xe})`, yn: S.yn, functies: [{ f: S.f, van: a, tot, losse: opt.losse }],
+  return rgraf({ x: opt.x || S.graf.x, y: [Y0, Y1], xn: `${S.x} (${S.xe})`, yn: S.yn, functies: [{ f: S.f, e: S.e, van: a, tot, losse: opt.losse }],
     ha: opt.asymptoten ? (S.ha != null ? [S.ha] : []) : [], va: opt.asymptoten && S.va != null ? [S.va] : [], klein: opt.klein, breed: opt.breed, hoog: opt.hoog });
 }
 const domTekst = (S) => S.domTex ? S.domTex : S.domOpen ? `${S.dom[0]} \\leq ${S.x} \\lt ${S.dom[1]}` : `${S.dom[0]} \\leq ${S.x} \\leq ${S.dom[1]}`;
@@ -378,6 +399,13 @@ const GV_STIJL = `
 .gv-let{color:#b85c00}
 .gv-leg{font-size:12px;color:#555;text-align:center;margin-top:4px}
 .gv-leg i{font-style:normal;display:inline-block;width:16px;height:3px;vertical-align:middle;margin:0 4px 0 10px}
+.zoom-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:6px 0 4px;font-size:13px}
+.zoom-knop{padding:4px 10px;font-size:13px;border-radius:6px;border:1px solid #1c4e8a;background:#1c4e8a;color:#fff;cursor:pointer}
+.zoom-knop.licht{background:#fff;color:#1c4e8a}
+.zoom-hulp{color:#667;font-size:12px}
+.rg{display:inline-block;max-width:100%}
+.rg svg{touch-action:none;cursor:grab;display:block;margin:0 auto}
+.rg svg:active{cursor:grabbing}
 .legende{color:#38414f;margin:2px 0 8px;font-size:14px}
 .vraagzin{margin-top:12px;font-size:16px}
 .woord{border-bottom:2px dotted #e8772e;cursor:help;position:relative;outline:none}
@@ -472,7 +500,7 @@ function venster(sp) {
   const hulp = t.includes('v') ? 'Beweeg over de grafiek (of tik erop) om de waarden te zien.' : '';
   return `<!--gv--><div class="gv" data-gv='${gvAttr(JSON.stringify(sp))}'>
     <div class="gv-kop">📈 Grafiekvenster <span>· de formule staat er al in${sp.a != null && !sp.geenDomein ? ' · blauw = praktisch domein' : ''}</span></div>
-    ${gvSvg(sp, fs)}${leg}<div class="gv-uit">${hulp}</div><div class="gv-tools">${kies}${tools.join('')}</div><div class="gv-res"></div></div><!--/gv-->`;
+    ${gvSvg(sp, fs)}${ZOOM_KNOPPEN('gv')}${leg}<div class="gv-uit">${hulp}</div><div class="gv-tools">${kies}${tools.join('')}</div><div class="gv-res"></div></div><!--/gv-->`;
 }
 // ---------- de luisteraars (één keer per pagina)
 (() => {
@@ -579,7 +607,65 @@ function venster(sp) {
       laag(root, l); return res(root, t.join('<br>'));
     }
   }
-  document.addEventListener('pointermove', (e) => { const s = e.target.closest && e.target.closest('.gv svg'); if (s) volg(s, e); });
+  // ---------- in- en uitzoomen, verschuiven (grafiekvenster .gv en zoombare grafiek .rg)
+  const rgSpec = (root) => { try { return JSON.parse(root.dataset.rg); } catch (e) { return null; } };
+  function beeld(root) { // huidig beeld {x:[..], y:[..]} en het beginbeeld
+    if (root.classList.contains('gv')) { const sp = spec(root); if (!root.dataset.gv0) root.dataset.gv0 = JSON.stringify({ x: sp.X, y: sp.Y }); return { nu: { x: sp.X, y: sp.Y }, begin: JSON.parse(root.dataset.gv0) }; }
+    const sp = rgSpec(root); const begin = { x: sp.x, y: sp.y };
+    return { nu: root.dataset.beeld ? JSON.parse(root.dataset.beeld) : begin, begin };
+  }
+  function tekenBeeld(root, b) {
+    if (root.classList.contains('gv')) {
+      const sp = spec(root); sp.X = b.x; sp.Y = b.y; delete sp.xs; delete sp.ys;
+      root.dataset.gv = JSON.stringify(sp);
+      const nieuw = document.createElement('div'); nieuw.innerHTML = gvSvg(sp, gvFuncties(sp, root));
+      const oud = root.querySelector('svg'); if (oud) oud.replaceWith(nieuw.firstElementChild);
+      return;
+    }
+    const sp = rgSpec(root), begin = sp.x[0] === b.x[0] && sp.x[1] === b.x[1] && sp.y[0] === b.y[0] && sp.y[1] === b.y[1];
+    root.dataset.beeld = JSON.stringify(b);
+    const opt = { ...sp, x: b.x, y: b.y, buiten: !begin, functies: sp.functies.map(fn => ({ ...fn, f: rgFormule(fn.e) })) };
+    if (!begin) { delete opt.xs; delete opt.ys; }
+    const nieuw = document.createElement('div'); nieuw.innerHTML = rgrafKern(opt);
+    const oud = root.querySelector('svg'); if (oud) oud.replaceWith(nieuw.firstElementChild);
+  }
+  function zoom(root, wat) {
+    const { nu, begin } = beeld(root);
+    if (wat === 'terug') { tekenBeeld(root, begin); }
+    else {
+      const k = wat === 'in' ? 0.5 : 2, cx = (nu.x[0] + nu.x[1]) / 2, cy = (nu.y[0] + nu.y[1]) / 2, hx = (nu.x[1] - nu.x[0]) / 2 * k, hy = (nu.y[1] - nu.y[0]) / 2 * k;
+      if (hx < 1e-6 || hx > 1e7) return;
+      // uitzoomen vanuit een beeld dat op 0 begint: 0 blijft links/onderaan staan (zo zie je verder naar rechts en naar boven)
+      const x0 = wat === 'uit' && Math.abs(nu.x[0]) < 1e-9 ? 0 : cx - hx, y0 = wat === 'uit' && Math.abs(nu.y[0]) < 1e-9 ? 0 : cy - hy;
+      tekenBeeld(root, { x: [x0, x0 + 2 * hx], y: [y0, y0 + 2 * hy] });
+    }
+    if (root.classList.contains('gv')) { laag(root, ''); res(root, ''); }
+  }
+  let sleep = null; // { root, x, y, beeld, bewogen }
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('[data-zoom]'); if (!b) return; e.preventDefault(); e.stopPropagation(); const root = b.closest('.gv, .rg'); if (root) zoom(root, b.dataset.zoom); }, true);
+  document.addEventListener('pointerdown', (e) => {
+    const s = e.target.closest && e.target.closest('.gv svg, .rg svg'); if (!s) return;
+    const root = s.closest('.gv, .rg'), r = s.getBoundingClientRect(), vb = s.viewBox.baseVal;
+    // schaal nu vastleggen: tijdens het slepen wordt de svg telkens vervangen
+    sleep = { root, sx: vb.width / r.width, sy: vb.height / r.height, x: e.clientX, y: e.clientY, beeld: beeld(root).nu, bewogen: false };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!sleep || !(e.buttons & 1)) { sleep = sleep && (e.buttons & 1) ? sleep : null; return; }
+    const dx = e.clientX - sleep.x, dy = e.clientY - sleep.y;
+    if (!sleep.bewogen && Math.hypot(dx, dy) < 5) return;
+    sleep.bewogen = true; e.preventDefault();
+    const gv = sleep.root.classList.contains('gv');
+    const sp = gv ? null : rgSpec(sleep.root);
+    const B = gv ? GV_M.B : (sp.breed || 360), H = gv ? GV_M.H : (sp.hoog || 230);
+    const b = sleep.beeld, ex = dx * sleep.sx / B * (b.x[1] - b.x[0]), ey = dy * sleep.sy / H * (b.y[1] - b.y[0]);
+    if (!isFinite(ex) || !isFinite(ey)) return;
+    if (sleep.wacht) return; sleep.wacht = true;
+    requestAnimationFrame(() => { if (!sleep) return; sleep.wacht = false; tekenBeeld(sleep.root, { x: [b.x[0] - ex, b.x[1] - ex], y: [b.y[0] + ey, b.y[1] + ey] }); if (gv) laag(sleep.root, ''); });
+  }, { passive: false });
+  document.addEventListener('pointerup', () => { sleep = null; });
+  document.addEventListener('pointercancel', () => { sleep = null; });
+
+  document.addEventListener('pointermove', (e) => { if (sleep && sleep.bewogen) return; const s = e.target.closest && e.target.closest('.gv svg'); if (s) volg(s, e); });
   document.addEventListener('pointerdown', (e) => { const s = e.target.closest && e.target.closest('.gv svg'); if (s) volg(s, e); });
   document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.gv [data-gv-actie]'); if (!b) return; e.preventDefault(); actie(b.closest('.gv'), b.dataset.gvActie); });
   document.addEventListener('keydown', (e) => {
@@ -760,7 +846,7 @@ const D1 = {
     ${LET_OP}
     <div class="kader werk"><div class="kader-titel">Uitgewerkt voorbeeld: taalcursus voor nieuwkomers</div>
       <p>Het aantal woorden $W$ dat een nieuwkomer kent, $w$ weken na de start van een taalcursus, is $W(w) = \\dfrac{1200w}{w + 8}$ met $0 \\leq w \\leq 52$.</p>
-      ${figuur(rgraf({ x: [0, 52], y: [0, 1400], xs: 4, ys: 200, xn: 'w (weken)', yn: 'aantal woorden', functies: [{ f: (w) => 1200 * w / (w + 8) }], ha: [1200] }))}
+      ${figuur(rgraf({ x: [0, 52], y: [0, 1400], xs: 4, ys: 200, xn: 'w (weken)', yn: 'aantal woorden', functies: [{ f: (w) => 1200 * w / (w + 8), e: '1200*x/(x+8)' }], ha: [1200] }))}
       <table class="tabel"><tr><th>Kenmerk</th><th>Wiskundig</th><th>In de context</th></tr>
       <tr><td>Domein</td><td>$\\text{dom } W = [0 \\,;\\, 52]$</td><td>We volgen de nieuwkomer gedurende één jaar (52 weken).</td></tr>
       <tr><td>Bereik</td><td>$\\text{ber } W = [0 \\,;\\, 1040]$</td><td>Het aantal gekende woorden ligt tussen 0 en 1040.</td></tr>
@@ -881,7 +967,7 @@ const D2 = {
       <li><b>Gemiddelde verandering</b> tussen $a$ en $b$: $\\dfrac{f(b) - f(a)}{b - a}$.</li></ul></div>${GEOGEBRA}
     <div class="kader werk"><div class="kader-titel">Voorbeeld: een pijnstiller in het bloed</div>
       <p>$C(t) = \\dfrac{30t}{t^2 + 9}$ met $0 \\leq t \\leq 24$ ($C$ in mg/l, $t$ in uur na inname om 8 u).</p>
-      ${figuur(rgraf({ x: [0, 24], y: [0, 6], xs: 2, ys: 1, xn: 't (uur)', yn: 'concentratie (mg/l)', functies: [{ f: (t) => 30 * t / (t * t + 9) }] }))}
+      ${figuur(rgraf({ x: [0, 24], y: [0, 6], xs: 2, ys: 1, xn: 't (uur)', yn: 'concentratie (mg/l)', functies: [{ f: (t) => 30 * t / (t * t + 9), e: '30*x/(x*x+9)' }] }))}
       <ul><li>Beginwaarde $C(0) = 0$: bij inname zit er nog geen pijnstiller in het bloed.</li>
       <li>Maximum $(3 \\,;\\, 5)$: na 3 uur, om 11 u, is de concentratie het hoogst: 5 mg/l.</li>
       <li>$C(t) \\geq 3$ voor $1 \\leq t \\leq 9$: de pijnstiller werkt van 9 u tot 17 u, dus 8 uur lang.</li>
@@ -996,7 +1082,7 @@ const D3 = {
       <li>Praktisch domein: $\\{1, 2, 3, \\ldots, 120\\}$: minstens 1 kind, maximaal 120, en een aantal is een natuurlijk getal. Dat is <b>geen interval</b>: de grafiek bestaat uit <b>losse punten</b>.</li>
       <li>Het bedrag ligt tussen 40 euro (bij 120 kinderen) en 4800 euro (bij 1 kind).</li>
       <li>Horizontale asymptoot $y = 0$: het bedrag per kind nadert 0, maar wordt nooit 0.</li></ul>
-      ${figuur(rgraf({ x: [0, 120], y: [0, 500], xs: 20, ys: 100, xn: 'n (kinderen)', yn: 'bedrag per kind (euro)', functies: [{ f: (n) => 4800 / n, van: 10, losse: true, stap: 2 }] }))}
+      ${figuur(rgraf({ x: [0, 120], y: [0, 500], xs: 20, ys: 100, xn: 'n (kinderen)', yn: 'bedrag per kind (euro)', functies: [{ f: (n) => 4800 / n, e: '4800/x', van: 10, losse: true, stap: 2 }] }))}
       <p class="klein midden">(enkel de punten vanaf 10 kinderen getekend)</p></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld: een geneesmiddel verdunnen</div>
       <p>500 mg in 20 ml water, daarna $w$ ml water erbij, het flesje kan 250 ml bevatten: $C(w) = \\dfrac{500}{w + 20}$.</p>
@@ -1151,7 +1237,7 @@ function andereSits(S, n) {
   for (const fam of schud(KOPPEL)) { if (uit.length >= n) break; const T = SITUATIES[fam](); if (vormen.has(VORM(T))) continue; vormen.add(VORM(T)); uit.push(T); }
   return uit;
 }
-const kaal = (S, klein) => rgraf({ x: S.graf.x, y: S.graf.y, functies: [{ f: S.f, van: S.dom[0], tot: S.fam === 'wacht' ? 99.6 : S.dom[1] }], klein, breed: klein ? 260 : 360, hoog: klein ? 160 : 230 });
+const kaal = (S, klein) => rgraf({ x: S.graf.x, y: S.graf.y, functies: [{ f: S.f, e: S.e, van: S.dom[0], tot: S.fam === 'wacht' ? 99.6 : S.dom[1] }], klein, breed: klein ? 260 : 360, hoog: klein ? 160 : 230 });
 function vraagGrafNaarSit() {
   const S = kiesSit(KOPPEL), A = andereSits(S, 3);
   const fout = A.map(korteSit); if (Math.random() < 0.3) fout[2] = 'De lichaamstemperatuur van een gezonde persoon, die de hele dag 37 °C blijft.';
@@ -1187,9 +1273,9 @@ const D5 = {
       <tr><td>${rgraf({ x: [0, 300], y: [-35, 15], xs: 50, ys: 10, functies: [{ f: (n) => (12 * n - 900) / n, van: 20 }], klein: true, breed: 200, hoog: 110 })}</td><td>gemiddelde winst per stuk</td><td>eerst negatief, nulwaarde 75, grenswaarde 12</td></tr></table>
       <p>Een constante temperatuur van 37 °C past bij geen enkele van die grafieken: daar hoort een horizontale rechte bij (geen rationale functie).</p></div>${AFSPRAAK}`,
   voorbeelden: [
-    { html: figuur(rgraf({ x: [0, 30], y: [0, 45], xs: 5, ys: 5, functies: [{ f: (t) => (40 * t + 20) / (t + 2) }] })),
+    { html: figuur(rgraf({ x: [0, 30], y: [0, 45], xs: 5, ys: 5, functies: [{ f: (t) => (40 * t + 20) / (t + 2), e: '(40*x+20)/(x+2)' }] })),
       stappen: ['\\text{Begint bij 10 en stijgt naar een grenswaarde 40.}', '\\text{Past bij: de temperatuur van een babyflesje in een flessenwarmer.}'] },
-    { html: figuur(rgraf({ x: [0, 24], y: [0, 6], xs: 4, ys: 1, functies: [{ f: (t) => 30 * t / (t * t + 9) }] })),
+    { html: figuur(rgraf({ x: [0, 24], y: [0, 6], xs: 4, ys: 1, functies: [{ f: (t) => 30 * t / (t * t + 9), e: '30*x/(x*x+9)' }] })),
       stappen: ['\\text{Begint bij 0, stijgt snel tot een maximum en daalt langzaam naar 0.}', '\\text{Past bij: de concentratie van een geneesmiddel in het bloed.}'] },
   ],
   soorten: {
@@ -1273,7 +1359,7 @@ const D6 = {
       <li>Controle: vertel het verhaal terug met je grafiek. Klopt alles?</li></ol></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld: een kop koffie</div>
       <p>Een kop koffie van 80 °C wordt ingeschonken in een kamer van 20 °C. De koffie koelt eerst snel af, daarna steeds trager. Na 10 minuten is de koffie 50 °C. We volgen de koffie een uur lang.</p>
-      ${figuur(rgraf({ x: [0, 60], y: [0, 90], xs: 10, ys: 10, xn: 't (minuten)', yn: 'temperatuur (°C)', functies: [{ f: (t) => (20 * t + 800) / (t + 10) }], ha: [20], punten: [{ x: 0, y: 80 }, { x: 10, y: 50 }] }))}
+      ${figuur(rgraf({ x: [0, 60], y: [0, 90], xs: 10, ys: 10, xn: 't (minuten)', yn: 'temperatuur (°C)', functies: [{ f: (t) => (20 * t + 800) / (t + 10), e: '(20*x+800)/(x+10)' }], ha: [20], punten: [{ x: 0, y: 80 }, { x: 10, y: 50 }] }))}
       <p>Domein $[0 \\,;\\, 60]$, bereik ongeveer $[29 \\,;\\, 80]$, horizontale asymptoot $y = 20$: de koffie nadert de temperatuur van de kamer. Ze wordt nooit kouder dan 20 °C: de grafiek blijft boven de stippellijn.</p>
       <p><b>Welk voorschrift past?</b> Controleer alle gegevens: $T_1(t) = \\dfrac{20t + 800}{t + 10}$ geeft $T_1(0) = 80$, $T_1(10) = 50$ en asymptoot $y = 20$: alles klopt.
       $T_2(t) = \\dfrac{30t + 800}{t + 10}$ heeft asymptoot $y = 30$ (fout). $T_3(t) = \\dfrac{20t + 400}{t + 5}$ geeft $T_3(10) = 40$ in plaats van 50 (fout).</p></div>${AFSPRAAK}`,
@@ -1318,7 +1404,7 @@ function tekenCellen(h, wissel = false) {
 }
 const tekenHTML = (h, wissel) => schema('x', 'f(x)', tekenCellen(h, wissel));
 const tekenOptie = (cellen) => `<table class="tabel tekenschema"><tr><th>x</th>${cellen.map(c => `<td>${c.x ?? ''}</td>`).join('')}</tr><tr><th>f(x)</th>${cellen.map(c => `<td>${c.y ?? ''}</td>`).join('')}</tr></table>`;
-const hGraf = (h, klein = false, extra = {}) => rgraf({ x: [h.a - 7, h.a + 7], y: [h.c - 7, h.c + 7], xs: 1, ys: 1, functies: [{ f: h.f, kleur: extra.kleur }], ha: [h.c], va: [h.a], klein, breed: klein ? 230 : 320, hoog: klein ? 230 : 320 });
+const hGraf = (h, klein = false, extra = {}) => rgraf({ x: [h.a - 7, h.a + 7], y: [h.c - 7, h.c + 7], xs: 1, ys: 1, functies: [{ f: h.f, e: `${h.c}+(${h.d})/(x-(${h.a}))`, kleur: extra.kleur }], ha: [h.c], va: [h.a], klein, breed: klein ? 230 : 320, hoog: klein ? 230 : 320 });
 function hTex(h) { const t = h.c, n = h.d - h.c * h.a; return `f(x) = \\dfrac{${t === 1 ? '' : t === -1 ? '-' : t}x${n ? ` ${n < 0 ? '-' : '+'} ${Math.abs(n)}` : ''}}{x ${h.a < 0 ? '+' : '-'} ${Math.abs(h.a)}}`; }
 function vraagAsymp() {
   const h = hyper();
@@ -1396,7 +1482,7 @@ const D7 = {
     <div class="kader werk"><div class="kader-titel">Voorbeeld</div>
       <p>$\\text{dom } f = \\mathbb{R} \\setminus \\{2\\}$, verticale asymptoot $x = 2$, horizontale asymptoot $y = 1$, nulwaarde $-1$, snijpunt met de $y$-as $(0 \\,;\\, -0{,}5)$, $f$ dalend op beide takken.
       Een passende functie is $f(x) = \\dfrac{x + 1}{x - 2}$.</p>
-      ${figuur(rgraf({ x: [-6, 9], y: [-5, 7], xs: 1, ys: 1, xn: 'x', yn: 'y', functies: [{ f: (x) => (x + 1) / (x - 2) }], ha: [1], va: [2], punten: [{ x: -1, y: 0 }, { x: 0, y: -0.5 }] }))}
+      ${figuur(rgraf({ x: [-6, 9], y: [-5, 7], xs: 1, ys: 1, xn: 'x', yn: 'y', functies: [{ f: (x) => (x + 1) / (x - 2), e: '(x+1)/(x-2)' }], ha: [1], va: [2], punten: [{ x: -1, y: 0 }, { x: 0, y: -0.5 }] }))}
       ${schema('x', 'f(x)', [{ y: '+' }, { x: '−1', y: '0' }, { y: '−' }, { x: '2', y: '×' }, { y: '+' }])}
       ${schema('x', 'f(x)', [{ x: '−∞', y: '1' }, { y: PIJL_NEER }, { x: '2', y: '−∞ ‖ +∞' }, { y: PIJL_NEER }, { x: '+∞', y: '1' }])}
       <p>$\\lim\\limits_{x \\to 2^-} f(x) = -\\infty$, &nbsp; $\\lim\\limits_{x \\to 2^+} f(x) = +\\infty$, &nbsp; $\\lim\\limits_{x \\to \\pm\\infty} f(x) = 1$. &nbsp; Bereik: $\\mathbb{R} \\setminus \\{1\\}$.</p></div>
@@ -1424,9 +1510,9 @@ const D7 = {
 //  7 · EEN GRAFIEK VERTELLEN
 // ===================================================================
 function sitReval() {
-  const E = kies([800, 850, 900]), M0 = kies([40, 50, 60]), b = kies([3, 4, 5]), a = (E - M0) * b, f = (w) => E - a / (w + b);
+  const E = kies([800, 850, 900]), M0 = kies([40, 50, 60]), b = kies([3, 4, 5]), a = (E - M0) * b, f = (w) => E - a / (w + b), e = `${E}-${a}/(x+${b})`;
   const m26 = Math.round(f(26) / 10) * 10, m4 = Math.round(f(4) / 10) * 10;
-  return { fam: 'reval', titel: 'Revalidatie na een operatie', f, fn: 'M', x: 'w', xe: 'weken', ye: 'meter', yn: 'afstand (meter)', dom: [0, 26], ha: E, E, M0, b, m26, m4,
+  return { fam: 'reval', titel: 'Revalidatie na een operatie', f, e, fn: 'M', x: 'w', xe: 'weken', ye: 'meter', yn: 'afstand (meter)', dom: [0, 26], ha: E, E, M0, b, m26, m4,
     verhaal: 'De grafiek toont de afstand $M$ (in meter) die een patiënt zonder pauze kan wandelen, $w$ weken na een heupoperatie.',
     graf: { x: [0, 26], y: [0, top(E * 1.05)] },
     w: { begin: `M(0) = ${M0}`, ha: `y = ${E}`, verloop: 'M \\text{ is stijgend op } [0 \\,;\\, 26]', lim: `\\lim\\limits_{w \\to +\\infty} M(w) = ${E}`, eind: `M(26) \\approx ${m26}` },
@@ -1436,9 +1522,9 @@ function sitReval() {
       beginF: `Bij de start kan de patiënt nog niet wandelen.`, verloopF: 'De patiënt gaat elke week evenveel vooruit.' } };
 }
 function sitWeb() {
-  const dm = kies([4, 5, 6]), Bm = kies([150, 200, 250]), b = dm * dm, a = 2 * Bm * dm, f = (d) => a * d / (d * d + b);
+  const dm = kies([4, 5, 6]), Bm = kies([150, 200, 250]), b = dm * dm, a = 2 * Bm * dm, f = (d) => a * d / (d * d + b), e = `${a}*x/(x*x+${b})`;
   const d60 = Math.round(f(60));
-  return { fam: 'web', titel: 'Een nieuwe website', f, fn: 'B', x: 'd', xe: 'dagen', ye: 'bezoekers', yn: 'bezoekers per dag', dom: [0, 60], ha: 0, dm, Bm, d60,
+  return { fam: 'web', titel: 'Een nieuwe website', f, e, fn: 'B', x: 'd', xe: 'dagen', ye: 'bezoekers', yn: 'bezoekers per dag', dom: [0, 60], ha: 0, dm, Bm, d60,
     verhaal: 'De grafiek toont het aantal bezoekers $B$ per dag van de website van een nieuw buurtproject, $d$ dagen na de lancering.',
     graf: { x: [0, 60], y: [0, top(Bm * 1.1)] },
     w: { begin: 'B(0) = 0', max: `\\text{maximum } (${dm} \\,;\\, ${Bm})`, ha: 'y = 0', verloop: `B \\text{ stijgt op } [0 \\,;\\, ${dm}] \\text{ en daalt op } [${dm} \\,;\\, 60]`, lim: '\\lim\\limits_{d \\to +\\infty} B(d) = 0', eind: `B(60) \\approx ${d60}` },
@@ -1458,7 +1544,7 @@ function sitSoep() {
   return S;
 }
 const kiesVerhaal = () => kies([sitSoep, sitReval, sitWeb])();
-const verhaalGraf = (S) => figuur(rgraf({ x: S.graf.x, y: S.graf.y, xn: `${S.x} (${S.xe}${S.fam === 'web' ? ' na de lancering' : S.fam === 'reval' ? ' na de operatie' : ' na het opscheppen'})`, yn: S.yn, functies: [{ f: S.f, van: S.dom[0], tot: S.dom[1] }] }));
+const verhaalGraf = (S) => figuur(rgraf({ x: S.graf.x, y: S.graf.y, xn: `${S.x} (${S.xe}${S.fam === 'web' ? ' na de lancering' : S.fam === 'reval' ? ' na de operatie' : ' na het opscheppen'})`, yn: S.yn, functies: [{ f: S.f, e: S.e, van: S.dom[0], tot: S.dom[1] }] }));
 function vraagVertaal() {
   const S = kiesVerhaal(), ks = Object.keys(S.w).filter(k => S.z[k]), k = kies(ks);
   const fout = schud(ks.filter(x => x !== k && !(k === 'ha' && x === 'lim') && !(k === 'lim' && x === 'ha')).map(x => S.z[x])); if (k === 'ha' || k === 'lim') fout.unshift(S.z.haF);
@@ -1503,7 +1589,7 @@ const D8 = {
       <li>Ik vermeld nulwaarden (of leg uit waarom er geen zijn).</li><li>Ik zeg iets over de snelheid van de verandering (snel/traag).</li><li>Ik vermeld de eindwaarde.</li>
       <li>Ik gebruik de taal van de situatie, géén woorden als "functie", "nulwaarde", "stijgend" of "asymptoot".</li><li>Mijn verhaal is logisch: het kan echt zo gebeurd zijn.</li></ul></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld: soep in het woonzorgcentrum</div>
-      ${figuur(rgraf({ x: [0, 60], y: [0, 100], xs: 5, ys: 10, xn: 't (minuten na het opscheppen)', yn: 'temperatuur (°C)', functies: [{ f: (t) => 20 + 1400 / (t + 20) }] }))}
+      ${figuur(rgraf({ x: [0, 60], y: [0, 100], xs: 5, ys: 10, xn: 't (minuten na het opscheppen)', yn: 'temperatuur (°C)', functies: [{ f: (t) => 20 + 1400 / (t + 20), e: '20+1400/(x+20)' }] }))}
       <p>De soep wordt opgeschept op 90 °C. In de eerste minuten koelt ze snel af: na een kwartier is ze 60 °C en mag ze naar de bewoners. Daarna gaat het afkoelen steeds trager.
       Na een halfuur is de soep ongeveer 48 °C en na een uur nog ongeveer 37,5 °C. De soep wordt nooit kouder dan de eetzaal: ze komt steeds dichter bij 20 °C, maar bereikt die temperatuur niet.</p>
       <table class="tabel"><tr><th>Wiskundetaal</th><th>Contexttaal</th></tr>
@@ -1514,7 +1600,7 @@ const D8 = {
       <tr><td>$\\lim\\limits_{t \\to +\\infty} S(t) = 20$</td><td>Hoe langer je wacht, hoe dichter de soep bij 20 °C komt.</td></tr>
       <tr><td>$\\text{ber } S = [37{,}5 \\,;\\, 90]$</td><td>Tijdens het uur ligt de temperatuur van de soep tussen 37,5 °C en 90 °C.</td></tr></table></div>${AFSPRAAK}`,
   voorbeelden: [
-    { html: `${figuur(rgraf({ x: [0, 26], y: [0, 900], xs: 2, ys: 100, xn: 'w (weken na de operatie)', yn: 'afstand (meter)', functies: [{ f: (w) => 850 - 3200 / (w + 4) }] }))}<p>Vertel de grafiek.</p>`,
+    { html: `${figuur(rgraf({ x: [0, 26], y: [0, 900], xs: 2, ys: 100, xn: 'w (weken na de operatie)', yn: 'afstand (meter)', functies: [{ f: (w) => 850 - 3200 / (w + 4), e: '850-3200/(x+4)' }] }))}<p>Vertel de grafiek.</p>`,
       stappen: ['\\text{Bij de start kan de patiënt 50 m zonder pauze wandelen.}', '\\text{De eerste weken gaat hij snel vooruit: na 4 weken haalt hij 450 m. Daarna gaat het steeds trager.}', '\\text{Na een halfjaar wandelt hij ongeveer 740 m. Hij haalt nooit meer dan ongeveer 850 m.}'] },
   ],
   soorten: {
@@ -1705,7 +1791,7 @@ const D10 = {
       <p>Op het terras van 8 °C: $k = 8$ en $8 + \\dfrac{a}{10} = 80 \\Rightarrow a = 720$.</p></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld: een geneesmiddel op maat</div>
       <p>$C(t) = \\dfrac{a \\cdot t}{t^2 + b}$; maximum na 2 uur, en dat maximum is 6 mg/l. &nbsp; $\\sqrt{b} = 2 \\Rightarrow b = 4$. &nbsp; $\\dfrac{a}{2 \\cdot 2} = 6 \\Rightarrow a = 24$.</p>
-      ${figuur(rgraf({ x: [0, 24], y: [0, 7], xs: 2, ys: 1, xn: 't (uur)', yn: 'concentratie (mg/l)', functies: [{ f: (t) => 24 * t / (t * t + 4) }], punten: [{ x: 2, y: 6 }] }))}</div>${AFSPRAAK}`,
+      ${figuur(rgraf({ x: [0, 24], y: [0, 7], xs: 2, ys: 1, xn: 't (uur)', yn: 'concentratie (mg/l)', functies: [{ f: (t) => 24 * t / (t * t + 4), e: '24*x/(x*x+4)' }], punten: [{ x: 2, y: 6 }] }))}</div>${AFSPRAAK}`,
   voorbeelden: [
     { html: `${opgave('Sociaal restaurant: 3000 euro vaste kosten per maand en 4 euro ingrediënten per maaltijd.')}<p>Schrijf het model als $K(n) = p + \\dfrac{v}{n}$.</p>`,
       stappen: ['p = 4 \\text{ (per maaltijd)}, \\quad v = 3000 \\text{ (vaste kost)}', 'K(n) = 4 + \\dfrac{3000}{n}', 'K(n) < 7 \\Leftrightarrow \\dfrac{3000}{n} < 3 \\Leftrightarrow n > 1000'] },

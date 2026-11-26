@@ -71,7 +71,7 @@ const D6 = {
       <li>Controle: vertel het verhaal terug met je grafiek. Klopt alles?</li></ol></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld: een kop koffie</div>
       <p>Een kop koffie van 80 °C wordt ingeschonken in een kamer van 20 °C. De koffie koelt eerst snel af, daarna steeds trager. Na 10 minuten is de koffie 50 °C. We volgen de koffie een uur lang.</p>
-      ${figuur(rgraf({ x: [0, 60], y: [0, 90], xs: 10, ys: 10, xn: 't (minuten)', yn: 'temperatuur (°C)', functies: [{ f: (t) => (20 * t + 800) / (t + 10) }], ha: [20], punten: [{ x: 0, y: 80 }, { x: 10, y: 50 }] }))}
+      ${figuur(rgraf({ x: [0, 60], y: [0, 90], xs: 10, ys: 10, xn: 't (minuten)', yn: 'temperatuur (°C)', functies: [{ f: (t) => (20 * t + 800) / (t + 10), e: '(20*x+800)/(x+10)' }], ha: [20], punten: [{ x: 0, y: 80 }, { x: 10, y: 50 }] }))}
       <p>Domein $[0 \\,;\\, 60]$, bereik ongeveer $[29 \\,;\\, 80]$, horizontale asymptoot $y = 20$: de koffie nadert de temperatuur van de kamer. Ze wordt nooit kouder dan 20 °C: de grafiek blijft boven de stippellijn.</p>
       <p><b>Welk voorschrift past?</b> Controleer alle gegevens: $T_1(t) = \\dfrac{20t + 800}{t + 10}$ geeft $T_1(0) = 80$, $T_1(10) = 50$ en asymptoot $y = 20$: alles klopt.
       $T_2(t) = \\dfrac{30t + 800}{t + 10}$ heeft asymptoot $y = 30$ (fout). $T_3(t) = \\dfrac{20t + 400}{t + 5}$ geeft $T_3(10) = 40$ in plaats van 50 (fout).</p></div>${AFSPRAAK}`,
@@ -116,7 +116,7 @@ function tekenCellen(h, wissel = false) {
 }
 const tekenHTML = (h, wissel) => schema('x', 'f(x)', tekenCellen(h, wissel));
 const tekenOptie = (cellen) => `<table class="tabel tekenschema"><tr><th>x</th>${cellen.map(c => `<td>${c.x ?? ''}</td>`).join('')}</tr><tr><th>f(x)</th>${cellen.map(c => `<td>${c.y ?? ''}</td>`).join('')}</tr></table>`;
-const hGraf = (h, klein = false, extra = {}) => rgraf({ x: [h.a - 7, h.a + 7], y: [h.c - 7, h.c + 7], xs: 1, ys: 1, functies: [{ f: h.f, kleur: extra.kleur }], ha: [h.c], va: [h.a], klein, breed: klein ? 230 : 320, hoog: klein ? 230 : 320 });
+const hGraf = (h, klein = false, extra = {}) => rgraf({ x: [h.a - 7, h.a + 7], y: [h.c - 7, h.c + 7], xs: 1, ys: 1, functies: [{ f: h.f, e: `${h.c}+(${h.d})/(x-(${h.a}))`, kleur: extra.kleur }], ha: [h.c], va: [h.a], klein, breed: klein ? 230 : 320, hoog: klein ? 230 : 320 });
 function hTex(h) { const t = h.c, n = h.d - h.c * h.a; return `f(x) = \\dfrac{${t === 1 ? '' : t === -1 ? '-' : t}x${n ? ` ${n < 0 ? '-' : '+'} ${Math.abs(n)}` : ''}}{x ${h.a < 0 ? '+' : '-'} ${Math.abs(h.a)}}`; }
 function vraagAsymp() {
   const h = hyper();
@@ -194,7 +194,7 @@ const D7 = {
     <div class="kader werk"><div class="kader-titel">Voorbeeld</div>
       <p>$\\text{dom } f = \\mathbb{R} \\setminus \\{2\\}$, verticale asymptoot $x = 2$, horizontale asymptoot $y = 1$, nulwaarde $-1$, snijpunt met de $y$-as $(0 \\,;\\, -0{,}5)$, $f$ dalend op beide takken.
       Een passende functie is $f(x) = \\dfrac{x + 1}{x - 2}$.</p>
-      ${figuur(rgraf({ x: [-6, 9], y: [-5, 7], xs: 1, ys: 1, xn: 'x', yn: 'y', functies: [{ f: (x) => (x + 1) / (x - 2) }], ha: [1], va: [2], punten: [{ x: -1, y: 0 }, { x: 0, y: -0.5 }] }))}
+      ${figuur(rgraf({ x: [-6, 9], y: [-5, 7], xs: 1, ys: 1, xn: 'x', yn: 'y', functies: [{ f: (x) => (x + 1) / (x - 2), e: '(x+1)/(x-2)' }], ha: [1], va: [2], punten: [{ x: -1, y: 0 }, { x: 0, y: -0.5 }] }))}
       ${schema('x', 'f(x)', [{ y: '+' }, { x: '−1', y: '0' }, { y: '−' }, { x: '2', y: '×' }, { y: '+' }])}
       ${schema('x', 'f(x)', [{ x: '−∞', y: '1' }, { y: PIJL_NEER }, { x: '2', y: '−∞ ‖ +∞' }, { y: PIJL_NEER }, { x: '+∞', y: '1' }])}
       <p>$\\lim\\limits_{x \\to 2^-} f(x) = -\\infty$, &nbsp; $\\lim\\limits_{x \\to 2^+} f(x) = +\\infty$, &nbsp; $\\lim\\limits_{x \\to \\pm\\infty} f(x) = 1$. &nbsp; Bereik: $\\mathbb{R} \\setminus \\{1\\}$.</p></div>
@@ -222,9 +222,9 @@ const D7 = {
 //  7 · EEN GRAFIEK VERTELLEN
 // ===================================================================
 function sitReval() {
-  const E = kies([800, 850, 900]), M0 = kies([40, 50, 60]), b = kies([3, 4, 5]), a = (E - M0) * b, f = (w) => E - a / (w + b);
+  const E = kies([800, 850, 900]), M0 = kies([40, 50, 60]), b = kies([3, 4, 5]), a = (E - M0) * b, f = (w) => E - a / (w + b), e = `${E}-${a}/(x+${b})`;
   const m26 = Math.round(f(26) / 10) * 10, m4 = Math.round(f(4) / 10) * 10;
-  return { fam: 'reval', titel: 'Revalidatie na een operatie', f, fn: 'M', x: 'w', xe: 'weken', ye: 'meter', yn: 'afstand (meter)', dom: [0, 26], ha: E, E, M0, b, m26, m4,
+  return { fam: 'reval', titel: 'Revalidatie na een operatie', f, e, fn: 'M', x: 'w', xe: 'weken', ye: 'meter', yn: 'afstand (meter)', dom: [0, 26], ha: E, E, M0, b, m26, m4,
     verhaal: 'De grafiek toont de afstand $M$ (in meter) die een patiënt zonder pauze kan wandelen, $w$ weken na een heupoperatie.',
     graf: { x: [0, 26], y: [0, top(E * 1.05)] },
     w: { begin: `M(0) = ${M0}`, ha: `y = ${E}`, verloop: 'M \\text{ is stijgend op } [0 \\,;\\, 26]', lim: `\\lim\\limits_{w \\to +\\infty} M(w) = ${E}`, eind: `M(26) \\approx ${m26}` },
@@ -234,9 +234,9 @@ function sitReval() {
       beginF: `Bij de start kan de patiënt nog niet wandelen.`, verloopF: 'De patiënt gaat elke week evenveel vooruit.' } };
 }
 function sitWeb() {
-  const dm = kies([4, 5, 6]), Bm = kies([150, 200, 250]), b = dm * dm, a = 2 * Bm * dm, f = (d) => a * d / (d * d + b);
+  const dm = kies([4, 5, 6]), Bm = kies([150, 200, 250]), b = dm * dm, a = 2 * Bm * dm, f = (d) => a * d / (d * d + b), e = `${a}*x/(x*x+${b})`;
   const d60 = Math.round(f(60));
-  return { fam: 'web', titel: 'Een nieuwe website', f, fn: 'B', x: 'd', xe: 'dagen', ye: 'bezoekers', yn: 'bezoekers per dag', dom: [0, 60], ha: 0, dm, Bm, d60,
+  return { fam: 'web', titel: 'Een nieuwe website', f, e, fn: 'B', x: 'd', xe: 'dagen', ye: 'bezoekers', yn: 'bezoekers per dag', dom: [0, 60], ha: 0, dm, Bm, d60,
     verhaal: 'De grafiek toont het aantal bezoekers $B$ per dag van de website van een nieuw buurtproject, $d$ dagen na de lancering.',
     graf: { x: [0, 60], y: [0, top(Bm * 1.1)] },
     w: { begin: 'B(0) = 0', max: `\\text{maximum } (${dm} \\,;\\, ${Bm})`, ha: 'y = 0', verloop: `B \\text{ stijgt op } [0 \\,;\\, ${dm}] \\text{ en daalt op } [${dm} \\,;\\, 60]`, lim: '\\lim\\limits_{d \\to +\\infty} B(d) = 0', eind: `B(60) \\approx ${d60}` },
@@ -256,7 +256,7 @@ function sitSoep() {
   return S;
 }
 const kiesVerhaal = () => kies([sitSoep, sitReval, sitWeb])();
-const verhaalGraf = (S) => figuur(rgraf({ x: S.graf.x, y: S.graf.y, xn: `${S.x} (${S.xe}${S.fam === 'web' ? ' na de lancering' : S.fam === 'reval' ? ' na de operatie' : ' na het opscheppen'})`, yn: S.yn, functies: [{ f: S.f, van: S.dom[0], tot: S.dom[1] }] }));
+const verhaalGraf = (S) => figuur(rgraf({ x: S.graf.x, y: S.graf.y, xn: `${S.x} (${S.xe}${S.fam === 'web' ? ' na de lancering' : S.fam === 'reval' ? ' na de operatie' : ' na het opscheppen'})`, yn: S.yn, functies: [{ f: S.f, e: S.e, van: S.dom[0], tot: S.dom[1] }] }));
 function vraagVertaal() {
   const S = kiesVerhaal(), ks = Object.keys(S.w).filter(k => S.z[k]), k = kies(ks);
   const fout = schud(ks.filter(x => x !== k && !(k === 'ha' && x === 'lim') && !(k === 'lim' && x === 'ha')).map(x => S.z[x])); if (k === 'ha' || k === 'lim') fout.unshift(S.z.haF);
@@ -301,7 +301,7 @@ const D8 = {
       <li>Ik vermeld nulwaarden (of leg uit waarom er geen zijn).</li><li>Ik zeg iets over de snelheid van de verandering (snel/traag).</li><li>Ik vermeld de eindwaarde.</li>
       <li>Ik gebruik de taal van de situatie, géén woorden als "functie", "nulwaarde", "stijgend" of "asymptoot".</li><li>Mijn verhaal is logisch: het kan echt zo gebeurd zijn.</li></ul></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld: soep in het woonzorgcentrum</div>
-      ${figuur(rgraf({ x: [0, 60], y: [0, 100], xs: 5, ys: 10, xn: 't (minuten na het opscheppen)', yn: 'temperatuur (°C)', functies: [{ f: (t) => 20 + 1400 / (t + 20) }] }))}
+      ${figuur(rgraf({ x: [0, 60], y: [0, 100], xs: 5, ys: 10, xn: 't (minuten na het opscheppen)', yn: 'temperatuur (°C)', functies: [{ f: (t) => 20 + 1400 / (t + 20), e: '20+1400/(x+20)' }] }))}
       <p>De soep wordt opgeschept op 90 °C. In de eerste minuten koelt ze snel af: na een kwartier is ze 60 °C en mag ze naar de bewoners. Daarna gaat het afkoelen steeds trager.
       Na een halfuur is de soep ongeveer 48 °C en na een uur nog ongeveer 37,5 °C. De soep wordt nooit kouder dan de eetzaal: ze komt steeds dichter bij 20 °C, maar bereikt die temperatuur niet.</p>
       <table class="tabel"><tr><th>Wiskundetaal</th><th>Contexttaal</th></tr>
@@ -312,7 +312,7 @@ const D8 = {
       <tr><td>$\\lim\\limits_{t \\to +\\infty} S(t) = 20$</td><td>Hoe langer je wacht, hoe dichter de soep bij 20 °C komt.</td></tr>
       <tr><td>$\\text{ber } S = [37{,}5 \\,;\\, 90]$</td><td>Tijdens het uur ligt de temperatuur van de soep tussen 37,5 °C en 90 °C.</td></tr></table></div>${AFSPRAAK}`,
   voorbeelden: [
-    { html: `${figuur(rgraf({ x: [0, 26], y: [0, 900], xs: 2, ys: 100, xn: 'w (weken na de operatie)', yn: 'afstand (meter)', functies: [{ f: (w) => 850 - 3200 / (w + 4) }] }))}<p>Vertel de grafiek.</p>`,
+    { html: `${figuur(rgraf({ x: [0, 26], y: [0, 900], xs: 2, ys: 100, xn: 'w (weken na de operatie)', yn: 'afstand (meter)', functies: [{ f: (w) => 850 - 3200 / (w + 4), e: '850-3200/(x+4)' }] }))}<p>Vertel de grafiek.</p>`,
       stappen: ['\\text{Bij de start kan de patiënt 50 m zonder pauze wandelen.}', '\\text{De eerste weken gaat hij snel vooruit: na 4 weken haalt hij 450 m. Daarna gaat het steeds trager.}', '\\text{Na een halfjaar wandelt hij ongeveer 740 m. Hij haalt nooit meer dan ongeveer 850 m.}'] },
   ],
   soorten: {
@@ -503,7 +503,7 @@ const D10 = {
       <p>Op het terras van 8 °C: $k = 8$ en $8 + \\dfrac{a}{10} = 80 \\Rightarrow a = 720$.</p></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld: een geneesmiddel op maat</div>
       <p>$C(t) = \\dfrac{a \\cdot t}{t^2 + b}$; maximum na 2 uur, en dat maximum is 6 mg/l. &nbsp; $\\sqrt{b} = 2 \\Rightarrow b = 4$. &nbsp; $\\dfrac{a}{2 \\cdot 2} = 6 \\Rightarrow a = 24$.</p>
-      ${figuur(rgraf({ x: [0, 24], y: [0, 7], xs: 2, ys: 1, xn: 't (uur)', yn: 'concentratie (mg/l)', functies: [{ f: (t) => 24 * t / (t * t + 4) }], punten: [{ x: 2, y: 6 }] }))}</div>${AFSPRAAK}`,
+      ${figuur(rgraf({ x: [0, 24], y: [0, 7], xs: 2, ys: 1, xn: 't (uur)', yn: 'concentratie (mg/l)', functies: [{ f: (t) => 24 * t / (t * t + 4), e: '24*x/(x*x+4)' }], punten: [{ x: 2, y: 6 }] }))}</div>${AFSPRAAK}`,
   voorbeelden: [
     { html: `${opgave('Sociaal restaurant: 3000 euro vaste kosten per maand en 4 euro ingrediënten per maaltijd.')}<p>Schrijf het model als $K(n) = p + \\dfrac{v}{n}$.</p>`,
       stappen: ['p = 4 \\text{ (per maaltijd)}, \\quad v = 3000 \\text{ (vaste kost)}', 'K(n) = 4 + \\dfrac{3000}{n}', 'K(n) < 7 \\Leftrightarrow \\dfrac{3000}{n} < 3 \\Leftrightarrow n > 1000'] },

@@ -40,7 +40,7 @@ const PIJL_OP = '↗', PIJL_NEER = '↘';
 // opt: { x:[X0,X1], y:[Y0,Y1], xs, ys (stappen), xn, yn (asnamen), functies:[{f, van, tot, kleur}], ha:[getal], va:[getal], breed, hoog, punten:[{x,y,hol}], losse: true (losse punten), klein }
 const top = (v) => { const s = nice(v / 5); return Math.ceil(v / s - 1e-9) * s; }; // nette bovengrens voor een as
 function nice(v) { const e = 10 ** Math.floor(Math.log10(v)), r = v / e; return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * e; }
-function rgraf(opt) {
+function rgrafKern(opt) {
   const [X0, X1] = opt.x, [Y0, Y1] = opt.y;
   const B = opt.breed || 360, H = opt.hoog || 230, ml = opt.klein ? 34 : 46, mr = 14, mt = 14, mb = opt.klein ? 26 : 38;
   const w = ml + B + mr, h = mt + H + mb;
@@ -58,26 +58,47 @@ function rgraf(opt) {
   let k = '';
   for (const a of opt.ha || []) if (a >= Y0 && a <= Y1) k += `<line x1="${X(X0)}" y1="${Y(a)}" x2="${X(X1)}" y2="${Y(a)}" stroke="${ORANJE}" stroke-width="1.6" stroke-dasharray="6 5"/>`;
   for (const a of opt.va || []) if (a >= X0 && a <= X1) k += `<line x1="${X(a)}" y1="${Y(Y0)}" x2="${X(a)}" y2="${Y(Y1)}" stroke="${ORANJE}" stroke-width="1.6" stroke-dasharray="6 5"/>`;
-  for (const fn of opt.functies || []) {
-    const van = Math.max(fn.van ?? X0, X0), tot = Math.min(fn.tot ?? X1, X1);
-    if (opt.losse || fn.losse) {
-      const st = fn.stap || 1;
-      for (let x = Math.ceil(van); x <= tot; x += st) { const y = fn.f(x); if (y >= Y0 && y <= Y1) k += `<circle cx="${X(x).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="1.8" fill="${fn.kleur || BLAUW}"/>`; }
-      continue;
-    }
+  const lijn = (f, van, tot, n) => {
     let d = '', aan = false;
-    for (let i = 0; i <= 600; i++) {
-      const x = van + (tot - van) * i / 600, y = fn.f(x);
+    for (let i = 0; i <= n; i++) {
+      const x = van + (tot - van) * i / n, y = f(x);
       if (!isFinite(y) || y < Y0 - (Y1 - Y0) || y > Y1 + (Y1 - Y0)) { aan = false; continue; }
       const yy = Math.max(Y0 - (Y1 - Y0) * 0.05, Math.min(Y1 + (Y1 - Y0) * 0.05, y));
       d += `${aan ? 'L' : 'M'}${X(x).toFixed(1)},${Y(yy).toFixed(1)} `; aan = true;
     }
-    k += `<path d="${d}" fill="none" stroke="${fn.kleur || BLAUW}" stroke-width="${opt.klein ? 2 : 2.4}"/>`;
+    return d;
+  };
+  for (const fn of opt.functies || []) {
+    const van = Math.max(fn.van ?? X0, X0), tot = Math.min(fn.tot ?? X1, X1);
+    // na in- of uitzoomen: de grafiek buiten het praktisch domein lichtgrijs en gestreept (zoals in het grafiekvenster)
+    if (opt.buiten) {
+      if (fn.van != null && fn.van > X0) k += `<path d="${lijn(fn.f, X0, Math.min(fn.van, X1), 400)}" fill="none" stroke="#b9c2cf" stroke-width="1.6" stroke-dasharray="4 4"/>`;
+      if (fn.tot != null && fn.tot < X1) k += `<path d="${lijn(fn.f, Math.max(fn.tot, X0), X1, 400)}" fill="none" stroke="#b9c2cf" stroke-width="1.6" stroke-dasharray="4 4"/>`;
+    }
+    if (van >= tot) continue;
+    if (opt.losse || fn.losse) {
+      const st = Math.max(fn.stap || 1, Math.ceil((tot - van) / 160));
+      for (let x = Math.ceil(van); x <= tot; x += st) { const y = fn.f(x); if (y >= Y0 && y <= Y1) k += `<circle cx="${X(x).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="1.8" fill="${fn.kleur || BLAUW}"/>`; }
+      continue;
+    }
+    k += `<path d="${lijn(fn.f, van, tot, 600)}" fill="none" stroke="${fn.kleur || BLAUW}" stroke-width="${opt.klein ? 2 : 2.4}"/>`;
   }
-  for (const p of opt.punten || []) k += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4" fill="${p.hol ? '#fff' : BLAUW}" stroke="${BLAUW}" stroke-width="2"/>`;
+  for (const p of opt.punten || []) if (p.x >= X0 && p.x <= X1 && p.y >= Y0 && p.y <= Y1) k += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4" fill="${p.hol ? '#fff' : BLAUW}" stroke="${BLAUW}" stroke-width="2"/>`;
   const id = 'c' + Math.random().toString(36).slice(2, 8);
   return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="grafiek" style="font-family:Verdana,sans-serif;max-width:100%;height:auto">
     <defs><clipPath id="${id}"><rect x="${ml}" y="${mt - 2}" width="${B}" height="${H + 4}"/></clipPath></defs>${g}<g clip-path="url(#${id})">${k}</g></svg>`;
+}
+// ---------- zoombare grafiek: elke functie heeft ook een formule e (bv. '1200*x/(x+8)') zodat de pagina
+// de grafiek zelf opnieuw kan tekenen bij in- en uitzoomen (ook na herladen of bij een bekeken test).
+// Kleine grafiekjes (klein: true, bv. in meerkeuzevragen) blijven gewoon vast.
+const rgFormule = (e) => { const body = String(e).replace(/\^/g, '**'); if (!/^[0-9a-z+\-*/(). ]*$/i.test(body)) return () => NaN;
+  const fn = new Function('x', `"use strict"; return (${body});`); return (x) => { const y = fn(x); return isFinite(y) ? y : NaN; }; };
+const ZOOM_KNOPPEN = (soort) => `<div class="zoom-tools"><button type="button" class="zoom-knop" data-zoom="in" data-zs="${soort}" title="Inzoomen">＋ Inzoomen</button><button type="button" class="zoom-knop" data-zoom="uit" data-zs="${soort}" title="Uitzoomen">− Uitzoomen</button><button type="button" class="zoom-knop licht" data-zoom="terug" data-zs="${soort}" title="Terug naar het beginbeeld">⟲ Beginbeeld</button><span class="zoom-hulp">sleep om te verschuiven</span></div>`;
+function rgraf(opt) {
+  const zoombaar = !opt.klein && (opt.functies || []).length && (opt.functies || []).every(fn => fn.e);
+  if (!zoombaar) return rgrafKern(opt);
+  const spec = { ...opt, functies: opt.functies.map(({ f, ...rest }) => rest) };
+  return `<div class="rg" data-rg='${String(JSON.stringify(spec)).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}'>${rgrafKern(opt)}${ZOOM_KNOPPEN('rg')}</div>`;
 }
 const figuur = (svg) => `<div class="figuur">${svg}</div>`;
 
@@ -341,7 +362,7 @@ function sitGraf(S, opt = {}) {
   const [a, b] = S.dom;
   const tot = S.domOpen && S.fam === 'wacht' ? 99.6 : b;
   let [Y0, Y1] = S.graf.y;
-  return rgraf({ x: opt.x || S.graf.x, y: [Y0, Y1], xn: `${S.x} (${S.xe})`, yn: S.yn, functies: [{ f: S.f, van: a, tot, losse: opt.losse }],
+  return rgraf({ x: opt.x || S.graf.x, y: [Y0, Y1], xn: `${S.x} (${S.xe})`, yn: S.yn, functies: [{ f: S.f, e: S.e, van: a, tot, losse: opt.losse }],
     ha: opt.asymptoten ? (S.ha != null ? [S.ha] : []) : [], va: opt.asymptoten && S.va != null ? [S.va] : [], klein: opt.klein, breed: opt.breed, hoog: opt.hoog });
 }
 const domTekst = (S) => S.domTex ? S.domTex : S.domOpen ? `${S.dom[0]} \\leq ${S.x} \\lt ${S.dom[1]}` : `${S.dom[0]} \\leq ${S.x} \\leq ${S.dom[1]}`;
@@ -376,6 +397,13 @@ const GV_STIJL = `
 .gv-let{color:#b85c00}
 .gv-leg{font-size:12px;color:#555;text-align:center;margin-top:4px}
 .gv-leg i{font-style:normal;display:inline-block;width:16px;height:3px;vertical-align:middle;margin:0 4px 0 10px}
+.zoom-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:6px 0 4px;font-size:13px}
+.zoom-knop{padding:4px 10px;font-size:13px;border-radius:6px;border:1px solid #1c4e8a;background:#1c4e8a;color:#fff;cursor:pointer}
+.zoom-knop.licht{background:#fff;color:#1c4e8a}
+.zoom-hulp{color:#667;font-size:12px}
+.rg{display:inline-block;max-width:100%}
+.rg svg{touch-action:none;cursor:grab;display:block;margin:0 auto}
+.rg svg:active{cursor:grabbing}
 .legende{color:#38414f;margin:2px 0 8px;font-size:14px}
 .vraagzin{margin-top:12px;font-size:16px}
 .woord{border-bottom:2px dotted #e8772e;cursor:help;position:relative;outline:none}
@@ -470,7 +498,7 @@ function venster(sp) {
   const hulp = t.includes('v') ? 'Beweeg over de grafiek (of tik erop) om de waarden te zien.' : '';
   return `<!--gv--><div class="gv" data-gv='${gvAttr(JSON.stringify(sp))}'>
     <div class="gv-kop">📈 Grafiekvenster <span>· de formule staat er al in${sp.a != null && !sp.geenDomein ? ' · blauw = praktisch domein' : ''}</span></div>
-    ${gvSvg(sp, fs)}${leg}<div class="gv-uit">${hulp}</div><div class="gv-tools">${kies}${tools.join('')}</div><div class="gv-res"></div></div><!--/gv-->`;
+    ${gvSvg(sp, fs)}${ZOOM_KNOPPEN('gv')}${leg}<div class="gv-uit">${hulp}</div><div class="gv-tools">${kies}${tools.join('')}</div><div class="gv-res"></div></div><!--/gv-->`;
 }
 // ---------- de luisteraars (één keer per pagina)
 (() => {
@@ -577,7 +605,65 @@ function venster(sp) {
       laag(root, l); return res(root, t.join('<br>'));
     }
   }
-  document.addEventListener('pointermove', (e) => { const s = e.target.closest && e.target.closest('.gv svg'); if (s) volg(s, e); });
+  // ---------- in- en uitzoomen, verschuiven (grafiekvenster .gv en zoombare grafiek .rg)
+  const rgSpec = (root) => { try { return JSON.parse(root.dataset.rg); } catch (e) { return null; } };
+  function beeld(root) { // huidig beeld {x:[..], y:[..]} en het beginbeeld
+    if (root.classList.contains('gv')) { const sp = spec(root); if (!root.dataset.gv0) root.dataset.gv0 = JSON.stringify({ x: sp.X, y: sp.Y }); return { nu: { x: sp.X, y: sp.Y }, begin: JSON.parse(root.dataset.gv0) }; }
+    const sp = rgSpec(root); const begin = { x: sp.x, y: sp.y };
+    return { nu: root.dataset.beeld ? JSON.parse(root.dataset.beeld) : begin, begin };
+  }
+  function tekenBeeld(root, b) {
+    if (root.classList.contains('gv')) {
+      const sp = spec(root); sp.X = b.x; sp.Y = b.y; delete sp.xs; delete sp.ys;
+      root.dataset.gv = JSON.stringify(sp);
+      const nieuw = document.createElement('div'); nieuw.innerHTML = gvSvg(sp, gvFuncties(sp, root));
+      const oud = root.querySelector('svg'); if (oud) oud.replaceWith(nieuw.firstElementChild);
+      return;
+    }
+    const sp = rgSpec(root), begin = sp.x[0] === b.x[0] && sp.x[1] === b.x[1] && sp.y[0] === b.y[0] && sp.y[1] === b.y[1];
+    root.dataset.beeld = JSON.stringify(b);
+    const opt = { ...sp, x: b.x, y: b.y, buiten: !begin, functies: sp.functies.map(fn => ({ ...fn, f: rgFormule(fn.e) })) };
+    if (!begin) { delete opt.xs; delete opt.ys; }
+    const nieuw = document.createElement('div'); nieuw.innerHTML = rgrafKern(opt);
+    const oud = root.querySelector('svg'); if (oud) oud.replaceWith(nieuw.firstElementChild);
+  }
+  function zoom(root, wat) {
+    const { nu, begin } = beeld(root);
+    if (wat === 'terug') { tekenBeeld(root, begin); }
+    else {
+      const k = wat === 'in' ? 0.5 : 2, cx = (nu.x[0] + nu.x[1]) / 2, cy = (nu.y[0] + nu.y[1]) / 2, hx = (nu.x[1] - nu.x[0]) / 2 * k, hy = (nu.y[1] - nu.y[0]) / 2 * k;
+      if (hx < 1e-6 || hx > 1e7) return;
+      // uitzoomen vanuit een beeld dat op 0 begint: 0 blijft links/onderaan staan (zo zie je verder naar rechts en naar boven)
+      const x0 = wat === 'uit' && Math.abs(nu.x[0]) < 1e-9 ? 0 : cx - hx, y0 = wat === 'uit' && Math.abs(nu.y[0]) < 1e-9 ? 0 : cy - hy;
+      tekenBeeld(root, { x: [x0, x0 + 2 * hx], y: [y0, y0 + 2 * hy] });
+    }
+    if (root.classList.contains('gv')) { laag(root, ''); res(root, ''); }
+  }
+  let sleep = null; // { root, x, y, beeld, bewogen }
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('[data-zoom]'); if (!b) return; e.preventDefault(); e.stopPropagation(); const root = b.closest('.gv, .rg'); if (root) zoom(root, b.dataset.zoom); }, true);
+  document.addEventListener('pointerdown', (e) => {
+    const s = e.target.closest && e.target.closest('.gv svg, .rg svg'); if (!s) return;
+    const root = s.closest('.gv, .rg'), r = s.getBoundingClientRect(), vb = s.viewBox.baseVal;
+    // schaal nu vastleggen: tijdens het slepen wordt de svg telkens vervangen
+    sleep = { root, sx: vb.width / r.width, sy: vb.height / r.height, x: e.clientX, y: e.clientY, beeld: beeld(root).nu, bewogen: false };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!sleep || !(e.buttons & 1)) { sleep = sleep && (e.buttons & 1) ? sleep : null; return; }
+    const dx = e.clientX - sleep.x, dy = e.clientY - sleep.y;
+    if (!sleep.bewogen && Math.hypot(dx, dy) < 5) return;
+    sleep.bewogen = true; e.preventDefault();
+    const gv = sleep.root.classList.contains('gv');
+    const sp = gv ? null : rgSpec(sleep.root);
+    const B = gv ? GV_M.B : (sp.breed || 360), H = gv ? GV_M.H : (sp.hoog || 230);
+    const b = sleep.beeld, ex = dx * sleep.sx / B * (b.x[1] - b.x[0]), ey = dy * sleep.sy / H * (b.y[1] - b.y[0]);
+    if (!isFinite(ex) || !isFinite(ey)) return;
+    if (sleep.wacht) return; sleep.wacht = true;
+    requestAnimationFrame(() => { if (!sleep) return; sleep.wacht = false; tekenBeeld(sleep.root, { x: [b.x[0] - ex, b.x[1] - ex], y: [b.y[0] + ey, b.y[1] + ey] }); if (gv) laag(sleep.root, ''); });
+  }, { passive: false });
+  document.addEventListener('pointerup', () => { sleep = null; });
+  document.addEventListener('pointercancel', () => { sleep = null; });
+
+  document.addEventListener('pointermove', (e) => { if (sleep && sleep.bewogen) return; const s = e.target.closest && e.target.closest('.gv svg'); if (s) volg(s, e); });
   document.addEventListener('pointerdown', (e) => { const s = e.target.closest && e.target.closest('.gv svg'); if (s) volg(s, e); });
   document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.gv [data-gv-actie]'); if (!b) return; e.preventDefault(); actie(b.closest('.gv'), b.dataset.gvActie); });
   document.addEventListener('keydown', (e) => {
