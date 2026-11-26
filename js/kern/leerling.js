@@ -9,6 +9,7 @@
     leerling: null, progs: [], prog: null, P: null,
     status: null, view: 'login', vak: null, deel: null, tab: 'theorie',
     oef: {}, test: null, fout: '', bezig: false,
+    menu: null, knop: null, ctx: null, statussen: {}, // menu: tegels → knoppen → leerpad/spellen (js/menu.js)
   };
   const DELEN = () => S.P.delen;
   const deelVan = (nr) => DELEN().find(x => x.nr === nr);
@@ -40,8 +41,8 @@
   }
   function afmelden(verlopen) {
     if (!verlopen && S.token) API.call('ll_logout', { p_token: S.token }).catch(() => {});
-    API.sessie.del('ll-token'); API.sessie.del('ll-prog');
-    Object.assign(S, { token: null, leerling: null, progs: [], prog: null, P: null, vak: null, status: null, view: 'login', test: null, oef: {}, fout: verlopen ? 'Je sessie is verlopen. Meld je opnieuw aan.' : '' });
+    API.sessie.del('ll-token'); API.sessie.del('ll-prog'); API.sessie.del('ll-menu'); API.sessie.del('ll-ctx');
+    Object.assign(S, { token: null, leerling: null, progs: [], prog: null, P: null, vak: null, status: null, view: 'login', test: null, oef: {}, menu: null, knop: null, ctx: null, statussen: {}, fout: verlopen ? 'Je sessie is verlopen. Meld je opnieuw aan.' : '' });
     render();
   }
 
@@ -63,6 +64,110 @@
   // ---------- programma's
   function beschikbaar() { return S.progs.filter(p => Leerpaden.vind(p.code)); }
   const mijnSpellen = () => typeof Spellen !== 'undefined' ? Spellen.lijst.filter(sp => S.progs.some(p => p.code === sp.code)) : [];
+
+  // ---------- menu (js/menu.js): tegels → knoppen → leerpad + spellen
+  const MENUS = window.MENUS || {};
+  const heeft = (code) => S.progs.some(p => p.code === code);
+  const heeftLP = (code) => heeft(code) && !!Leerpaden.vind(code);
+  const alleTegels = () => Object.entries(MENUS).flatMap(([vak, M]) => M.tegels.map(T => ({ vak, T })));
+  const inMenuLP = (code) => alleTegels().some(({ T }) => T.direct === code || (T.knoppen || []).some(k => k.leerpad === code));
+  const inMenuSpel = (code) => alleTegels().some(({ T }) => (T.knoppen || []).some(k => (k.spellen || []).includes(code)));
+  const knopZichtbaar = (k) => (k.leerpad && heeftLP(k.leerpad)) || (k.spellen || []).some(heeft);
+  const tegelZichtbaar = (T) => T.direct ? heeftLP(T.direct) : (T.knoppen || []).some(knopZichtbaar);
+  const menuVakVanSpel = (code) => { const x = alleTegels().find(({ T }) => (T.knoppen || []).some(k => (k.spellen || []).includes(code))); return x ? x.vak : null; };
+  // Waar staat de leerling nu in het menu? (enkel geldig als het bij het open leerpad past)
+  function ctxInfo() {
+    const c = S.ctx; if (!c || !MENUS[c.vak]) return null;
+    const T = MENUS[c.vak].tegels.find(t => t.id === c.menu); if (!T) return null;
+    const k = c.knop != null && T.knoppen ? T.knoppen[c.knop] : null;
+    if (S.prog && (k ? k.leerpad : T.direct) !== S.prog) return null;
+    return { vak: c.vak, T, k };
+  }
+  const knopTitel = (k) => { const P = k.leerpad && Leerpaden.vind(k.leerpad); return k.titel || (P ? P.titel : ''); };
+  const knopDelen = (k, P) => k.groep != null ? ((P.groepen || [])[k.groep] || { delen: [] }).delen : P.delen.map(d => d.nr);
+  function bewaarPlek() {
+    API.sessie.set('ll-menu', JSON.stringify({ vak: S.vak, menu: S.menu, knop: S.knop }));
+    API.sessie.set('ll-ctx', JSON.stringify(S.ctx || null));
+  }
+  const leesSessie = (k) => { try { return JSON.parse(API.sessie.get(k) || 'null'); } catch (e) { return null; } };
+  // Voortgang van alle menu-leerpaden ophalen (één keer na het aanmelden; daarna bijgewerkt bij het verlaten van een leerpad).
+  async function laadStatussen() {
+    const codes = [...new Set(alleTegels().flatMap(({ T }) => [T.direct, ...(T.knoppen || []).map(k => k.leerpad)]).filter(c => c && heeftLP(c) && !S.statussen[c]))];
+    await Promise.all(codes.map(c => roep('ll_status', { p_programma: c }).then(st => { S.statussen[c] = st; }).catch(() => {})));
+  }
+  // Voortgang van een knop: { g, n, open } (geslaagde delen / aantal delen / eerste deel open?)
+  function knopVoortgang(k) {
+    if (!k.leerpad || !heeftLP(k.leerpad)) return null;
+    const st = S.statussen[k.leerpad], P = Leerpaden.vind(k.leerpad); if (!st) return null;
+    const delen = knopDelen(k, P), eerste = delen[0];
+    const open = !!P.allesOpen || eerste === 1 || st.geslaagd.includes(eerste - 1) || st.vrijgegeven.includes(eerste);
+    return { g: delen.filter(nr => st.geslaagd.includes(nr)).length, n: delen.length, open };
+  }
+  function etiketVoortgang(v) {
+    if (!v) return '';
+    if (v.g >= v.n) return '<span class="etiket groen">✓ Afgewerkt</span>';
+    if (!v.open && !v.g) return '<span class="etiket grijs">🔒 Nog niet open</span>';
+    return `<span class="etiket ${v.g ? 'oranje' : 'grijs'}">${v.g}/${v.n} ${v.n === 1 ? 'deel' : 'delen'}</span>`;
+  }
+  function instapEtiket(code) {
+    const st = S.statussen[code]; if (!st) return '';
+    if (st.testen.some(t => t.status === 'ingediend')) return '<span class="etiket groen">✓ Afgelegd</span>';
+    if (st.testen.some(t => t.status === 'bezig')) return '<span class="etiket oranje">Bezig</span>';
+    return '<span class="etiket oranje">Start</span>';
+  }
+  function tegelEtiket(T) {
+    if (T.direct) return instapEtiket(T.direct);
+    const v = T.knoppen.filter(k => k.leerpad && heeftLP(k.leerpad)).map(knopVoortgang).filter(Boolean);
+    if (!v.length) return '';
+    const g = v.reduce((a, x) => a + x.g, 0), n = v.reduce((a, x) => a + x.n, 0);
+    return g >= n ? '<span class="etiket groen">✓ Afgewerkt</span>' : `<span class="etiket ${g ? 'oranje' : 'grijs'}">${g}/${n} delen</span>`;
+  }
+  function kruimel(c, laatste) {
+    return `<p class="klein kruimel"><button class="link" data-a="menu" data-id="">🏠 Start</button>
+      ${c.T.direct ? '' : ` › <button class="link" data-a="menu" data-id="${esc(c.T.id)}">${esc(c.T.titel)}</button>`}
+      ${laatste ? ` › <b>${esc(laatste)}</b>` : ''}</p>`;
+  }
+  function spelTegels(codes) {
+    return `<div class="tegels">${codes.map(c => Spellen.vind(c)).filter(Boolean).map(x => `<button class="tegel" data-a="spel" data-code="${esc(x.code)}">
+        <div class="tegel-titel">${x.icoon} ${esc(x.titel)}</div><div class="klein">${esc(x.sub)}</div></button>`).join('')}</div>`;
+  }
+  function knopSpellen(k) {
+    const sp = (k.spellen || []).filter(heeft);
+    if (!sp.length) return '';
+    return `<h2 class="menu-blok">🎮 Spellen</h2>
+      <p class="klein">Oefen al spelend. Je voortgang wordt bewaard, ook als je op een andere computer verder speelt.</p>${spelTegels(sp)}`;
+  }
+  function knopHTML(T, k, i) {
+    const P = k.leerpad && heeftLP(k.leerpad) ? Leerpaden.vind(k.leerpad) : null;
+    const nsp = (k.spellen || []).filter(heeft).length;
+    const inhoud = [P ? '📘 leerpad' : '', nsp ? `🎮 ${nsp} spel${nsp === 1 ? '' : 'len'}` : ''].filter(Boolean).join(' · ');
+    const sub = [k.sub, inhoud].filter(Boolean).map(esc).join(' · ');
+    return `<button class="stap open menu-knop${k.plus ? ' plus' : ''}" data-a="knop" data-id="${esc(T.id)}" data-i="${i}">
+      <div class="nr">${k.ster ? '★' : k.plus ? '+' : k.teken ? esc(k.teken) : String.fromCharCode(65 + (k.groep != null ? k.groep : i))}</div>
+      <div><div class="titel">${esc(knopTitel(k))}</div><div class="sub">${sub}</div></div>${etiketVoortgang(knopVoortgang(k))}</button>`;
+  }
+  // Menu voor groep g (een vak met een menu): niveau 1 (tegels) of 2 (knoppen), of een knop met enkel spellen.
+  function vMenu(g, meerVakken) {
+    const M = MENUS[g.vak], tegels = M.tegels.filter(tegelZichtbaar);
+    const T = S.menu ? tegels.find(t => t.id === S.menu && t.knoppen) : null;
+    const klasTekst = S.leerling && S.leerling.klas ? ` <span class="klein">· klas ${esc(S.leerling.klas)}</span>` : '';
+    if (T && S.knop != null && T.knoppen[S.knop] && knopZichtbaar(T.knoppen[S.knop])) {
+      const k = T.knoppen[S.knop];
+      return `${kruimel({ T }, knopTitel(k))}<h1>${esc(knopTitel(k))}</h1>${knopSpellen(k)}`;
+    }
+    if (T) return `${kruimel({ T })}<h1><span class="menu-h-nr">${T.nr}</span> ${esc(T.titel)}</h1><p>Kies een onderdeel.</p>
+      <div class="pad">${T.knoppen.map((k, i) => knopZichtbaar(k) ? knopHTML(T, k, i) : '').join('')}</div>`;
+    const andere = g.items.filter(x => !inMenuLP(x.p.code));
+    return `${meerVakken ? '<p class="klein"><button class="link" data-a="vak" data-vak="">← Alle vakken</button></p>' : ''}
+      <h1>Dag ${esc(S.leerling.voornaam)}!${klasTekst}</h1>
+      <p>Waar wil je aan werken?</p>
+      <div class="menu-tegels">${tegels.map(t => `<button class="menu-tegel" data-a="menu" data-id="${esc(t.id)}">
+          <div class="menu-nr">${t.nr}</div><div class="menu-icoon">${t.icoon || ''}</div>
+          <div class="menu-titel">${esc(t.titel)}</div><div class="klein">${esc(t.sub || '')}</div>
+          <div class="menu-etiket">${tegelEtiket(t)}</div></button>`).join('')}</div>
+      ${andere.length ? `<h2 class="menu-blok">Andere leerpaden</h2><div class="pad">${andere.map(leerpadKnop).join('')}</div>` : ''}
+      ${meerVakken ? '' : spellenBlok()}`;
+  }
   // Spel openen: toestand uit de databank halen, in sessionStorage zetten (spellen/spel-volg.js leest ze) en het spel laden.
   async function openSpel(code) {
     const SP = Spellen.vind(code); if (!SP) return;
@@ -74,7 +179,7 @@
     location.href = new URL((location.pathname.includes('/test/') ? '../' : '') + 'spellen/' + SP.map + '/', location.href).href;
   }
   function spellenBlok() {
-    const sp = mijnSpellen();
+    const sp = mijnSpellen().filter(x => !inMenuSpel(x.code)); // spellen uit het menu staan bij hun onderwerp
     if (!sp.length) return '';
     return `<h2 style="margin-top:26px">🎮 Spellen</h2>
       <p class="klein">Oefen al spelend. Je voortgang wordt bewaard, ook als je op een andere computer verder speelt.</p>
@@ -87,15 +192,19 @@
     S.status = await roep('ll_status', { p_programma: code });
     Object.assign(S, { prog: code, P, view: 'pad', oef: {}, test: null });
     if (P.instaptoets) Object.assign(S, { view: 'deel', deel: 1, tab: 'test' }); // instaptoets: meteen de toets, geen theorie/oefenen
-    API.sessie.set('ll-prog', code);
+    API.sessie.set('ll-prog', code); bewaarPlek();
     document.title = P.titel;
   }
   async function naLogin() {
     const lijst = beschikbaar();
     const voorkeur = urlProg || API.sessie.get('ll-prog');
     const keuze = lijst.find(p => p.code === voorkeur) || (lijst.length === 1 && !mijnSpellen().length ? lijst[0] : null);
+    const plek = leesSessie('ll-menu');
+    if (plek) Object.assign(S, { vak: plek.vak || null, menu: plek.menu || null, knop: plek.knop != null ? plek.knop : null });
+    S.ctx = keuze ? leesSessie('ll-ctx') : null;
     if (keuze) await openProgramma(keuze.code);
     else S.view = 'kies';
+    laadStatussen().then(() => { if (S.view === 'kies') render(); });
   }
 
   // ---------- weergave
@@ -108,7 +217,7 @@
         <div class="logo">${esc(titel)}<small>${esc(onder)}</small></div>
         ${S.leerling ? `<div class="rechts"><span>${naam}</span>
           ${S.view === 'deel' && !(S.P && S.P.instaptoets) ? '<button class="licht" data-a="pad">Leerpad</button>' : ''}
-          ${S.P && beschikbaar().length + mijnSpellen().length > 1 ? `<button class="licht" data-a="kies">${mijnSpellen().length ? 'Leerpaden en spellen' : 'Andere leerpaden'}</button>` : ''}
+          ${S.P && beschikbaar().length + mijnSpellen().length > 1 ? `<button class="licht" data-a="kies">${ctxInfo() ? '🏠 Start' : mijnSpellen().length ? 'Leerpaden en spellen' : 'Andere leerpaden'}</button>` : ''}
           <button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>`;
   }
@@ -146,6 +255,11 @@
       if (!groepen.has(sleutel)) groepen.set(sleutel, { vak: sleutel, naam: pl ? pl.V.naam : 'Andere leerpaden', items: [] });
       groepen.get(sleutel).items.push({ p, P: Leerpaden.vind(p.code), h: pl ? pl.h : null });
     }
+    // Spellen uit een menu: hun vak moet ook zichtbaar zijn (ook zonder leerpad).
+    for (const sp of mijnSpellen()) {
+      const vak = menuVakVanSpel(sp.code);
+      if (vak && !groepen.has(vak) && window.CATALOGUS) groepen.set(vak, { vak, naam: CATALOGUS.vakken[vak].naam, items: [] });
+    }
     const lijst = [...groepen.values()];
     // Twee vakken met dezelfde naam (bv. "Wiskunde"): toon de map erbij.
     lijst.forEach(g => { const dubbel = lijst.filter(x => x.naam === g.naam).length > 1; g.titel = dubbel && g.vak !== '_overig' ? `${g.naam} ${Catalogus.klassenMetVak(g.vak).join(' · ')}` : g.naam; });
@@ -163,9 +277,10 @@
     if (!groepen.length) return `<h1>Dag ${esc(S.leerling.voornaam)}!${klasTekst}</h1>
       ${mijnSpellen().length ? spellenBlok() : '<div class="kaart"><p>Je bent nog aan geen enkel leerpad gekoppeld. Vraag aan je leerkracht om je toe te voegen.</p></div>'}`;
     const g = groepen.length === 1 ? groepen[0] : groepen.find(x => x.vak === S.vak);
+    if (g && MENUS[g.vak]) return vMenu(g, groepen.length > 1);
     if (!g) return `<h1>Dag ${esc(S.leerling.voornaam)}!${klasTekst}</h1><p>Kies een vak.</p>
       <div class="tegels">${groepen.map(x => `<button class="tegel" data-a="vak" data-vak="${esc(x.vak)}">
-        <div class="tegel-titel">${esc(x.titel)}</div><div class="klein">${x.items.length} leerpad${x.items.length === 1 ? '' : 'en'}</div></button>`).join('')}</div>${spellenBlok()}`;
+        <div class="tegel-titel">${esc(x.titel)}</div><div class="klein">${MENUS[x.vak] ? 'Leerpaden en spellen' : `${x.items.length} leerpad${x.items.length === 1 ? '' : 'en'}`}</div></button>`).join('')}</div>${spellenBlok()}`;
     return `${groepen.length > 1 ? '<p class="klein"><button class="link" data-a="vak" data-vak="">← Alle vakken</button></p>' : ''}
       <h1>${groepen.length > 1 ? esc(g.titel) : `Dag ${esc(S.leerling.voornaam)}!`}${klasTekst}</h1>
       <p>Kies een leerpad${groepen.length > 1 ? '' : ` · ${esc(g.titel)}`}.</p>
@@ -189,16 +304,22 @@
   }
 
   function vPad() {
-    const st = S.status, P = S.P;
+    const st = S.status, P = S.P, c = ctxInfo(), k = c && c.k;
     const totaal = DELEN().filter(d => d.klaar).length;
-    const groepen = P.groepen || [{ titel: '', delen: DELEN().map(d => d.nr) }];
-    return `<h1>Dag ${esc(S.leerling.voornaam)}!</h1>
-      ${P.intro || `<p>Werk de delen één voor één af: lees de theorie, bekijk de voorbeelden, oefen zoveel je wil en maak dan de test.
-      Haal je <b>${st.drempel}%</b>, dan gaat het volgende deel open.</p>`}
+    const alle = P.groepen || [{ titel: '', delen: DELEN().map(d => d.nr) }];
+    const groepen = k && k.groep != null ? [alle[k.groep]].filter(Boolean) : alle;  // knop voor één groep: enkel die delen
+    const nrs = groepen.flatMap(g => g.delen), ok = nrs.filter(nr => st.geslaagd.includes(nr)).length;
+    const standaard = `<p>Werk de delen één voor één af: lees de theorie, bekijk de voorbeelden, oefen zoveel je wil en maak dan de test.
+      Haal je <b>${st.drempel}%</b>, dan gaat het volgende deel open.</p>`;
+    const sp = k ? knopSpellen(k) : '';
+    return `${c ? `${kruimel(c, k ? knopTitel(k) : P.titel)}<h1>${esc(k ? knopTitel(k) : P.titel)}</h1>` : `<h1>Dag ${esc(S.leerling.voornaam)}!</h1>`}
+      ${k && k.groep ? standaard : (P.intro || standaard)}
       ${P.afspraken || ''}
-      <p class="klein">Geslaagd: ${st.geslaagd.length} van ${DELEN().length} delen${totaal < DELEN().length ? ' · nog niet alle delen zijn beschikbaar' : ''}.</p>
+      ${sp ? '<h2 class="menu-blok">📘 Leerpad</h2>' : ''}
+      <p class="klein">Geslaagd: ${ok} van ${nrs.length} delen${totaal < DELEN().length ? ' · nog niet alle delen zijn beschikbaar' : ''}.</p>
       ${groepen.map(g => `${g.titel ? `<div class="groep-titel">${esc(g.titel)}</div>` : ''}
-        <div class="pad">${g.delen.map(nr => deelVan(nr)).filter(Boolean).map(stapKnop).join('')}</div>`).join('')}`;
+        <div class="pad">${g.delen.map(nr => deelVan(nr)).filter(Boolean).map(stapKnop).join('')}</div>`).join('')}
+      ${sp}`;
   }
 
   function vDeel() {
@@ -632,9 +753,26 @@
       const a = el.dataset.a;
       try {
         if (a === 'afmelden') return afmelden(false);
-        if (a === 'kies') { leesTestInvoer(); S.view = 'kies'; S.test = null; S.P = null; S.prog = null; API.sessie.del('ll-prog'); document.title = CONFIG.TITEL || 'Leerpaden'; return render(); }
-        if (a === 'prog') { await openProgramma(el.dataset.code); return render(); }
-        if (a === 'vak') { S.vak = el.dataset.vak || null; return render(); }
+        if (a === 'kies' || a === 'menu') {
+          leesTestInvoer();
+          const c = ctxInfo();
+          if (S.prog && S.status) S.statussen[S.prog] = S.status;  // voortgang in het menu bijwerken
+          if (c) S.vak = c.vak;
+          Object.assign(S, { view: 'kies', test: null, P: null, prog: null, ctx: null, knop: null, menu: a === 'menu' ? (el.dataset.id || null) : null });
+          API.sessie.del('ll-prog'); document.title = CONFIG.TITEL || 'Leerpaden';
+          const T = S.menu && alleTegels().find(x => x.T.id === S.menu);
+          if (T && T.T.direct) { S.ctx = { vak: T.vak, menu: T.T.id, knop: null }; S.menu = null; await openProgramma(T.T.direct); }  // instaptoets: meteen starten
+          bewaarPlek(); render(); return window.scrollTo(0, 0);
+        }
+        if (a === 'knop') {
+          const T = alleTegels().find(x => x.T.id === el.dataset.id), i = +el.dataset.i, k = T && T.T.knoppen[i];
+          if (!k) return;
+          if (k.leerpad && heeftLP(k.leerpad)) { S.ctx = { vak: T.vak, menu: T.T.id, knop: i }; await openProgramma(k.leerpad); }
+          else { S.knop = i; bewaarPlek(); }  // enkel spellen achter deze knop
+          render(); return window.scrollTo(0, 0);
+        }
+        if (a === 'prog') { S.ctx = null; await openProgramma(el.dataset.code); return render(); }
+        if (a === 'vak') { S.vak = el.dataset.vak || null; S.menu = null; S.knop = null; bewaarPlek(); return render(); }
         if (a === 'spel') { el.disabled = true; return await openSpel(el.dataset.code); }
         if (a === 'pad' && S.P && S.P.instaptoets) { leesTestInvoer(); Object.assign(S, { view: 'deel', deel: 1, tab: 'test' }); if (S.test && S.test.resultaat) S.test = null; render(); return window.scrollTo(0, 0); }
         if (a === 'pad') { leesTestInvoer(); S.view = 'pad'; if (S.test && S.test.resultaat) S.test = null; render(); return window.scrollTo(0, 0); }

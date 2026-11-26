@@ -132,3 +132,24 @@ button.icoon-knop { padding: 4px 8px; line-height: 1; }
 .lpkeuze { display: flex; align-items: center; gap: 8px; padding: 4px 2px; cursor: pointer; font-size: 14px; }
 .lpkeuze input { width: 17px; height: 17px; }
 .lpkeuzes details summary { cursor: pointer; color: var(--blauw); font-size: 14px; margin: 6px 0; }
+
+/* ===== Menu (js/menu.js): tegels → knoppen → leerpad + spellen ===== */
+.menu-tegels { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin: 14px 0 22px; }
+.menu-tegel {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left;
+  background: var(--vlak); color: var(--tekst); border: 1px solid var(--lijn); border-top: 6px solid var(--oranje);
+  border-radius: 14px; padding: 18px 18px 14px; cursor: pointer; box-shadow: var(--schaduw); font-size: 14px; min-height: 150px;
+}
+.menu-tegel:hover { border-color: var(--blauw); border-top-color: var(--blauw); filter: none; transform: translateY(-1px); }
+.menu-tegel .menu-nr { position: absolute; top: 12px; right: 14px; width: 30px; height: 30px; border-radius: 50%; background: var(--blauw); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 15px; }
+.menu-tegel .menu-icoon { font-size: 30px; line-height: 1; }
+.menu-tegel .menu-titel { font-size: 19px; font-weight: bold; color: var(--blauw); margin-top: 4px; }
+.menu-tegel .menu-etiket { margin-top: auto; padding-top: 8px; }
+.menu-h-nr { display: inline-flex; align-items: center; justify-content: center; width: 1.4em; height: 1.4em; border-radius: 50%; background: var(--blauw); color: #fff; font-size: .8em; vertical-align: middle; }
+.kruimel { margin-bottom: 6px; }
+.kruimel .link { padding: 0; }
+.menu-knop.plus { margin-left: 28px; border-left: 4px solid var(--oranje); }
+.menu-knop.plus .nr { background: var(--oranje); color: #fff; }
+h2.menu-blok { margin-top: 26px; }
+@media (max-width: 560px) { .menu-knop.plus { margin-left: 14px; } .menu-tegel { min-height: 0; } }
