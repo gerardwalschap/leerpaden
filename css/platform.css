@@ -153,3 +153,4 @@ button.icoon-knop { padding: 4px 8px; line-height: 1; }
 .menu-knop.plus .nr { background: var(--oranje); color: #fff; }
 h2.menu-blok { margin-top: 26px; }
 @media (max-width: 560px) { .menu-knop.plus { margin-left: 14px; } .menu-tegel { min-height: 0; } }
+.grijs-tekst { color: var(--grijs, #778); }

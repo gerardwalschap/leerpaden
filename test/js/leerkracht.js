@@ -9,7 +9,9 @@
     data: null, detail: null, alle: null, nieuw: null, fout: '', melding: '',
     klas: API.sessie.get('lk-klas') || '', zoek: '', selectie: new Set(), lpFilter: '',
     boomKlas: API.sessie.get('lk-boomklas') || null, boomVak: API.sessie.get('lk-boomvak') || null,
+    boomMenu: API.sessie.get('lk-boommenu') || null, // tegel uit js/menu.js (bv. 'getallenleer')
   };
+  const MENUS = () => window.MENUS || {};
   const KLAAR = () => S.P.delen.filter(d => d.klaar);
   const DELEN = () => S.P.delen;
 
@@ -293,6 +295,15 @@
     if (!p) return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> › <i>dit leerpad staat nog niet in de catalogus</i></p>`;
     const kls = Catalogus.klassenMetVak(p.vak);
     const kl = kls.includes(S.boomKlas) ? S.boomKlas : kls[0];
+    const M = MENUS()[p.vak];
+    if (M) {
+      const T = M.tegels.find(t => t.id === S.boomMenu && (t.direct === S.prog || (t.knoppen || []).some(k => k.leerpad === S.prog)))
+        || M.tegels.find(t => t.direct === S.prog || (t.knoppen || []).some(k => k.leerpad === S.prog));
+      if (T) return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> ›
+        <button class="link" data-a="boom" data-niveau="klas" data-klas="${esc(kl)}">${esc(kl)}</button> ›
+        <button class="link" data-a="boom" data-niveau="vak" data-klas="${esc(kl)}" data-vak="${esc(p.vak)}">${vakTitel(p.vak)}</button> ›
+        ${T.direct ? esc(T.titel) : `<button class="link" data-a="boom" data-niveau="vak" data-klas="${esc(kl)}" data-vak="${esc(p.vak)}" data-menu="${esc(T.id)}">${T.nr}. ${esc(T.titel)}</button> › ${esc(S.P ? S.P.titel : '')}`}</p>`;
+    }
     return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> ›
       <button class="link" data-a="boom" data-niveau="klas" data-klas="${esc(kl)}">${esc(kl)}</button> ›
       <button class="link" data-a="boom" data-niveau="vak" data-klas="${esc(kl)}" data-vak="${esc(p.vak)}">${vakTitel(p.vak)}</button> ›
@@ -336,6 +347,9 @@
         }).join('')}</div>`;
     }
 
+    // Niveau 3: vak met een menu (js/menu.js) → dezelfde tegels en knoppen als de leerlingen
+    if (MENUS()[vak]) return vBoomMenu(klas, vak);
+
     // Niveau 3: hoofdstukken van het vak
     const V = C.vakken[vak], ll = leerlingenVanKlas(klas.code);
     const andere = Catalogus.klassenMetVak(vak).filter(k => k !== klas.code);
@@ -378,6 +392,79 @@
       }).join('')}</div>
       <p class="klein legende">Hoofdstukken met <span class="etiket grijs">Nog te maken</span> ziet enkel jij. Een leerpad ziet een leerling pas als je hem eraan koppelt:
         in één keer met <i>Hele klas koppelen</i>, of per leerling bij <button class="link" data-a="alle">Alle leerlingen</button> (bv. enkel wie remediëring nodig heeft).</p>`;
+  }
+
+  // Regel met koppelen/opvolgen voor één leerpad of spel (klas k, vak v).
+  function lpRegel(code, k, v, ll) {
+    const P = Leerpaden.vind(code);
+    if (!P) return `<div class="lp-regel"><span class="etiket grijs">Bestand ontbreekt</span> <span class="klein">${esc(code)}</span></div>`;
+    const g = gekoppeld(code, ll), tot = (S.alle || []).filter(l => l.programmas.includes(code)).length;
+    return `<div class="lp-regel">
+      <button class="link vet" data-a="openlp" data-code="${esc(code)}" data-klas="${esc(k)}" data-vak="${esc(v)}">📘 ${esc(P.titel)}</button>
+      <span class="etiket ${g ? 'groen' : 'grijs'}">${g ? `${g}/${ll.length} van ${esc(k)} gekoppeld` : `niemand van ${esc(k)} gekoppeld`}</span>
+      ${tot > g ? `<span class="klein">(${tot} in totaal)</span>` : ''}
+      <span class="vul"></span>
+      ${ll.length && g < ll.length ? `<button class="licht klein-knop" data-a="klaskoppel" data-code="${esc(code)}" data-klas="${esc(k)}">Hele ${esc(k)} koppelen</button>` : ''}
+      <button class="licht klein-knop" data-a="openlp" data-code="${esc(code)}" data-klas="${esc(k)}" data-vak="${esc(v)}">Opvolgen →</button></div>`;
+  }
+  function spelRegel(code, k, ll) {
+    const SP = spelVind(code); if (!SP) return '';
+    const g = gekoppeld(code, ll), tot = (S.alle || []).filter(l => l.programmas.includes(code)).length;
+    return `<div class="lp-regel">
+      <button class="link vet" data-a="openspel" data-code="${esc(code)}">${SP.icoon} ${esc(SP.titel)}</button>
+      <span class="etiket ${g ? 'groen' : 'grijs'}">${g ? `${g}/${ll.length} van ${esc(k)} gekoppeld` : `niemand van ${esc(k)} gekoppeld`}</span>
+      ${tot > g ? `<span class="klein">(${tot} in totaal)</span>` : ''}
+      <span class="vul"></span>
+      ${ll.length && g < ll.length ? `<button class="licht klein-knop" data-a="klaskoppel" data-code="${esc(code)}" data-klas="${esc(k)}">Hele ${esc(k)} koppelen</button>` : ''}
+      <button class="licht klein-knop" data-a="openspel" data-code="${esc(code)}">Speeltijd →</button></div>`;
+  }
+  // Vak met menu: niveau A = tegels, niveau B = knoppen van één tegel (zoals de leerling het ziet).
+  function vBoomMenu(klas, vak) {
+    const C = CAT(), V = C.vakken[vak], M = MENUS()[vak], ll = leerlingenVanKlas(klas.code);
+    const andere = Catalogus.klassenMetVak(vak).filter(k => k !== klas.code);
+    const basis = `<button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> ›
+        <button class="link" data-a="boom" data-niveau="klas" data-klas="${esc(klas.code)}">${esc(klas.code)}</button> ›`;
+    const codesVan = (T) => T.direct ? [T.direct] : [...new Set(T.knoppen.flatMap(k => [k.leerpad, ...(k.spellen || [])]).filter(Boolean))];
+    const T = M.tegels.find(t => t.id === S.boomMenu && !t.direct);
+    if (!T) {
+      return `<p class="klein">${basis} ${esc(V.naam)}</p>
+        <h1>${esc(V.naam)} · ${esc(klas.code)}</h1>
+        <p class="klein">Map <b>${esc(V.map)}</b>${andere.length ? ` · ook voor ${andere.map(esc).join(', ')}` : ''} · ${ll.length} leerling(en) van ${esc(klas.code)} met een account ·
+          zelfde indeling als de leerlingen zien (js/menu.js)</p>
+        <div class="menu-tegels">${M.tegels.map(t => {
+          const codes = codesVan(t), nlp = codes.filter(c => Leerpaden.vind(c)).length, nsp = codes.filter(c => spelVind(c)).length;
+          const metLL = new Set(ll.filter(l => codes.some(c => l.programmas.includes(c))).map(l => l.id)).size;
+          const knop = t.direct ? `data-a="openlp" data-code="${esc(t.direct)}" data-klas="${esc(klas.code)}" data-vak="${esc(vak)}" data-menu="${esc(t.id)}"`
+                                : `data-a="boom" data-niveau="vak" data-klas="${esc(klas.code)}" data-vak="${esc(vak)}" data-menu="${esc(t.id)}"`;
+          return `<button class="menu-tegel" ${knop}>
+            <div class="menu-nr">${t.nr}</div><div class="menu-icoon">${t.icoon || ''}</div>
+            <div class="menu-titel">${esc(t.titel)}</div>
+            <div class="klein">${[nlp ? `${nlp} leerpad${nlp === 1 ? '' : 'en'}` : '', nsp ? `${nsp} spel${nsp === 1 ? '' : 'len'}` : ''].filter(Boolean).join(' · ') || 'nog leeg'}</div>
+            <div class="menu-etiket"><span class="etiket ${metLL ? 'groen' : 'grijs'}">${metLL ? `${metLL}/${ll.length} leerlingen gekoppeld` : 'nog niemand gekoppeld'}</span></div></button>`;
+        }).join('')}</div>
+        <p class="klein legende">Een leerling ziet enkel de tegels en knoppen waaraan je hem koppelt. Bij de instaptoets kom je meteen in het overzicht van de resultaten.</p>`;
+    }
+    const gezien = new Set();
+    return `<p class="klein">${basis} <button class="link" data-a="boom" data-niveau="vak" data-klas="${esc(klas.code)}" data-vak="${esc(vak)}" data-menu="">${esc(V.naam)}</button> › ${T.nr}. ${esc(T.titel)}</p>
+      <h1><span class="menu-h-nr">${T.nr}</span> ${esc(T.titel)} · ${esc(klas.code)}</h1>
+      <p class="klein">${esc(T.sub || '')}</p>
+      <div class="pad">${T.knoppen.map((k, i) => {
+        const P = k.leerpad ? Leerpaden.vind(k.leerpad) : null;
+        const titel = k.titel || (P ? P.titel : k.leerpad);
+        const delen = P && k.groep != null ? ((P.groepen || [])[k.groep] || { delen: [] }).delen : null;
+        const regels = [];
+        if (k.leerpad) {
+          if (!gezien.has(k.leerpad)) { gezien.add(k.leerpad); regels.push(lpRegel(k.leerpad, klas.code, vak, ll)); }
+          else regels.push(`<div class="klein">📘 deel ${delen && delen.length ? (delen.length > 1 ? `${delen[0]}–${delen[delen.length - 1]}` : delen[0]) : ''} van <b>${esc(P ? P.titel : k.leerpad)}</b> (koppelen en opvolgen: zie hierboven)</div>`);
+        }
+        (k.spellen || []).forEach(c => regels.push(spelRegel(c, klas.code, ll)));
+        if (!(k.spellen || []).length) regels.push('<div class="klein grijs-tekst">🎮 nog geen spellen</div>');
+        const nr = k.ster ? '★' : k.plus ? '+' : k.teken ? esc(k.teken) : String.fromCharCode(65 + (k.groep != null ? k.groep : i));
+        return `<div class="stap hoofdstuk open${k.plus ? ' menu-knop plus' : ''}"><div class="nr">${nr}</div>
+          <div class="vul"><div class="titel">${esc(titel)}${delen && delen.length ? ` <span class="klein">· deel ${delen.length > 1 ? `${delen[0]}–${delen[delen.length - 1]}` : delen[0]}</span>` : ''}</div>
+            ${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ''}<div class="lp-lijst">${regels.join('')}</div></div></div>`;
+      }).join('')}</div>
+      <p class="klein legende">Een spel bij een onderwerp zetten of de indeling wijzigen: <code>js/menu.js</code>.</p>`;
   }
 
   function sindsLaatsteTest(det, nr) {
@@ -1033,12 +1120,14 @@
           const n = el.dataset.niveau;
           S.boomKlas = n === 'klassen' ? null : (el.dataset.klas || S.boomKlas);
           S.boomVak = n === 'vak' ? el.dataset.vak : null;
-          API.sessie.set('lk-boomklas', S.boomKlas || ''); API.sessie.set('lk-boomvak', S.boomVak || '');
+          S.boomMenu = n === 'vak' && el.dataset.menu !== undefined ? (el.dataset.menu || null) : n === 'vak' && S.boomVak === API.sessie.get('lk-boomvak') ? S.boomMenu : null;
+          API.sessie.set('lk-boomklas', S.boomKlas || ''); API.sessie.set('lk-boomvak', S.boomVak || ''); API.sessie.set('lk-boommenu', S.boomMenu || '');
           await laadAlle(); S.view = 'boom'; S.detail = null; S.nieuw = null; render(); return window.scrollTo(0, 0);
         }
         if (a === 'openlp') {
           S.boomKlas = el.dataset.klas; S.boomVak = el.dataset.vak;
-          API.sessie.set('lk-boomklas', S.boomKlas); API.sessie.set('lk-boomvak', S.boomVak);
+          if (el.dataset.menu !== undefined) S.boomMenu = el.dataset.menu || null;
+          API.sessie.set('lk-boomklas', S.boomKlas); API.sessie.set('lk-boomvak', S.boomVak); API.sessie.set('lk-boommenu', S.boomMenu || '');
           S.prog = el.dataset.code; S.P = Leerpaden.vind(S.prog); API.sessie.set('lk-prog', S.prog);
           await naarOverzicht(); render(); return window.scrollTo(0, 0);
         }
