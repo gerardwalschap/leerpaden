@@ -1,0 +1,56 @@
+:root{--inkt:#1b1f3b;--zacht:#6b6f99;--geel:#ffd23f;--roze:#ff5d8f;--blauw:#3aa8ef;--groen:#3ddc84;--paars:#7b3fe4;
+  --f-titel:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",sans-serif;--f-tekst:"Atkinson Hyperlegible",system-ui,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100vh;background:linear-gradient(160deg,#2a1a6a 0%,#13103a 60%,#0b0a22 100%) fixed;font-family:var(--f-tekst);color:var(--inkt)}
+#wereld{max-width:1000px;margin:0 auto;padding:12px 12px 60px;display:flex;flex-direction:column;gap:10px}
+#podium{position:relative;width:100%;aspect-ratio:960/600;border-radius:18px;overflow:hidden;box-shadow:0 0 0 4px #fff2,0 24px 60px rgba(0,0,0,.6)}
+#doek{position:absolute;inset:0;width:100%;height:100%;display:block;background:#1a1050}
+#toetsen{margin:0;text-align:center;color:#b9b6e6;font-size:13px}
+/* vraagpaneel */
+#paneel{background:#fffdf5;border-radius:16px;padding:10px 16px;min-height:118px;display:flex;align-items:center;gap:14px;box-shadow:0 6px 0 #d9cfa8,0 10px 30px rgba(0,0,0,.35);border:3px solid #fff}
+#paneel .p-icoon{font-size:34px}
+#paneel .p-inhoud{flex:1;min-width:0}
+#paneel .p-opdracht{font-family:var(--f-titel);font-size:15px;color:var(--paars);letter-spacing:.02em}
+#paneel .p-opgave{font-size:23px;line-height:1.45;overflow-x:auto}
+#paneel .p-opgave.p-info{font-size:17px}
+#paneel .p-opgave .opgave-tekst{margin:0;font-size:18px}
+#paneel .p-opgave svg{max-height:80px;width:auto;max-width:100%}
+#paneel .p-opgave .katex svg{max-height:none;width:100%}
+#paneel .p-doel{font-family:var(--f-titel);font-size:15px;color:#c0457a;text-align:right;max-width:230px}
+#paneel.flits-goed{animation:fg .6s}#paneel.flits-fout{animation:ff .6s}
+@keyframes fg{0%{background:#c9ffd9;transform:scale(1.02)}100%{}}
+@keyframes ff{0%{background:#ffd0d8;transform:translateX(-6px)}30%{transform:translateX(6px)}60%{transform:translateX(-3px)}100%{}}
+/* schermen */
+#laag{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#laag>*{pointer-events:auto}
+.scherm{width:min(92%,800px);max-height:94%;overflow:auto;background:#fffdf5;border-radius:24px;padding:24px 28px;border:4px solid #fff;
+  box-shadow:0 8px 0 #d9cfa8,0 30px 80px rgba(0,0,0,.6);animation:in .4s cubic-bezier(.2,1.4,.4,1)}
+@keyframes in{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:none}}
+.scherm h2{font-family:var(--f-titel);font-weight:400;font-size:30px;margin:0 0 8px;color:var(--paars)}
+.scherm p{line-height:1.55;margin:8px 0}
+.logo{font-family:var(--f-titel);font-size:clamp(34px,6vw,56px);line-height:1;color:var(--geel);-webkit-text-stroke:2px #7a3fd0;text-shadow:0 5px 0 #7a3fd0,0 10px 20px rgba(0,0,0,.3)}
+.sub{color:var(--zacht);margin:10px 0 0!important}
+.start,.verhaal{display:flex;gap:22px;align-items:center}
+.figuur{flex:0 0 auto}
+.zweef{animation:zweef 2.4s ease-in-out infinite}@keyframes zweef{50%{transform:translateY(-10px) rotate(-3deg)}}
+.veld{display:grid;gap:6px;margin:16px 0}
+.veld input{font:inherit;font-size:20px;padding:10px 14px;border-radius:12px;border:3px solid #d9cfa8;background:#fff;color:var(--inkt);max-width:300px}
+.veld input:focus{outline:none;border-color:var(--paars)}
+.rij{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.knop{font-family:var(--f-titel);font-size:20px;border:0;border-radius:14px;padding:12px 24px;cursor:pointer;color:#fff;background:linear-gradient(180deg,#9a6bff,#6a35d8);box-shadow:0 6px 0 #45209a;transition:transform .08s}
+.knop:hover{filter:brightness(1.08)}.knop:active{transform:translateY(4px);box-shadow:0 2px 0 #45209a}
+.knop.licht{background:#fff;color:var(--paars);box-shadow:0 6px 0 #d9cfa8,inset 0 0 0 3px #e7defc}
+.knop:focus-visible{outline:4px solid var(--geel);outline-offset:3px}
+.hint{color:var(--zacht);font-size:14px}
+.besturing{background:#f1ecff;border-radius:12px;padding:8px 12px;font-size:15px}
+kbd{font-family:var(--f-titel);font-size:13px;border:2px solid #cfc6f0;border-bottom-width:4px;border-radius:7px;padding:0 6px;background:#fff;color:var(--paars)}
+.kristal{width:110px;height:110px;margin:0 auto 10px;display:grid;place-items:center;font-family:"Cambria Math",serif;font-size:56px;font-weight:700;color:#fff;
+  background:radial-gradient(circle at 35% 30%,#fff,var(--k) 45%,#222 140%);clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%);animation:draai 2s ease-in-out infinite}
+@keyframes draai{50%{transform:scale(1.08) rotate(4deg)}}
+.kristallen{display:flex;gap:10px;justify-content:center;margin:12px 0}
+.kristallen span{width:46px;height:46px;display:grid;place-items:center;font-family:"Cambria Math",serif;font-weight:700;font-size:24px;color:#fff;background:#ddd;clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%);opacity:.35}
+.kristallen span.aan{background:radial-gradient(circle at 35% 30%,#fff,var(--k) 50%,#333 150%);opacity:1}
+.kristallen.groot span{width:70px;height:70px;font-size:36px}
+#melding{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:#fffdf5;color:var(--paars);padding:8px 18px;border-radius:99px;font-family:var(--f-titel);z-index:99;box-shadow:0 4px 0 #d9cfa8}
+@media (max-width:700px){.start,.verhaal{flex-direction:column;text-align:center}#paneel .p-opgave{font-size:18px}}

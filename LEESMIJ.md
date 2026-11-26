@@ -367,9 +367,8 @@ De instaptoets start meteen. Een leerling ziet enkel tegels en knoppen waaraan j
 * Indeling aanpassen of een spel bij een onderwerp zetten: enkel `js/menu.js` (uitleg bovenaan dat bestand).
 * Actief op de echte site en in `test/`.
 
-## Galaxie ℝ (spellen/galaxie) — grote getallenleer-game (nov 2026)
-- Ruimteshooter (canvas) met vier stelsels ℕ, ℤ, ℚ, ℝ; nu speelbaar: **stelsel ℕ** (normaal en + gevorderd). ℤ, ℚ en ℝ: in `vragen.js` bij `STELSELS` het leerpad invullen (`lp: { normaal, plus }`).
-- Vragen komen rechtstreeks uit de leerpaden (`programmas/…`): `vragen.js` zet ze om naar spelvormen — asteroïden (schiet het juiste antwoord), poorten (keuzevragen), verzamelen (oplossingsverzameling), meteorenregen (ontwijken) en per stelsel een eindbaas (moederschip: de tussenstappen van een berekening uit deel 1).
-- Sector = deel van het leerpad; de laatste sector (eindtest) = eindbaas. Sterren: 0 fouten ★★★, ≤ 2 fouten ★★, anders ★. Hangar met upgrades (kristallen).
-- Fout antwoord → schade + na de vraag de uitleg uit het leerpad.
-- Menu: eigen knop 🚀 onderaan Getallenleer (js/menu.js). Databank: programma `spel-galaxie` (koppelen zoals de andere spellen). `?test=1` zet een testhaakje (`window.__galaxie`) aan.
+## Pi's Getallenavontuur (spellen/galaxie) — grote getallenleer-game (nov 2026)
+- Verhaal: robotje Pi zoekt de vier stukken van het Getallenkristal. Enkel naam typen en spelen; voortgang (wereld, levens, munten, score) blijft bewaard.
+- Werelden: `w1-platform.js` (ℕ, platformspel: tegen het juiste blok springen), `w2-race.js` (ℤ, pseudo-3D race: door de juiste poort), `w3-puzzel.js` (ℚ, duwpuzzel: juiste blok op het slot, iets moeilijkere vragen), `w4-doolhof.js` (ℝ, 3D-doolhof/raycaster: juiste robot neerschieten), `w5-ruimte.js` (finale: asteroïden + moederschip met tussenstappen).
+- `kern.js`: invoer, geluid, levens (start 5; extra leven met hartjes en per 50 munten; game over = wereld opnieuw), vragen uit de gewone leerpaden (`BRON`: per wereld makkelijke soorten), HUD, verhaalschermen. Geen uitleg bij een fout (ontspanning): −1 leven, het foute antwoord verdwijnt.
+- Menu: knop 🤖 onderaan Getallenleer; databank: programma `spel-galaxie`.
