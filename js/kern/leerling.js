@@ -221,6 +221,7 @@
     return `${API.DEMO ? '<div class="demo-band">DEMO — gegevens blijven enkel in deze browser · leerling: demo / demo · <a href="leerkracht.html">naar de leerkrachtpagina</a></div>' : ''}
       <header class="balk"><div class="schoollogo" role="img" aria-label="De Resonant"></div>
         <div class="logo">${esc(titel)}<small>${esc(onder)}</small></div>
+        <div class="auteur" title="Gerard Walschap"><span class="auteur-foto" role="img" aria-label="Gerard Walschap"></span><span class="auteur-naam">Gerard Walschap</span></div>
         ${S.leerling ? `<div class="rechts"><span>${naam}</span>
           ${S.view === 'deel' && !(S.P && S.P.instaptoets) ? '<button class="licht" data-a="pad">Leerpad</button>' : ''}
           ${S.P && beschikbaar().length + mijnSpellen().length > 1 ? `<button class="licht" data-a="kies">${ctxInfo() ? '🏠 Start' : mijnSpellen().length ? 'Leerpaden en spellen' : 'Andere leerpaden'}</button>` : ''}

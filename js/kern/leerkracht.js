@@ -93,6 +93,7 @@
     return `${API.DEMO ? '<div class="demo-band">DEMO — gegevens blijven enkel in deze browser · leerkracht-wachtwoord: demo · <a href="index.html">naar de leerlingenpagina</a></div>' : ''}
       <header class="balk"><div class="schoollogo" role="img" aria-label="De Resonant"></div>
         <div class="logo">${esc(CONFIG.TITEL || 'Leerpaden')}<small>Leerkracht${S.P && !['alle', 'boom', 'afdruk', 'spellen', 'spel'].includes(S.view) ? ' · ' + esc(S.P.titel) : ''}</small></div>
+        <div class="auteur" title="Gerard Walschap"><span class="auteur-foto" role="img" aria-label="Gerard Walschap"></span><span class="auteur-naam">Gerard Walschap</span></div>
         ${S.token ? `<div class="rechts"><button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>
       ${S.token && S.view !== 'login' ? `<nav class="progtabs">
