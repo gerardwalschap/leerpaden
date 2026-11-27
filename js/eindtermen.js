@@ -33,15 +33,74 @@ window.Eindtermen = (() => {
         ['BV3_06.17', 'De leerlingen gebruiken ICT om berekeningen uit te voeren en grafische voorstellingen te maken.', 'Rekening houdend met concepten uit het zevende leerjaar gericht op het hoger onderwijs.'],
       ],
     },
+    // Bron: 5_en_6_wiskundedoelen_biotechnologische_en_chemische_wetenschappen.xlsx — enkel de doelen van het 5de jaar
+    // (de andere doelen volgen in het 6de jaar). Kolommen = de leerpaden per hoofdstuk uit js/catalogus.js;
+    // welke doelen bij welk leerpad horen, staat hieronder in perLeerpad (sleutel = leerpadcode of de titel van een externe link).
+    'wisk-5bcw-ww': {
+      titel: 'Wiskundedoelen 5BCW · 5WW — wiskunde', bron: 'Basisvorming wiskunde (BV3) — 3de graad doorstroom · doelen van het 5de jaar',
+      lijst: [
+        ["BV3_06.01", "De leerlingen rekenen met reële getallen.", "Machten met rationale exponent, n-de machtswortels en logaritmen met willekeurig grondtal m.i.v. rekenregels en eigenschappen met symbolen"],
+        ["BV3_06.02", "De leerlingen brengen met behulp van de grafiek, kenmerken van een functie in verband met de betekenisvolle situatie die door de functie beschreven wordt."],
+        ["BV3_06.03", "De leerlingen interpreteren de afgeleide als limiet van een differentiequotiënt en als richtingscoëfficiënt van de raaklijn aan de grafiek."],
+        ["BV3_06.04", "De leerlingen leggen grafisch het verband tussen een functie en haar afgeleide functie."],
+        ["BV3_06.08", "De leerlingen tekenen de grafiek van de functie f(x)=sin x vanuit de goniometrische cirkel."],
+        ["BV3_06.09", "De leerlingen gebruiken transformaties van de vorm f(x)+k, f(x-k), f(x/k) en k·f(x) om de grafiek van een algemene sinusfunctie f(x)=a·sin[b(x-c)]+d op te bouwen vanuit de grafiek van f(x)=sin x."],
+        ["BV3_06.10", "De leerlingen analyseren kenmerken van een algemene sinusfunctie aan de hand van de grafiek: domein, bereik, nulwaarden, tekenverloop, stijgen/dalen, extrema, symmetrie, periodiciteit en amplitude."],
+        ["BV3_06.11", "De leerlingen lossen vergelijkingen grafisch op met behulp van ICT."],
+        ["BV3_06.14", "De leerlingen verklaren het belang van randomisatie en representativiteit bij steekproeven voor het formuleren van statistische besluiten over een populatie.", "Variabiliteit van steekproeven; aselecte steekproef"],
+        ["BV3_06.15", "De leerlingen leggen in concrete situaties het verschil uit tussen samenhang en causaliteit."],
+        ["BV3_06.18", "De leerlingen beschrijven fenomenen uit de realiteit aan de hand van wiskundige concepten uit de derde graad."],
+        ["BV3_06.19", "De leerlingen beargumenteren wiskundige redeneringen.", "Rekening houdend met concepten van de derde graad."],
+        ["BV3_06.20", "De leerlingen lossen vraagstukken en problemen op door te mathematiseren en demathematiseren en door gebruik te maken van heuristieken.", "Rekening houdend met concepten van de derde graad."],
+        ["BV3_06.21", "De leerlingen gebruiken ICT om berekeningen uit te voeren en grafische voorstellingen te maken.", "Rekening houdend met concepten van de derde graad."],
+      ],
+      perLeerpad: {
+        'Remediëring machten en wortels': ['BV3_06.01', 'BV3_06.21'],
+        'veeltermfuncties-context': ['BV3_06.02', 'BV3_06.18', 'BV3_06.19', 'BV3_06.20', 'BV3_06.21'],
+        'rationale-functies-context': ['BV3_06.02', 'BV3_06.18', 'BV3_06.19', 'BV3_06.20', 'BV3_06.21'],
+        'machtswortelfuncties': ['BV3_06.01', 'BV3_06.02', 'BV3_06.18', 'BV3_06.20'],
+        'sinusfunctie': ['BV3_06.02', 'BV3_06.08', 'BV3_06.09', 'BV3_06.10', 'BV3_06.11', 'BV3_06.18', 'BV3_06.21'],
+        'afgeleiden': ['BV3_06.03', 'BV3_06.04', 'BV3_06.18', 'BV3_06.20'],
+        'steekproeven-samenhang': ['BV3_06.14', 'BV3_06.15', 'BV3_06.18', 'BV3_06.19'],
+      },
+    },
+    'twisk-5bcw': {
+      titel: 'Wiskundedoelen 5BCW — toegepaste wiskunde', bron: 'Uitbreiding wiskunde (WD3) — Biotechnologische & Chemische Wetenschappen · doelen van het 5de jaar',
+      lijst: [
+        ["WD3_06.04.01", "De leerlingen stellen complexe getallen voor in het vlak."],
+        ["WD3_06.04.02", "De leerlingen voeren bewerkingen met complexe getallen in cartesische vorm uit: optelling, aftrekking, vermenigvuldiging en deling."],
+        ["WD3_06.04.03", "De leerlingen zetten complexe getallen in cartesische vorm om naar goniometrische vorm en omgekeerd."],
+        ["WD3_06.04.04", "De leerlingen voeren de vermenigvuldiging, de deling en de machtsverheffing van complexe getallen in goniometrische vorm uit.", "Goniometrische formules: somformules, verschilformules, verdubbelingsformules; formule van de Moivre; meetkundige betekenis van de complexe vermenigvuldiging"],
+        ["WD3_06.04.05", "De leerlingen lossen tweedegraadsvergelijkingen met reële coëfficiënten in één onbekende op in de verzameling van de complexe getallen."],
+        ["WD3_06.04.06", "De leerlingen voeren bewerkingen uit met matrices: optelling, scalaire vermenigvuldiging, matrixvermenigvuldiging, machtsverheffing en transpositie."],
+        ["WD3_06.04.07", "De leerlingen gebruiken matrixmodellen om evoluties te beschrijven.", "Matrixvoorstelling van een graaf"],
+        ["WD3_06.04.08", "De leerlingen lossen stelsels van eerstegraadsvergelijkingen op met behulp van de methode van Gauss-Jordan."],
+        ["WD3_06.04.17", "De leerlingen definiëren afgeleide in een punt en afgeleide functie.", "Verband tussen continuïteit en afleidbaarheid"],
+        ["WD3_06.04.18", "De leerlingen berekenen de afgeleide functie van functies die zijn opgebouwd uit veeltermfuncties, rationale functies, elementaire irrationale functies, exponentiële functies, logaritmische functies en goniometrische functies.", "Rekenregels: afgeleide van een som, product, quotiënt van functies en afgeleide van een samengestelde functie (kettingregel)"],
+        ["WD3_06.04.30", "De leerlingen bepalen het voorschrift of de grafiek van een tweedegraadsfunctie als de andere representatie gegeven is.", "Voorschrift f(x)=a(x-p)²+q; voorschrift f(x)=ax²+bx+c"],
+        ["WD3_06.04.31", "De leerlingen analyseren kenmerken van tweedegraadsfuncties: domein, bereik, nulwaarden, tekenverloop, stijgen/dalen, extremum, toenemende/afnemende stijging/daling en symmetrie ten opzichte van een verticale rechte."],
+        ["WD3_06.04.32", "De leerlingen lossen tweedegraadsvergelijkingen in één onbekende in de verzamelingen van de reële getallen algebraïsch en grafisch op.", "Ontbinding in factoren; discriminant"],
+        ["WD3_06.04.33", "De leerlingen lossen tweedegraadsongelijkheden in één onbekende algebraïsch op."],
+        ["WD3_06.04.34", "De leerlingen gebruiken de sinus- en cosinusregel om meetkundige problemen op te lossen."],
+      ],
+      perLeerpad: {
+        'tweedegraadsfuncties-5bcw': ['WD3_06.04.30', 'WD3_06.04.31', 'WD3_06.04.32', 'WD3_06.04.33'],
+        'complexe-getallen': ['WD3_06.04.01', 'WD3_06.04.02', 'WD3_06.04.03', 'WD3_06.04.04', 'WD3_06.04.05'],
+        'matrices-stelsels': ['WD3_06.04.06', 'WD3_06.04.07', 'WD3_06.04.08'],
+        'sinus-cosinusregel': ['WD3_06.04.34'],
+        'afgeleiden-rekenregels': ['WD3_06.04.17', 'WD3_06.04.18*'],   // * = gedeeltelijk: exponentiële en logaritmische functies afleiden volgt in het 6de jaar
+      },
+    },
   };
   // Korte kolomkoppen (de tegel staat erboven); volledige naam bij aanwijzen.
   const KORT = { 'proeftoets getallenleer': 'Proef\u00adtoets', 'wat is een functie?': 'Functies', 'eerstegraadsfuncties': 'Eerste\u00adgraads', 'exponentiële functies': 'Expo\u00adnentieel',
     'eindtest functieleer': 'Test', 'wat zijn reële functies?': 'Functies', 'functiewaarden en functiewaardentabel': 'Functie\u00adwaarden', 'domein en bereik': 'Domein', 'tekentabel en verloopschema': 'Teken/\u00adverloop', 'de functies f(x) = c en f(x) = ax': 'c en ax', 'de functie f(x) = ax + b': 'ax + b', 'functievoorschrift opstellen': 'Voor\u00adschrift', 'vergelijkingen en ongelijkheden grafisch oplossen': 'Grafisch oplossen', 'differentiecoëfficiënt en hellingshoek': 'Helling', 'eindtest': 'Test', 'telproblemen': 'Tellen', 'kansrekenen': 'Kansen', 'steekproeven': 'Steek\u00adproef', 'gegevens verwerken': 'Gege\u00advens', 'de normale verdeling': 'Normaal' };
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const heeft = (vak) => !!(DOELEN[vak] && window.MENUS && window.MENUS[vak]);
+  const heeft = (vak) => !!(DOELEN[vak] && ((window.MENUS && window.MENUS[vak]) || (DOELEN[vak].perLeerpad && window.CATALOGUS && window.CATALOGUS.vakken[vak])));
 
   // Kolommen: de knoppen van het menu (per tegel) met doelen; +-versies hebben dezelfde doelen als het gewone leerpad.
   function kolommen(vak) {
+    if (!(window.MENUS && window.MENUS[vak])) return kolommenCatalogus(vak);
     const groepen = [];
     for (const T of (window.MENUS[vak].tegels || [])) {
       const kn = (T.knoppen || []).filter(k => (k.doelen || []).length && !k.plus);
@@ -57,10 +116,27 @@ window.Eindtermen = (() => {
     return groepen;
   }
 
+  // Kolommen voor een vak zonder menu: per hoofdstuk (catalogus) de leerpaden en externe links met doelen.
+  function kolommenCatalogus(vak) {
+    const D = DOELEN[vak], V = window.CATALOGUS.vakken[vak], kol = [];
+    for (const h of V.hoofdstukken) {
+      const items = [...(h.extern || []).map(e => ({ sleutel: e.titel, naam: e.titel })),
+        ...(h.leerpaden || []).map(c => { const P = typeof Leerpaden !== 'undefined' ? Leerpaden.vind(c) : null; return { sleutel: c, naam: P ? P.titel : c }; })];
+      for (const it of items) {
+        const doelen = D.perLeerpad[it.sleutel];
+        if (doelen && doelen.length) kol.push({ naam: `${h.nr}. ${h.titel}`, volledig: it.naam, doelen, plus: false });
+      }
+    }
+    return [{ titel: 'Leerpaden per hoofdstuk', kol }];
+  }
+
   // De tabel (ook gebruikt voor de PDF). voorPdf: vaste breedte en eigen stijl.
   function tabel(vak, voorPdf) {
     const D = DOELEN[vak], G = kolommen(vak), alle = G.flatMap(g => g.kol);
-    const telDoel = (c) => alle.filter(k => k.doelen.includes(c)).length;
+    // 'v' = doel komt aan bod, 'd' = gedeeltelijk (code met * in perLeerpad), '' = niet
+    const zit = (k, c) => k.doelen.includes(c) ? 'v' : k.doelen.includes(c + '*') ? 'd' : '';
+    const telDoel = (c) => alle.filter(k => zit(k, c)).length;
+    const breedCode = D.lijst.some(([c]) => c.length > 10);
     return `<div class="et-wrap${voorPdf ? ' et-pdf' : ''}">
       <style>
         .et-wrap{font-family:Arial,Helvetica,sans-serif;color:#1c2b3a}
@@ -78,6 +154,7 @@ window.Eindtermen = (() => {
         .et-tabel td.et-tekst small{display:block;color:#6b7a8c;font-size:10.5px;margin-top:2px}
         .et-tabel td.et-v{text-align:center;font-size:15px;font-weight:bold;color:#2e7d4f}
         .et-tabel td.et-v.leeg{color:#c6ced8}
+        .et-tabel td.et-v.deels{color:#e8731a;font-size:12px}
         .et-tabel tr:nth-child(even) td{background:#f7f9fc}
         .et-tabel td.et-n{text-align:center;color:#5b6b7d}
         .et-tabel td.et-n.nul{color:#b83a2e;font-weight:bold}
@@ -90,36 +167,50 @@ window.Eindtermen = (() => {
       <h2>🎯 ${esc(D.titel)} — welk doel in welk leerpad?</h2>
       <p class="et-sub">${esc(D.bron)} · G. Walschap · De Resonant${voorPdf ? ' · afgedrukt op ' + new Date().toLocaleDateString('nl-BE') : ''}</p>
       <div class="et-scroll"><table class="et-tabel" style="min-width:${voorPdf ? 0 : 1000}px">
-        <colgroup><col style="width:${voorPdf ? 74 : 82}px"><col style="width:${voorPdf ? 300 : 290}px">${alle.map(() => '<col>').join('')}<col style="width:52px"></colgroup>
+        <colgroup><col style="width:${breedCode ? (voorPdf ? 92 : 104) : (voorPdf ? 74 : 82)}px"><col style="width:${voorPdf ? 300 : 290}px">${alle.map(() => '<col>').join('')}<col style="width:52px"></colgroup>
         <thead>
           <tr><th class="et-doel" colspan="2" rowspan="2">Wiskundedoel</th>${G.map(g => `<th class="et-rand" colspan="${g.kol.length}">${esc(g.titel)}</th>`).join('')}<th rowspan="2" class="et-rand" title="aantal leerpaden">#</th></tr>
           <tr class="et-kol">${G.map(g => g.kol.map((k, i) => `<th class="${i === 0 ? 'et-rand' : ''}${k.plus ? ' plus' : ''}" title="${esc(k.volledig)}">${esc(k.naam)}</th>`).join('')).join('')}</tr>
         </thead>
         <tbody>${D.lijst.map(([c, t, a]) => { const n = telDoel(c); return `<tr><td class="et-code">${esc(c)}</td>
             <td class="et-tekst">${esc(t)}${a ? `<small>${esc(a)}</small>` : ''}</td>
-            ${G.map(g => g.kol.map((k, i) => `<td class="et-v${k.doelen.includes(c) ? '' : ' leeg'}${i === 0 ? ' et-rand' : ''}">${k.doelen.includes(c) ? '✓' : '·'}</td>`).join('')).join('')}
+            ${G.map(g => g.kol.map((k, i) => `<td class="et-v${zit(k, c) ? '' : ' leeg'}${zit(k, c) === 'd' ? ' deels' : ''}${i === 0 ? ' et-rand' : ''}"${zit(k, c) === 'd' ? ' title="gedeeltelijk: de rest volgt in het 6de jaar"' : ''}>${zit(k, c) === 'v' ? '✓' : zit(k, c) === 'd' ? '(✓)' : '·'}</td>`).join('')).join('')}
             <td class="et-n et-rand${n ? '' : ' nul'}">${n}</td></tr>`; }).join('')}</tbody>
       </table></div>
-      <p class="et-leg">✓ = het doel komt aan bod in dit leerpad. <b style="color:#e8731a">+</b> = geldt ook voor de +-versie voor gevorderden (zelfde doelen, moeilijkere oefeningen).</p>
+      <p class="et-leg">✓ = het doel komt aan bod in dit leerpad.${D.lijst.some(([c]) => alle.some(k => zit(k, c) === 'd')) ? ' <b style="color:#e8731a">(✓)</b> = gedeeltelijk: de rest van het doel volgt in het 6de jaar.' : ''}${G.some(g => g.kol.some(k => k.plus)) ? ' <b style="color:#e8731a">+</b> = geldt ook voor de +-versie voor gevorderden (zelfde doelen, moeilijkere oefeningen).' : ''}</p>
     </div>`;
   }
 
   function sluit() { const m = document.getElementById('et-venster'); if (m) m.remove(); document.removeEventListener('keydown', esc_); }
   function esc_(e) { if (e.key === 'Escape') sluit(); }
 
+  // Naam van een vak voor de keuzeknoppen, bv. "Wiskunde 5BCW · 5WW" of "Toegepaste wiskunde 5BCW".
+  function vakNaam(vak) {
+    const V = window.CATALOGUS && window.CATALOGUS.vakken[vak];
+    const kl = window.CATALOGUS ? window.CATALOGUS.klassen.filter(k => k.vakken.includes(vak)).map(k => k.code) : [];
+    return `${V ? V.naam : vak} ${kl.join(' · ')}`.trim();
+  }
+  function keuze(actief) {
+    return `<div class="et-keuze" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      <span class="klein" style="margin-right:4px">Klas en vak:</span>${vakken().map(v => `<button class="${v === actief ? 'oranje' : 'licht'}" data-et-vak="${esc(v)}">${esc(vakNaam(v))}</button>`).join('')}</div>`;
+  }
+
+  // vak leeg = eerst kiezen (één knop 🎯 Eindtermen op de leerkrachtpagina)
   function toon(vak) {
-    if (!heeft(vak)) return;
+    if (vak && !heeft(vak)) return;
     sluit();
     const m = document.createElement('div');
     m.id = 'et-venster'; m.className = 'modaal-achter';
     m.innerHTML = `<div class="modaal" role="dialog" aria-modal="true" aria-label="Eindtermen" style="max-width:1200px;max-height:92vh;overflow:auto">
         <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-bottom:8px">
-          <button class="oranje" data-et="pdf">📄 PDF maken</button><button class="licht" data-et="sluit">Sluiten</button></div>
-        ${tabel(vak, false)}</div>`;
+          ${vak ? '<button class="oranje" data-et="pdf">📄 PDF maken</button>' : ''}<button class="licht" data-et="sluit">Sluiten</button></div>
+        ${vak ? '' : '<h2 style="margin:0 0 6px;color:#1c4e8a">🎯 Eindtermen</h2><p class="klein">Van welke klas wil je zien welke wiskundedoelen in welk leerpad aan bod komen?</p>'}
+        ${!vak || /leerkracht/.test(location.pathname) ? keuze(vak) : ''}${vak ? tabel(vak, false) : ''}</div>`;
     m.addEventListener('click', (e) => { if (e.target === m) sluit(); });
     m.querySelector('[data-et=sluit]').onclick = sluit;
+    m.querySelectorAll('[data-et-vak]').forEach(b => { b.onclick = () => toon(b.dataset.etVak); });
     const knop = m.querySelector('[data-et=pdf]');
-    knop.onclick = async () => {
+    if (knop) knop.onclick = async () => {
       const oud = knop.textContent; knop.disabled = true; knop.textContent = 'PDF wordt gemaakt…';
       try { await pdf(vak); } catch (e) { alert(e.message); }
       knop.disabled = false; knop.textContent = oud;

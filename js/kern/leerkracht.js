@@ -103,7 +103,7 @@
         <button class="ptab ${S.view === 'alle' ? 'actief' : ''}" data-a="alle">👥 Alle leerlingen</button>
         ${SPELLEN().length ? `<button class="ptab ${S.view === 'spellen' ? 'actief' : ''}" data-a="spellen">🎮 Spellen</button>` : ''}
         <button class="ptab ${S.view === 'afdruk' ? 'actief' : ''}" data-a="afdruk">🖨️ Afdrukcentrum</button>
-        ${window.Eindtermen ? Eindtermen.vakken().map(v => `<button class="ptab" data-eindtermen="${esc(v)}" title="Welke wiskundedoelen komen in welk leerpad aan bod?">🎯 Eindtermen ${esc((Catalogus.C.klassen.find(k => k.vakken.includes(v)) || {}).code || '')}</button>`).join('') : ''}</nav>` : ''}`;
+        ${window.Eindtermen && Eindtermen.vakken().length ? `<button class="ptab" data-eindtermen="" title="Welke wiskundedoelen komen in welk leerpad aan bod? Kies daarna de klas.">🎯 Eindtermen</button>` : ''}</nav>` : ''}`;
   }
   function render() {
     let h = '';
@@ -357,7 +357,7 @@
     const andere = Catalogus.klassenMetVak(vak).filter(k => k !== klas.code);
     return `<p class="klein"><button class="link" data-a="boom" data-niveau="klassen">🏫 Klassen</button> ›
         <button class="link" data-a="boom" data-niveau="klas" data-klas="${esc(klas.code)}">${esc(klas.code)}</button> › ${esc(V.naam)}</p>
-      <h1>${esc(V.naam)} · ${esc(klas.code)}</h1>
+      <h1>${esc(V.naam)} · ${esc(klas.code)}${window.Eindtermen && Eindtermen.heeft(vak) ? ` <button class="licht" data-eindtermen="${esc(vak)}" title="Welke wiskundedoelen komen in welk leerpad aan bod?">🎯 Eindtermen</button>` : ''}</h1>
       <p class="klein">Map <b>${esc(V.map)}</b>${andere.length ? ` · dit vak en zijn leerpaden gelden ook voor ${andere.map(esc).join(', ')}` : ''} · ${ll.length} leerling(en) van ${esc(klas.code)} met een account</p>
       <div class="pad">${V.hoofdstukken.map(h => {
         const regels = [

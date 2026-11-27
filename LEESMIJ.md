@@ -454,3 +454,9 @@ De instaptoets start meteen. Een leerling ziet enkel tegels en knoppen waaraan j
 Achteraan toegevoegd (groep **G · Verdieping**), zodat de nummers en resultaten van deel 1–12 onveranderd blijven:
 - **Deel 13 – Meetkundige betekenis van vermenigvuldigen:** schaling en rotatie aflezen, vermenigvuldigen met i, het getal w zoeken bij een gegeven schaling/rotatie, effect van i, −1, −i, 2, 2i.
 - **Deel 14 – Som-, verschil- en verdubbelingsformules** (leerplandoel 04.04): cos/sin van 75°, 105°, 15°… via de bijzondere hoeken, en cos 2θ / sin 2θ uit cos θ en sin θ.
+
+## 4y. 🎯 Eindtermen voor alle klassen — november 2026
+
+- Leerkrachtpagina: één knop **🎯 Eindtermen**; in het venster kies je de klas en het vak (Wiskunde 7VJHO, Wiskunde 5BCW · 5WW, Toegepaste wiskunde 5BCW). Ook op de pagina van een vak (🏫 Klassen en leerpaden) staat een knop.
+- Leerlingenpagina: op de lijst met leerpaden van een vak staat een knop **🎯 Eindtermen** voor dat vak.
+- 5BCW/5WW: enkel de doelen van het 5de jaar (BV3 voor wiskunde, WD3 voor toegepaste wiskunde). Welke doelen bij welk leerpad horen, staat in `js/eindtermen.js` bij `perLeerpad`; een code met `*` = gedeeltelijk (rest in het 6de jaar).
