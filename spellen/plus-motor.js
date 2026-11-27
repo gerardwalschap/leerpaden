@@ -1,4 +1,5 @@
-// plus-motor.js — gedeelde motor voor de spellen bij de +-leerpaden (7VJHO, gevorderden).
+// plus-motor.js — gedeelde motor voor de spellen bij de +-leerpaden (7VJHO, gevorderden)
+// én voor de gewone Expeditie/Oefenarena bij functieleer, telproblemen/kansen en statistiek (PLUSSPEL.plus === false).
 //
 // De vragen komen RECHTSTREEKS uit het +-leerpad zelf (programmas/…-plus.js): dezelfde soorten
 // oefeningen, dezelfde invoer (breuken, formule-editor, keuzeknoppen …) en dezelfde verbetering.
@@ -12,7 +13,8 @@
 //                minstens NODIG juist om verder te gaan; mis je een deel, dan start je opnieuw bij deel 1.
 // Oefenarena + : zelf delen kiezen en een ronde van 10, 15 of 20 vragen spelen (met reeks-bonus).
 (() => {
-  const C = window.PLUSSPEL, P = Leerpaden.vind(C.programma);
+  const C = window.PLUSSPEL, P = Leerpaden.vind(C.programma), PLUS = C.plus !== false;
+  const tPlus = (metPlus, zonder = '') => PLUS ? metPlus : zonder;
   const app = document.getElementById('app');
   const esc = W.esc, T = (s, d) => W.tex(s, d);
   if (!P) { app.innerHTML = '<div class="card"><h2>Spel niet gevonden</h2><p>Het leerpad van dit spel kon niet geladen worden.</p></div>'; return; }
@@ -85,8 +87,8 @@
   }
 
   const theorieBlok = (d) => d.theorie ? `<details class="theorie"><summary>📖 Theorie van dit deel bekijken</summary><div class="theorie-inhoud">${d.theorie}</div></details>` : '';
-  const kopHero = (sub) => `<div class="eyebrow">Wiskunde 7VJHO · ${esc(P.titel)} · gevorderden</div>
-      <h1>${C.modus === 'expeditie' ? 'Expeditie' : 'Oefenarena'} <span class="q">${C.teken}</span><span class="plus">+</span></h1>${sub}`;
+  const kopHero = (sub) => `<div class="eyebrow">Wiskunde 7VJHO · ${esc(P.titel)}${tPlus(' · gevorderden')}</div>
+      <h1>${C.modus === 'expeditie' ? 'Expeditie' : 'Oefenarena'} <span class="q">${C.teken}</span>${tPlus('<span class="plus">+</span>')}</h1>${sub}`;
 
   // =================================================================== EXPEDITIE +
   function expeditie() {
@@ -100,7 +102,7 @@
     }).join('')}</div>`;
 
     function start() {
-      app.innerHTML = `<div class="hero card">${kopHero(`<p class="muted">De expeditie voor gevorderden: alle ${N} delen van <b>${esc(P.titel)}</b>, in de volgorde van het leerpad, met de moeilijkere oefeningen van de +-versie.
+      app.innerHTML = `<div class="hero card">${kopHero(`<p class="muted">${tPlus('De expeditie voor gevorderden', 'De expeditie')}: alle ${N} delen van <b>${esc(P.titel)}</b>, in de volgorde van het leerpad${tPlus(', met de moeilijkere oefeningen van de +-versie')}.
           De laatste etappe (★) is de top: alles door elkaar. Per deel krijg je ${PER} vragen: haal er minstens ${NODIG} juist om door te gaan.
           <b>Mis je een deel, dan start je opnieuw bij deel 1.</b></p>`)}
           <div class="field"><label for="nm"><b>Jouw naam</b></label><input id="nm" maxlength="30" value="${esc(S.name)}" placeholder="Voornaam"></div>
@@ -144,14 +146,14 @@
         $('#go').onclick = () => intro(L + 1); $('#go').focus();
       } else {
         app.innerHTML = `<div class="card"><h2>Terug naar deel 1 …</h2><p style="margin:8px 0 6px">Je had ${run.goed} juist in ${isTop(d) ? 'de top' : 'deel ' + L} (${esc(kortTitel(d))}). Je hebt er minstens ${NODIG} van de ${PER} nodig.</p>
-          <p class="muted" style="margin-bottom:14px">Tip: open bij het begin van een deel de theorie (kader <b>Extra uitdaging</b>). Je verste deel tot nu toe: deel ${S.best || 0}.</p>
+          <p class="muted" style="margin-bottom:14px">Tip: open bij het begin van een deel de theorie${tPlus(' (kader <b>Extra uitdaging</b>)')}. Je verste deel tot nu toe: deel ${S.best || 0}.</p>
           <div class="row"><button class="btn gold" id="go" type="button">Opnieuw vanaf deel 1</button><button class="btn ghost" id="home" type="button">Naar het begin</button></div></div>`;
         $('#go').onclick = () => { S.runs++; save(); intro(1); }; $('#home').onclick = start; $('#go').focus();
       }
     }
     function top() {
       S.wins++; S.best = N; save();
-      app.innerHTML = `<div class="card hero"><div class="eyebrow">Expeditie + voltooid</div><h1>Proficiat${S.name ? ', ' + esc(S.name) : ''}! 🏆</h1>
+      app.innerHTML = `<div class="card hero"><div class="eyebrow">Expeditie${tPlus(' +')} voltooid</div><h1>Proficiat${S.name ? ', ' + esc(S.name) : ''}! 🏆</h1>
           <p style="margin:10px 0">Je hebt alle ${N} delen van ${esc(P.titel)} in één tocht gehaald, tot en met de top. Toon dit scherm aan je leerkracht.</p>
           <p class="muted">${new Date().toLocaleString('nl-BE')}</p>
           <div class="row" style="margin-top:14px"><button class="btn" id="go" type="button">Nog een expeditie</button></div></div>
@@ -168,7 +170,7 @@
     let game = null;
 
     function start() {
-      app.innerHTML = `<div class="hero card">${kopHero(`<p class="muted">Kies zelf welke delen van <b>${esc(P.titel)}</b> je wil oefenen, met de moeilijkere oefeningen van de +-versie.
+      app.innerHTML = `<div class="hero card">${kopHero(`<p class="muted">Kies zelf welke delen van <b>${esc(P.titel)}</b> je wil oefenen${tPlus(', met de moeilijkere oefeningen van de +-versie')}.
           Bij een fout zie je meteen de juiste oplossing en de uitleg. Elke reeks van 3 juiste antwoorden na elkaar geeft bonuspunten.</p>`)}
           <p class="muted">Record: <b>${S.best || 0} punten</b></p></div>
         <div class="card"><div class="row tussen"><div class="eyebrow">Delen</div>

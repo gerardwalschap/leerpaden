@@ -27,6 +27,14 @@ const Spellen = (() => {
       pct: Math.round(100 * best / n) };
   }
 
+  // Themaspel (spellen/thema-motor.js): levels met sterren
+  function thema(st, sleutel, n, woord) {
+    const S = lees(st, sleutel, null);
+    if (!S || !S.levels) return { tekst: 'nog niet gestart', pct: 0 };
+    const lv = Object.values(S.levels), af = lv.filter(x => x.stars).length, ster = lv.reduce((a, x) => a + (x.stars || 0), 0);
+    return { tekst: `${af}/${n} ${woord} gehaald · ${ster}/${3 * n} ★${af === n ? ' 🏆' : ''}`, pct: Math.round(100 * af / n) };
+  }
+
   const lijst = [
     { code: 'spel-codekraker', map: 'codekraker', titel: 'Codekraker ℕ', sub: 'Kraak de kluis · rekenen in ℕ', icoon: '🔐',
       voortgang(st) {
@@ -98,6 +106,30 @@ const Spellen = (() => {
         return { tekst: `${S.voltooid ? `uitgespeeld (${S.voltooid}×) 🏆 · ` : ''}nu in wereld ${namen[S.wereld] || S.wereld} · werelden gehaald: ${gehaald.map(k => namen[k]).join(', ') || 'nog geen'} · score ${(S.score || 0).toLocaleString('nl-BE')} · record ${(S.best || 0).toLocaleString('nl-BE')}`,
           pct: S.voltooid ? 100 : Math.round(100 * gehaald.length / 5) };
       } },
+    // Functieleer, telproblemen/kansen en statistiek (7VJHO): vragen rechtstreeks uit het leerpad (spellen/plus-motor.js, plus: false)
+    { code: 'spel-expeditie-functies', map: 'expeditie-functies', titel: 'Expeditie Functies', sub: '11 delen in één tocht', icoon: '🧗',
+      voortgang: (st) => expeditie(st, 'expeditie-functies-v1', 11) },
+    { code: 'spel-oefenarena-functies', map: 'oefenarena-functies', titel: 'Oefenarena Functies', sub: 'Zelf onderdelen kiezen en oefenen', icoon: '🏋️',
+      voortgang: (st) => arena(st, 11) },
+    { code: 'spel-expeditie-kansen', map: 'expeditie-kansen', titel: 'Expeditie Tellen & kansen', sub: '12 delen in één tocht', icoon: '🧗',
+      voortgang: (st) => expeditie(st, 'expeditie-kansen-v1', 12) },
+    { code: 'spel-oefenarena-kansen', map: 'oefenarena-kansen', titel: 'Oefenarena Tellen & kansen', sub: 'Zelf onderdelen kiezen en oefenen', icoon: '🏋️',
+      voortgang: (st) => arena(st, 12) },
+    { code: 'spel-expeditie-statistiek', map: 'expeditie-statistiek', titel: 'Expeditie Statistiek', sub: '9 delen in één tocht', icoon: '🧗',
+      voortgang: (st) => expeditie(st, 'expeditie-statistiek-v1', 9) },
+    { code: 'spel-oefenarena-statistiek', map: 'oefenarena-statistiek', titel: 'Oefenarena Statistiek', sub: 'Zelf onderdelen kiezen en oefenen', icoon: '🏋️',
+      voortgang: (st) => arena(st, 9) },
+    // Themaspelen 7VJHO (spellen/thema-motor.js)
+    { code: 'spel-functie-of-niet', map: 'functie-of-niet', titel: 'Functie of niet?', sub: 'Flitsquiz · functieleer 1–4', icoon: '⚡',
+      voortgang: (st) => thema(st, 'functie-of-niet-v1', 7, 'levels') },
+    { code: 'spel-rechtenschieter', map: 'rechtenschieter', titel: 'Rechtenschieter', sub: 'Schiet rechten door de doelen · functieleer 5–9', icoon: '🎯',
+      voortgang: (st) => thema(st, 'rechtenschieter-v1', 5, 'levels') },
+    { code: 'spel-codekraker-tellen', map: 'codekraker-tellen', titel: 'Codekraker tellen', sub: 'Kraak 6 kluizen met de telregels', icoon: '🔐',
+      voortgang: (st) => thema(st, 'codekraker-tellen-v1', 6, 'kluizen') },
+    { code: 'spel-kermis-kansen', map: 'kermis-kansen', titel: 'Kermis van de kansen', sub: 'Draaien, gooien en kansen berekenen', icoon: '🎡',
+      voortgang: (st) => thema(st, 'kermis-kansen-v1', 6, 'kramen') },
+    { code: 'spel-enquetebureau', map: 'enquetebureau', titel: 'Enquêtebureau', sub: 'Van steekproef tot normale verdeling', icoon: '📋',
+      voortgang: (st) => thema(st, 'enquetebureau-v1', 6, 'opdrachten') },
     // Grafiekdetective: hoort bij het 5de jaar, komt later in een andere klas (map spellen/grafiekdetective blijft staan).
     /*
     { code: 'spel-grafiekdetective', map: 'grafiekdetective', titel: 'Grafiekdetective', sub: 'Grafieken lezen en interpreteren', icoon: '🔎',
