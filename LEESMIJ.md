@@ -470,3 +470,4 @@ Achteraan toegevoegd (groep **G · Verdieping**), zodat de nummers en resultaten
 ## 5a. Toegepaste wiskunde 4BW: hoofdstuk 4 De functie c/x — november 2026
 
 Leerpad `functie-c-op-x` (9 delen): omgekeerd evenredig verband, grafiek en tabel van waarden, invloed van c, domein/bereik/nulwaarden, tekenverloop en stijgen/dalen, symmetrie en asymptoten, functieoverzicht, toepassingen, eindtest. Grafieken (hyperbolen) worden in het leerpad zelf getekend.
+- Leerpad `homothetie` (8 delen): wat is een homothetie, beeld van een punt (rooster), eigenschappen, beeld van een figuur, coördinaten, factor bepalen, toepassingen (schaal), eindtest.
