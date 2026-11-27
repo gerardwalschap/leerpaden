@@ -268,6 +268,19 @@ Enkel individueel werk: de duo- en groepsopdrachten en hoofdstuk 10 (poster) zit
 
 Bron: `bron/veeltermfuncties-context/` (het grafiekvenster is overgenomen uit rationale-functies-context), bouwen met `sh bron/bouw.sh veeltermfuncties-context`.
 
+## 4t. Het leerpad Sinusfunctie (5WW / 5BCW, wiskunde) — november 2026
+
+8 delen volgens de cursus en de PWP *5. Sinusfunctie*, slaagdrempel **70%**, telkens een test van **10 vragen**.
+Radialen typen de leerlingen als het getal vóór π (antwoordsoort `breuk` met `na: '\\cdot \\pi'`, in de formule-editor: 3/4 voor 3π/4).
+Geen GeoGebra: bij de vergelijkingen staat een grafiekvenster met π op de x-as (eigen klasse `.gvs` met eigen luisteraars, zodat het niet botst met het grafiekvenster van de contexten-leerpaden); in het venster mag je `3π/2` of `3pi/2` typen.
+
+* **A** (1–2): graden ↔ radialen, veelgebruikte hoeken, omwentelingen · sinuswaarden, basiskenmerken, nulwaarden/toppen/dalen, "kan sin x = c?".
+* **B** (3–4): wat doen a, b, k, p · voorschrift → grafiek · amplitude, evenwichtslijn, bereik, periode, faseverschuiving uit voorschrift en grafiek.
+* **C** (5–7): vergelijkingen grafisch oplossen in [0, 2π] (oplossingen, aantal, waarom geen) · beperkt interval (bereik, max/min, nulwaarden) · zorg en welzijn (bioritme, bloeddruk, hartslag baby, slaapcycli, ademhaling).
+* **D** (8): eindtest.
+
+Bron: `bron/sinusfunctie/0-alles.js`, bouwen met `sh bron/bouw.sh sinusfunctie`.
+
 ## 4n. Het rekenblad (een klein "Excel" in het leerpad) — november 2026
 
 Nieuwe antwoordsoort `rekenblad` (rekenkern `js/kern/rekenblad.js`, opmaak in `css/platform.css`). Gegevens staan in kolom A (A1 = titel),
