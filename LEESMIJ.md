@@ -241,6 +241,18 @@ Procenten, gemiddelden en standaardafwijkingen op 1 decimaal; procenten in de ui
 Histogrammen, stippendiagrammen en normale krommen tekent de website zelf. Bij Excelvragen worden enkel grenzen gekozen waarbij
 afronden op 3 decimalen (zoals in de cursus: 0,903 − 0,080) en exact rekenen hetzelfde percentage op 0,1 % geven.
 
+## 4r. Het leerpad Machtswortelfuncties (5WW / 5BCW, wiskunde) — november 2026
+
+6 delen volgens de cursus en de PWP *4. Machtswortelfuncties*, slaagdrempel **70%**, telkens een test van **10 vragen**, zonder rekenmachine.
+Eén leerpad voor 5BCW en 5WW samen (basisvorming, enkel de leerstof van de cursus). Alles is af te leiden uit de PWP: na elk stuk theorie staat daar een dia die naar het juiste deel verwijst.
+
+* **A · Wat is een machtswortelfunctie?** (1): even of oneven aan het voorschrift · machtswortels berekenen (let op het teken, bestaat niet in ℝ).
+* **B · Even en oneven** (2–3): domein, bereik (uit het voorschrift of de grafiek), gedrag op oneindig, geen horizontale asymptoot, nulwaarde · even of oneven aan de grafiek.
+* **C · Vergelijken en toepassen** (4–5): domein zonder grafiek, negatief getal invullen?, kenmerken, verschil met rationale functies · in de zorg en welzijn: grafiek aflezen (ontwikkelingsscore, logopedie, revalidatie, zelfstandig eten), "evenredig met de vierkantswortel" (2×, 4×, 9×), welk model past, waarom niet oneven.
+* **D · Eindtest** (6).
+
+Domein en bereik typen de leerlingen als `[0, +∞[` of `ℝ` (antwoordsoort `verzameling`). Bron: `bron/machtswortelfuncties/`, bouwen met `sh bron/bouw.sh machtswortelfuncties`.
+
 ## 4n. Het rekenblad (een klein "Excel" in het leerpad) — november 2026
 
 Nieuwe antwoordsoort `rekenblad` (rekenkern `js/kern/rekenblad.js`, opmaak in `css/platform.css`). Gegevens staan in kolom A (A1 = titel),
