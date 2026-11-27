@@ -253,6 +253,21 @@ Eén leerpad voor 5BCW en 5WW samen (basisvorming, enkel de leerstof van de curs
 
 Domein en bereik typen de leerlingen als `[0, +∞[` of `ℝ` (antwoordsoort `verzameling`). Bron: `bron/machtswortelfuncties/`, bouwen met `sh bron/bouw.sh machtswortelfuncties`.
 
+## 4s. Het leerpad Veeltermfuncties in context (5WW / 5BCW, wiskunde) — november 2026
+
+11 delen volgens de werkbundel *Veeltermfuncties in context* (elk hoofdstuk 0–9 is een deel, plus een eindtest), slaagdrempel **70%**, telkens een test van **10 vragen**.
+Gebouwd zoals het leerpad *Rationale functies in context*: **geen GeoGebra nodig**. Bij elke rekenvraag staat een grafiekvenster met de formule al ingevuld
+(bewegen over de grafiek, Bereken, Snijpunt, Hoogste en laagste punt, in- en uitzoomen; praktisch domein in blauw). Moeilijke woorden krijgen een uitleg (oranje stippellijn).
+Enkel individueel werk: de duo- en groepsopdrachten en hoofdstuk 10 (poster) zitten er niet in.
+
+* **A · Kenmerken in context** (1–2): woordenlijst (griepgolf) · aflezen en interpreteren: pijnstiller, spoeddienst (twee toppen, lokaal ≠ absoluut), baby, hartslag, budget jeugdbeweging (in het rood, absoluut maximum aan de rand).
+* **B · Domein en kritisch kijken** (3–4): wiskundig domein ℝ en praktisch domein (fontein, doos, benefietfuif, bacteriën, zwembad), bereik en maximum op het praktisch domein · extrapoleren (baby na 60 dagen, inwoners), twee modellen voor de 65-plussers.
+* **C · Grafiek en situatie** (5–8): koppelen (ook gsm-batterij en constante temperatuur) · verhaal → grafiek, maximum/domein, voorschrift (opendeurdag) · tekenschema, minimale graad, nulpunten uit het verloopschema, snijden of raken, "kan dit?" · een grafiek vertellen.
+* **D · Fouten en modellen** (9–10): Ruben, Amina, Lotte, Jonas en Sem · modellen op maat: a·t·(t − b)², a·x·(x − b), a(d − p)² + q.
+* **E · Eindtest** (11): uit elk hoofdstuk één vraag.
+
+Bron: `bron/veeltermfuncties-context/` (het grafiekvenster is overgenomen uit rationale-functies-context), bouwen met `sh bron/bouw.sh veeltermfuncties-context`.
+
 ## 4n. Het rekenblad (een klein "Excel" in het leerpad) — november 2026
 
 Nieuwe antwoordsoort `rekenblad` (rekenkern `js/kern/rekenblad.js`, opmaak in `css/platform.css`). Gegevens staan in kolom A (A1 = titel),
