@@ -281,6 +281,18 @@ Geen GeoGebra: bij de vergelijkingen staat een grafiekvenster met π op de x-as 
 
 Bron: `bron/sinusfunctie/0-alles.js`, bouwen met `sh bron/bouw.sh sinusfunctie`.
 
+## 4u. Het leerpad Afgeleiden (5WW / 5BCW, wiskunde) — november 2026
+
+6 delen volgens de cursus en de PWP *6. Afgeleiden*, slaagdrempel **70%**, telkens een test van **10 vragen**.
+Alles grafisch en conceptueel: nergens worden afgeleiden met rekenregels berekend. Geen GeoGebra; grafieken met raaklijnen, secansen en roosterpunten worden als SVG getekend (`agraf`).
+
+* **A** (1–2): differentiequotiënt uit twee punten, op een grafiek en in een situatie (eenheden), interpretatie, waar/niet waar · de afgeleide als limiet (tabellen die naderen), begrippen, gemiddeld of ogenblikkelijk.
+* **B** (3–4): teken van f '(a) uit de raaklijn, rico van een raaklijn aflezen via roosterpunten, in welk punt, wat zegt f '(a) · van f naar het tekenschema van f ', van de grafiek van f ' naar het verloop van f, extremum uit f ', welke f / welke f ' past.
+* **C** (5): zorg en welzijn (koorts, concentratie van een medicijn, mindfulnesssessie): gemiddelde verandering, wanneer is de afgeleide 0, teken, betekenis, eenheid.
+* **D** (6): eindtest.
+
+Bron: `bron/afgeleiden/0-alles.js`, bouwen met `sh bron/bouw.sh afgeleiden`.
+
 ## 4n. Het rekenblad (een klein "Excel" in het leerpad) — november 2026
 
 Nieuwe antwoordsoort `rekenblad` (rekenkern `js/kern/rekenblad.js`, opmaak in `css/platform.css`). Gegevens staan in kolom A (A1 = titel),
