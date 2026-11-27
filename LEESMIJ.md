@@ -473,3 +473,4 @@ Leerpad `functie-c-op-x` (9 delen): omgekeerd evenredig verband, grafiek en tabe
 - Leerpad `homothetie` (8 delen): wat is een homothetie, beeld van een punt (rooster), eigenschappen, beeld van een figuur, coördinaten, factor bepalen, toepassingen (schaal), eindtest.
 - Leerpad `thales` (7 delen): de stelling (verband homothetie), driehoeksvorm, vlindervorm, omgekeerde stelling, middenparallel, toepassingen, eindtest.
 - Leerpad `goniometrische-formules` (7 delen): goniometrische cirkel, kwadranten en tekens, grote en negatieve hoeken, grondformule, verwante hoeken, vereenvoudigen, eindtest.
+- Leerpad `sinus-cosinusregel-4bw` (7 delen): sinusregel (zijde), sinusregel (hoek, dubbelzinnig geval), cosinusregel (zijde), cosinusregel (hoek), welke regel, toepassingen, eindtest.
