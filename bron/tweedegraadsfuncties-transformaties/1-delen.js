@@ -398,7 +398,7 @@ const D8 = {
   ],
   soorten: {
     bereik: { naam: 'Domein en bereik', gen() {
-      const p = { a: kies([1, -1, 2, -2, 3, -0.5, 0.5]), h: nz(-6, 6), k: nz(-8, 8) };
+      const p = { a: kies([1, -1, 2, -2, 3, -0.5, 0.5]), h: nz(-6, 6), k: nz(-8, 8) }; if (p.h === p.k) p.h = p.h > 0 ? -p.h : p.h - 1;
       return { soort: 'bereik', opdracht: 'Geef het domein en het bereik.', tex: topTex(Q(p.a * 2, 2), Q(p.h), Q(p.k)),
         antw: { soort: 'delen', delen: [{ label: '\\text{dom } f =', antw: { soort: 'keuze', opties: [{ k: 'R', l: '\\mathbb{R}' }, { k: 'k', l: `[${tg(p.k)}, +\\infty[` }, { k: 'h', l: `[${tg(p.h)}, +\\infty[` }], juist: 'R' } },
           { label: '\\text{ber } f =', antw: bereikAntw(p) }] },

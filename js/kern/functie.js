@@ -1,4 +1,4 @@
-// Rekenkern voor functievoorschriften in x: leest  2(x − 1)² + 5 · −x² · 1/4 x² + 3 · √(x − 3) · 1/(x + 2) · x³ − 1
+// Rekenkern voor functievoorschriften in x: leest  2(x − 1)² + 5 · −x² · 1/4 x² + 3 · √(x − 3) · 1/(x + 2) · x³ − 1 · sin x · cos(2x) · 1/cos²x
 // ontleed(s) → { ok, boom, tex, topvorm } ;  controleer(invoer, a) met a = { expr, vorm?: 'topvorm' | 'vrij' }
 const FX = (() => {
   class Fout extends Error {}
@@ -14,8 +14,10 @@ const FX = (() => {
       if (c === ' ') { k++; continue; }
       const m = s.slice(k).match(/^\d+(?:[.,]\d+)?/);
       if (m) { t.push({ t: 'n', v: parseFloat(m[0].replace(',', '.')), s: m[0] }); k += m[0].length; continue; }
+      const fn = s.slice(k).match(/^(sin|cos|tan|tg)/i);
+      if (fn) { t.push({ t: 'fn', naam: fn[1].toLowerCase() === 'tg' ? 'tan' : fn[1].toLowerCase() }); k += fn[1].length; continue; }
       if ('+-·/()^²³√x'.includes(c)) { t.push({ t: c }); k++; continue; }
-      if (/[a-z]/i.test(c)) throw new Fout(`De letter "${c}" ken ik niet. Gebruik enkel x.`);
+      if (/[a-z]/i.test(c)) throw new Fout(`De letter "${c}" ken ik niet. Gebruik enkel x (en sin, cos, tan).`);
       throw new Fout(`Het teken "${c}" kan ik niet lezen.`);
     }
     return t;
@@ -36,7 +38,7 @@ const FX = (() => {
         const x = kijk(); if (!x) break;
         if (x.t === '·') { p++; f.push({ deel: false, k: macht() }); continue; }
         if (x.t === '/') { p++; f.push({ deel: true, k: macht() }); continue; }
-        if (x.t === 'n' || x.t === 'x' || x.t === '(' || x.t === '√') { f.push({ deel: false, k: macht(), impl: true }); continue; }
+        if (x.t === 'n' || x.t === 'x' || x.t === '(' || x.t === '√' || x.t === 'fn') { f.push({ deel: false, k: macht(), impl: true }); continue; }
         break;
       }
       return f.length === 1 ? f[0].k : { op: 'prod', f };
@@ -58,6 +60,21 @@ const FX = (() => {
       if (x.t === 'x') return { op: 'x' };
       if (x.t === '(') { const k = som(); if (!neem(')')) throw new Fout('Er ontbreekt een haakje ).'); return { op: 'haak', k }; }
       if (x.t === '√') return { op: 'wortel', k: primair() };
+      if (x.t === 'fn') {   // sin x · sin(2x) · sin 2x · sin²x · cos^2 x · sin x²
+        let e = 1;
+        if (neem('²')) e = 2; else if (neem('³')) e = 3; else if (kijk() && kijk().t === '^' && t[p + 1] && t[p + 1].t === 'n') { p++; e = t[p++].v; }
+        let arg;
+        if (kijk() && kijk().t === '(') arg = primair();
+        else {   // zonder haakjes: een getal en/of x (met exponent), bv. sin 2x, sin x²
+          const f = [];
+          if (kijk() && kijk().t === 'n') f.push({ deel: false, k: primair() });
+          if (kijk() && kijk().t === 'x') f.push({ deel: false, k: macht(), impl: f.length > 0 });
+          if (!f.length) throw new Fout(`Na ${x.naam} hoort een argument, bv. ${x.naam} x of ${x.naam}(2x).`);
+          arg = f.length === 1 ? f[0].k : { op: 'prod', f };
+        }
+        const fk = { op: 'fn', naam: x.naam, k: arg };
+        return e === 1 ? fk : { op: 'macht', b: fk, e };
+      }
       if (x.t === '-') return { op: 'neg', k: macht() };
       if (x.t === ')') throw new Fout('Er staat een haakje ) te veel.');
       throw new Fout('Je antwoord is onvolledig of er staat een teken te veel.');
@@ -73,6 +90,7 @@ const FX = (() => {
       case 'haak': return waarde(k.k, x);
       case 'neg': return -waarde(k.k, x);
       case 'wortel': { const w = waarde(k.k, x); return w < -1e-12 ? NaN : Math.sqrt(Math.max(0, w)); }
+      case 'fn': { const w = waarde(k.k, x); return k.naam === 'sin' ? Math.sin(w) : k.naam === 'cos' ? Math.cos(w) : Math.abs(Math.cos(w)) < 1e-9 ? NaN : Math.tan(w); }
       case 'macht': return Math.pow(waarde(k.b, x), k.e);
       case 'som': return k.termen.reduce((a, t) => a + t.teken * waarde(t.k, x), 0);
       case 'prod': return k.f.reduce((a, f, j) => { const w = waarde(f.k, x); if (j === 0) return w; if (f.deel) return Math.abs(w) < 1e-12 ? NaN : a / w; return a * w; }, 0);
@@ -115,7 +133,8 @@ const FX = (() => {
       case 'haak': return `\\left(${tex(k.k)}\\right)`;
       case 'neg': return `-${tex(k.k)}`;
       case 'wortel': return `\\sqrt{${k.k.op === 'haak' ? tex(k.k.k) : tex(k.k)}}`;
-      case 'macht': return `${tex(k.b)}^{${k.e}}`;
+      case 'fn': return `\\${k.naam}${k.k.op === 'haak' ? tex(k.k) : ' ' + tex(k.k)}`;
+      case 'macht': return k.b.op === 'fn' ? `\\${k.b.naam}^{${k.e}}${k.b.k.op === 'haak' ? tex(k.b.k) : ' ' + tex(k.b.k)}` : `${tex(k.b)}^{${k.e}}`;
       case 'som': return k.termen.map((x, j) => (x.teken < 0 ? '-' : j ? '+' : '') + tex(x.k)).join(' ');
       case 'prod': {
         let uit = '';

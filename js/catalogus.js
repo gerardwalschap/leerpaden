@@ -64,12 +64,16 @@ window.CATALOGUS = {
     'twisk-5bcw': {
       naam: 'Toegepaste wiskunde', map: 'TWISKUNDE 5BCW',
       hoofdstukken: [
-        { nr: 1, titel: 'Tweedegraadsfuncties' },
+        { nr: 1, titel: 'Tweedegraadsfuncties', sub: 'Topvorm en algemene vorm · Kenmerken · Product-som · Discriminant · Ongelijkheden',
+          leerpaden: ['tweedegraadsfuncties-5bcw'] },
         { nr: 2, titel: 'Complexe getallen', sub: 'Complexe vlak · Cartesische en goniometrische vorm · De Moivre · Vergelijkingen',
           leerpaden: ['complexe-getallen'] },
-        { nr: 3, titel: 'Matrices en stelsels' },
-        { nr: 4, titel: 'Sinus- en cosinusregel' },
-        { nr: 5, titel: 'Afgeleiden' },
+        { nr: 3, titel: 'Matrices en stelsels', sub: 'Bewerkingen · Overgangsmatrices · Grafen · Gauss-Jordan',
+          leerpaden: ['matrices-stelsels'] },
+        { nr: 4, titel: 'Sinus- en cosinusregel', sub: 'Sinusregel · Cosinusregel · Welke regel? · Toepassingen',
+          leerpaden: ['sinus-cosinusregel'] },
+        { nr: 5, titel: 'Afgeleiden', sub: 'Definitie · Continuïteit en afleidbaarheid · Som-, product-, quotiënt- en kettingregel · Goniometrisch · Toepassingen',
+          leerpaden: ['afgeleiden-rekenregels'] },
       ],
     },
     'wisk-5bcw-ww': {

@@ -6,7 +6,7 @@
 //   interval     {a, ai, b, bi}                                 [−2 ; 5[   (a/b = null betekent ∓∞)
 //   ongelijkheid {a, ai, b, bi}                                 −2 ≤ x < 5
 //   vakjes       {sjabloon:[{tex}|{veld, sub?, sup?, breed?}], velden:[{expr, vormen?}]}
-//   delen        {delen:[{label, antw}]}                        meerdere antwoorden bij één vraag
+//   delen        {delen:[{label, antw}], rooster?, voor?}       meerdere antwoorden bij één vraag; rooster = n: als matrix met n kolommen
 //   V            {waarde, dec?, speciaal?: 'leeg'|'R', metSpeciaal?: true|'leeg', exact?, tex?}  oplossingenverzameling V = {…}, V = ∅ of V = ℝ
 //                metSpeciaal 'leeg' = enkel de knop V = ∅; exact = breuk of geheel getal, geen afgerond kommagetal
 //   veelterm     {expr, vorm?: 'uitgewerkt'|'ontbonden', voor?, tex?}  veeltermen (veeltermkern VT)
@@ -256,6 +256,10 @@ const Antwoord = (() => {
         return `<input type="text" id="${id}-${s.veld}" data-veld="${s.veld}" class="vak${s.sub ? ' sub' : ''}${s.sup ? ' sup' : ''}${s.breed ? ' breed' : ''}" value="${esc(w.vakjes[s.veld])}" autocomplete="off" autocapitalize="none" spellcheck="false" ${dis} aria-label="vakje ${s.veld + 1}">`;
       }).join('');
       return `<div class="vakjesrij">${delen}</div>`;
+    }
+    if (a.soort === 'delen' && a.rooster) {   // matrix: velden in een rooster tussen haakjes (a.rooster = aantal kolommen)
+      return `<div class="matrixrij">${a.voor ? `<span class="mvoor">${T(a.voor)}</span>` : ''}<div class="matrixveld" style="grid-template-columns:repeat(${a.rooster},auto)">${a.delen.map((d, i) =>
+        `<div class="mcel">${html(`${id}-d${i}`, d.antw, w.delen[i], uit)}</div>`).join('')}</div></div>`;
     }
     if (a.soort === 'delen') {
       return `<div class="deelvragen">${a.delen.map((d, i) => `<div class="deelvraag"><div class="dlabel">${d.html ? d.label : T(d.label)}</div>
@@ -685,6 +689,7 @@ const Antwoord = (() => {
   }
   function juistHTML(a) {
     if (a.soort === 'keuze') { const o = a.opties.find(x => String(x.k) === String(a.juist)); return o ? (o.html ? o.l : T(o.l)) : '?'; }
+    if (a.soort === 'delen' && a.rooster) { const r = []; for (let i = 0; i < a.delen.length; i += a.rooster) r.push(a.delen.slice(i, i + a.rooster).map(d => juistTex(d.antw)).join(' & ')); return T(`${a.voor || ''} \\begin{pmatrix} ${r.join(' \\\\ ')} \\end{pmatrix}`); }
     if (a.soort === 'delen') return a.delen.map(d => `${d.html ? d.label : T(d.label)} ${juistHTML(d.antw)}`).join(' &nbsp;·&nbsp; ');
     if (a.soort === 'vector') return VEC.juistHTML(a);
     if (a.soort === 'rekenblad') return RB.juistHTML(a);
@@ -693,6 +698,7 @@ const Antwoord = (() => {
   }
   function juistTekst(a) {
     if (a.soort === 'keuze') { const o = a.opties.find(x => String(x.k) === String(a.juist)); return o ? (o.tekst || W.platteTekst(o.l)) : '?'; }
+    if (a.soort === 'delen' && a.rooster) { const r = []; for (let i = 0; i < a.delen.length; i += a.rooster) r.push(a.delen.slice(i, i + a.rooster).map(d => juistTekst(d.antw)).join('  ')); return '[ ' + r.join(' | ') + ' ]'; }
     if (a.soort === 'delen') return a.delen.map(d => `${W.platteTekst(d.label)} ${juistTekst(d.antw)}`).join(' · ');
     if (a.soort === 'vector') return VEC.juistTekst(a);
     if (a.soort === 'rekenblad') return RB.juistTekst(a);

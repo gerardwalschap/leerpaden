@@ -304,6 +304,19 @@ Volledig conceptueel (geen berekeningen): grote banken met situaties uit de zorg
 
 Bron: `bron/steekproeven-samenhang/0-alles.js`, bouwen met `sh bron/bouw.sh steekproeven-samenhang`.
 
+## 4w. Toegepaste wiskunde 5BCW volledig — november 2026
+
+Vier nieuwe leerpaden (catalogus `twisk-5bcw`, hoofdstuk 1, 3, 4, 5), elk volgens cursus, PWP en werkbundel, drempel 70%, tests van 10 vragen:
+
+* **`tweedegraadsfuncties-5bcw`** (13 delen) — hergebruikt in eigen blokken (`{ … }`, geen naamconflicten) de 4BW-bronnen van transformaties, ontbinden/discriminant en ongelijkheden, plus nieuwe delen *topvorm met de formules* en *topvorm → algemene vorm*. Theorie in p/q-notatie (`pqDeel`). Kopieën: als je de 4BW-bronnen wijzigt, wordt dit leerpad niet mee aangepast.
+* **`matrices-stelsels`** (9 delen) — bewerkingen, machten, transponeren, overgangsmatrices, grafen (SVG), Gauss-Jordan.
+* **`sinus-cosinusregel`** (6 delen) — met driehoektekeningen (SVG).
+* **`afgeleiden-rekenregels`** (9 delen) — definitie, continuïteit/afleidbaarheid, som-, product-, quotiënt-, kettingregel, goniometrisch, raaklijn en snelheid. Alle afgeleiden zijn numeriek nagekeken.
+
+Uitbreidingen van de kern:
+* **Matrix-antwoord**: `{ soort: 'delen', rooster: n, voor, delen }` toont de velden als een matrix met n kolommen (CSS `.matrixveld`); nakijken blijft dat van `delen`.
+* **Rekenkern FX** (`functie.js`) leest nu ook `sin`, `cos`, `tan` (ook `sin 2x`, `sin²x`, `cos(x)^2`, `1/cos²x`).
+
 ## 4n. Het rekenblad (een klein "Excel" in het leerpad) — november 2026
 
 Nieuwe antwoordsoort `rekenblad` (rekenkern `js/kern/rekenblad.js`, opmaak in `css/platform.css`). Gegevens staan in kolom A (A1 = titel),

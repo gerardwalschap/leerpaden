@@ -302,3 +302,11 @@ button.keuze.vsp { min-width: 0; padding: 6px 12px; font-size: 15px; }
 /* Afrondingslabel naast een invulvak */
 .antwoordrij .afrond { font-size: 13px; font-weight: bold; padding: 3px 10px; border-radius: 99px; background: var(--oranje-licht); color: #9a4a14; white-space: nowrap; }
 .afrond-voorbeeld { font-size: 13px; font-weight: bold; padding: 2px 8px; border-radius: 99px; background: var(--oranje-licht); color: #9a4a14; white-space: nowrap; }
+
+/* matrix-antwoord (delen met rooster) */
+.matrixrij { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px auto; flex-wrap: wrap; }
+.matrixrij .mvoor { font-size: 18px; }
+.matrixveld { display: grid; gap: 6px 10px; padding: 6px 12px; border-left: 2px solid #1f2733; border-right: 2px solid #1f2733; border-radius: 10px; }
+.matrixveld .voorbeeld, .matrixveld .afrond { display: none; }
+.matrixveld .antwoordrij input, .matrixveld .antwoordrij input.veld { width: 74px; font-size: 17px; }
+.matrixveld input::placeholder { color: transparent; }
