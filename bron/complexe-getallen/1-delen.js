@@ -570,6 +570,109 @@ const D12 = {
   test: [['leesaf', 1], ['modulus', 1], ['som', 1], ['product', 1], ['deling', 1], ['naarGoni', 1], ['naarCart', 1], ['goniBew', 1], ['moivre', 1], ['vgl', 1]], testSchudden: false,
 };
 
+
+// ===================================================================
+//  G · VERDIEPING (achteraan toegevoegd: de nummers van deel 1–12 blijven gelijk)
+// ===================================================================
+const D13 = {
+  nr: 13, titel: 'Meetkundige betekenis van vermenigvuldigen', kort: 'Vermenigvuldigen = schalen (moduli maal elkaar) en draaien (argumenten optellen).', rekenmachine: false,
+  opdracht: 'Beantwoord de vraag.',
+  theorie: `<div class="kader def"><div class="kader-titel">Schalen en draaien</div>
+      <p>Vermenigvuldig je $z$ met $w = r(\\cos \\alpha + i \\sin \\alpha)$, dan</p>
+      <ul><li>wordt de modulus van $z$ vermenigvuldigd met $r$ (<b>schaling</b>),</li>
+      <li>komt er $\\alpha$ bij het argument van $z$: $z$ <b>draait</b> over de hoek $\\alpha$ rond de oorsprong.</li></ul></div>
+    <div class="kader eig"><div class="kader-titel">Belangrijke gevallen</div>
+      <p>$i = 1(\\cos 90^\\circ + i \\sin 90^\\circ)$: vermenigvuldigen met $i$ is een rotatie over $90^\\circ$ (de modulus blijft gelijk).</p>
+      <p>$-1 = 1(\\cos 180^\\circ + i \\sin 180^\\circ)$: rotatie over $180^\\circ$.</p>
+      <p>Een positief reëel getal, bv. $3 = 3(\\cos 0^\\circ + i \\sin 0^\\circ)$: enkel schaling, geen draaiing.</p></div>
+    <div class="kader werk"><div class="kader-titel">Voorbeeld</div>
+      <p>$z = 4 + 2i$. Dan is $i \\cdot z = 4i + 2i^2 = -2 + 4i$: het punt $(4, 2)$ draait over $90^\\circ$ naar $(-2, 4)$.</p></div>${INTYPEN_GONI}`,
+  voorbeelden: [
+    { tex: 'z \\cdot 2(\\cos 30^\\circ + i \\sin 30^\\circ)', stappen: ['\\text{de modulus van } z \\text{ wordt } 2 \\text{ keer zo groot}', '\\text{het argument van } z \\text{ neemt toe met } 30^\\circ', '\\text{dus: schaling met factor } 2 \\text{ en rotatie over } 30^\\circ'] },
+    { tex: 'i \\cdot (3 - i)', stappen: ['= 3i - i^2 = 3i + 1', '= 1 + 3i', '\\text{het punt } (3, -1) \\text{ draait over } 90^\\circ \\text{ naar } (1, 3)'] },
+  ],
+  soorten: {
+    factor: { naam: 'Schaling en rotatie aflezen', gen() {
+      const r = kies([2, 3, 4, 5, 0.5]), a = kies([20, 30, 45, 60, 90, 120, 135, 150, 180]);
+      return { soort: 'factor', opdracht: 'Je vermenigvuldigt een complex getal z met w. Met welke factor wordt de modulus vermenigvuldigd, en over welke hoek draait z?',
+        tex: `w = ${goniTex(tg(r), a)}`, antw: { soort: 'delen', delen: [{ label: '\\text{factor} =', antw: getal(r) }, { label: '\\text{hoek} =', antw: hAntw(a) }] },
+        uitleg: [`\\text{modulus van } w = ${tg(r)} \\Rightarrow \\text{schaling met factor } ${tg(r)}`, `\\text{argument van } w = ${gr(a)} \\Rightarrow \\text{rotatie over } ${gr(a)}`] };
+    } },
+    maali: { naam: 'Vermenigvuldigen met i', gen() {
+      const z = willekeurig(7), u = mul(Z(0, 1), z);
+      return { soort: 'maali', opdracht: 'Bereken i · z. Over welke hoek is z dan gedraaid?', tex: `z = ${zt(z)}`,
+        antw: { soort: 'delen', delen: [{ label: 'i \\cdot z =', antw: cAntw(u, { voor: '' }) }, { label: '\\text{hoek} =', antw: hAntw(90) }] },
+        uitleg: [`i \\cdot ${zh(z)} = ${tg(z.re)}i ${z.im < 0 ? '-' : '+'} ${tg(Math.abs(z.im))}i^2`, `= ${zt(u)}`, `\\text{vermenigvuldigen met } i \\text{ is een rotatie over } 90^\\circ`] };
+    } },
+    zoekw: { naam: 'Met welk getal vermenigvuldig je?', gen() {
+      const r = kies([2, 3, 4]), a = kies([30, 45, 60, 90, 120, 180]);
+      return { soort: 'zoekw', opdracht: 'Met welk complex getal w (in goniometrische vorm) moet je z vermenigvuldigen om dit effect te krijgen?',
+        tex: `\\text{de modulus wordt } ${r} \\text{ keer zo groot en } z \\text{ draait over } ${gr(a)}`, antw: goniAntw(r, tg(r), a),
+        uitleg: [`\\text{schaling } ${r} \\Rightarrow r = ${r}`, `\\text{rotatie } ${gr(a)} \\Rightarrow \\theta = ${gr(a)}`, `w = ${goniTex(r, a)}`] };
+    } },
+    effect: { naam: 'Welk effect?', gen() {
+      const L = [['i', 'rotatie over 90°, modulus blijft gelijk'], ['(-1)', 'rotatie over 180°, modulus blijft gelijk'], ['(-i)', 'rotatie over 270° (of −90°), modulus blijft gelijk'],
+        ['2', 'modulus 2 keer zo groot, geen rotatie'], ['2i', 'modulus 2 keer zo groot én rotatie over 90°']];
+      const j = rnd(0, L.length - 1);
+      return { soort: 'effect', opdracht: 'Wat gebeurt er met z als je vermenigvuldigt met dit getal?', tex: `z \\cdot ${L[j][0]}`,
+        antw: keuze(L.map(x => ({ k: x[1], l: `\\text{${x[1]}}` })), L[j][1]),
+        uitleg: [`${L[j][0]} \\text{ in goniometrische vorm bekijken: modulus en argument}`, `\\text{dus: ${L[j][1]}}`] };
+    } },
+  },
+  oefenMix: [['factor', 2], ['maali', 2], ['zoekw', 2], ['effect', 2]],
+  test: [['factor', 3], ['maali', 3], ['zoekw', 2], ['effect', 2]], testSchudden: true,
+};
+
+// exacte waarden van de bijzondere hoeken
+const BH = { 30: { c: ['\\frac{\\sqrt{3}}{2}', Math.sqrt(3) / 2], s: ['\\frac{1}{2}', 0.5] }, 45: { c: ['\\frac{\\sqrt{2}}{2}', Math.SQRT2 / 2], s: ['\\frac{\\sqrt{2}}{2}', Math.SQRT2 / 2] }, 60: { c: ['\\frac{1}{2}', 0.5], s: ['\\frac{\\sqrt{3}}{2}', Math.sqrt(3) / 2] } };
+const PAREN = [[45, 30], [60, 45], [60, 30], [30, 45], [45, 60]];
+const D14 = {
+  nr: 14, titel: 'Som-, verschil- en verdubbelingsformules', kort: 'cos(α ± β), sin(α ± β), cos 2θ en sin 2θ.', rekenmachine: true,
+  opdracht: 'Bereken met de formules. Rond af op 4 decimalen.',
+  theorie: `<div class="kader def"><div class="kader-titel">Somformules</div>
+      <p>Uit het vermenigvuldigen in goniometrische vorm (deel 9) volgen de somformules:</p>
+      <p class="midden">$\\cos(\\alpha + \\beta) = \\cos \\alpha \\cos \\beta - \\sin \\alpha \\sin \\beta$</p>
+      <p class="midden">$\\sin(\\alpha + \\beta) = \\sin \\alpha \\cos \\beta + \\cos \\alpha \\sin \\beta$</p></div>
+    <div class="kader def"><div class="kader-titel">Verschilformules</div>
+      <p>Bij <b>delen</b> trek je de argumenten af. Zo vind je op dezelfde manier:</p>
+      <p class="midden">$\\cos(\\alpha - \\beta) = \\cos \\alpha \\cos \\beta + \\sin \\alpha \\sin \\beta$</p>
+      <p class="midden">$\\sin(\\alpha - \\beta) = \\sin \\alpha \\cos \\beta - \\cos \\alpha \\sin \\beta$</p></div>
+    <div class="kader def"><div class="kader-titel">Verdubbelingsformules</div>
+      <p>De Moivre met $n = 2$, of de somformules met $\\alpha = \\beta = \\theta$:</p>
+      <p class="midden">$\\cos(2\\theta) = \\cos^2 \\theta - \\sin^2 \\theta \\qquad \\sin(2\\theta) = 2 \\sin \\theta \\cos \\theta$</p></div>
+    <div class="kader eig"><div class="kader-titel">Exacte waarden die je nodig hebt</div>
+      <p class="midden">$\\cos 30^\\circ = \\frac{\\sqrt{3}}{2},\\ \\sin 30^\\circ = \\frac{1}{2} \\qquad \\cos 45^\\circ = \\sin 45^\\circ = \\frac{\\sqrt{2}}{2} \\qquad \\cos 60^\\circ = \\frac{1}{2},\\ \\sin 60^\\circ = \\frac{\\sqrt{3}}{2}$</p></div>
+    <div class="kader"><div class="kader-titel">Zo vul je je antwoord in</div><p>Rond af op <b>4 decimalen</b>, bv. <code>0,2588</code>. Controleer met je rekenmachine (stand DEG).</p></div>`,
+  voorbeelden: [
+    { tex: '\\cos 75^\\circ = \\cos(45^\\circ + 30^\\circ)', stappen: ['= \\cos 45^\\circ \\cos 30^\\circ - \\sin 45^\\circ \\sin 30^\\circ', '= \\frac{\\sqrt{2}}{2} \\cdot \\frac{\\sqrt{3}}{2} - \\frac{\\sqrt{2}}{2} \\cdot \\frac{1}{2} = \\frac{\\sqrt{6} - \\sqrt{2}}{4}', '\\approx 0{,}2588'] },
+    { tex: '\\cos \\theta = 0{,}8 \\text{ en } \\sin \\theta = 0{,}6', stappen: ['\\cos(2\\theta) = 0{,}8^2 - 0{,}6^2 = 0{,}64 - 0{,}36 = 0{,}28', '\\sin(2\\theta) = 2 \\cdot 0{,}6 \\cdot 0{,}8 = 0{,}96'] },
+  ],
+  soorten: Object.assign(Object.fromEntries([['som', '+'], ['verschil', '-']].map(([nm, tk]) => [nm, { naam: nm === 'som' ? 'Somformule' : 'Verschilformule', gen() {
+    let [a, b] = kies(PAREN); if (tk === '-' && a < b) [a, b] = [b, a];
+    const f = kies(['\\cos', '\\sin']), A = BH[a], B = BH[b];
+    const plus_ = tk === '+';
+    let w, regel;
+    if (f === '\\cos') { w = A.c[1] * B.c[1] + (plus_ ? -1 : 1) * A.s[1] * B.s[1]; regel = `\\cos ${gr(a)} \\cos ${gr(b)} ${plus_ ? '-' : '+'} \\sin ${gr(a)} \\sin ${gr(b)}`; }
+    else { w = A.s[1] * B.c[1] + (plus_ ? 1 : -1) * A.c[1] * B.s[1]; regel = `\\sin ${gr(a)} \\cos ${gr(b)} ${plus_ ? '+' : '-'} \\cos ${gr(a)} \\sin ${gr(b)}`; }
+    const ex = f === '\\cos' ? `${A.c[0]} \\cdot ${B.c[0]} ${plus_ ? '-' : '+'} ${A.s[0]} \\cdot ${B.s[0]}` : `${A.s[0]} \\cdot ${B.c[0]} ${plus_ ? '+' : '-'} ${A.c[0]} \\cdot ${B.s[0]}`;
+    const hk = plus_ ? a + b : a - b;
+    return { soort: nm, opdracht: `Bereken met de ${nm}formule. Rond af op 4 decimalen.`, tex: `${f} ${gr(hk)} = ${f}(${gr(a)} ${tk} ${gr(b)})`,
+      antw: getal(W.rond(w, 4), { dec: 4 }), uitleg: [`= ${regel}`, `= ${ex}`, `\\approx ${tg(W.rond(w, 4))}`] };
+  } }])), {
+    verdub: { naam: 'Verdubbelingsformules', gen() {
+      const [p, q] = kies([[0.6, 0.8], [0.8, 0.6], [0.28, 0.96], [0.96, 0.28]]);
+      const c = kies([1, -1]) * p, s = kies([1, -1]) * q;
+      const c2 = c * c - s * s, s2 = 2 * s * c, f = (x) => tg(W.rond(x, 4));
+      return { soort: 'verdub', opdracht: 'Bereken cos(2θ) en sin(2θ) met de verdubbelingsformules. Rond af op 4 decimalen.',
+        tex: `\\cos \\theta = ${f(c)} \\text{ en } \\sin \\theta = ${f(s)}`,
+        antw: { soort: 'delen', delen: [{ label: '\\cos(2\\theta) =', antw: getal(W.rond(c2, 4), { dec: 4 }) }, { label: '\\sin(2\\theta) =', antw: getal(W.rond(s2, 4), { dec: 4 }) }] },
+        uitleg: [`\\cos(2\\theta) = ${h(W.rond(c, 4))}^2 - ${h(W.rond(s, 4))}^2 \\approx ${f(c2)}`, `\\sin(2\\theta) = 2 \\cdot ${h(W.rond(s, 4))} \\cdot ${h(W.rond(c, 4))} \\approx ${f(s2)}`] };
+    } },
+  }),
+  oefenMix: [['som', 3], ['verschil', 3], ['verdub', 2]],
+  test: [['som', 4], ['verschil', 3], ['verdub', 3]], testSchudden: true,
+};
+
 Leerpaden.registreer({
   code: 'complexe-getallen',
   titel: 'Complexe getallen',
@@ -586,6 +689,7 @@ Leerpaden.registreer({
     { titel: 'D · Bewerkingen in goniometrische vorm', delen: [9, 10] },
     { titel: 'E · Tweedegraadsvergelijkingen in ℂ', delen: [11] },
     { titel: 'F · Eindtest', delen: [12] },
+    { titel: 'G · Verdieping', delen: [13, 14] },
   ],
-  delen: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12],
+  delen: [D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14],
 });

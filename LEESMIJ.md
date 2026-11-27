@@ -448,3 +448,9 @@ De instaptoets start meteen. Een leerling ziet enkel tegels en knoppen waaraan j
 - Werelden: `w1-platform.js` (ℕ, platformspel: tegen het juiste blok springen), `w2-race.js` (ℤ, pseudo-3D race: door de juiste poort), `w3-puzzel.js` (ℚ, duwpuzzel: juiste blok op het slot, iets moeilijkere vragen), `w4-doolhof.js` (ℝ, 3D-doolhof/raycaster: juiste robot neerschieten), `w5-ruimte.js` (finale: asteroïden + moederschip met tussenstappen).
 - `kern.js`: invoer, geluid, levens (start 5; extra leven met hartjes en per 50 munten; game over = wereld opnieuw), vragen uit de gewone leerpaden (`BRON`: per wereld makkelijke soorten), HUD, verhaalschermen. Geen uitleg bij een fout (ontspanning): −1 leven, het foute antwoord verdwijnt.
 - Menu: knop 🤖 onderaan Getallenleer; databank: programma `spel-galaxie`.
+
+## 4x. Complexe getallen: verdieping (deel 13 en 14) — november 2026
+
+Achteraan toegevoegd (groep **G · Verdieping**), zodat de nummers en resultaten van deel 1–12 onveranderd blijven:
+- **Deel 13 – Meetkundige betekenis van vermenigvuldigen:** schaling en rotatie aflezen, vermenigvuldigen met i, het getal w zoeken bij een gegeven schaling/rotatie, effect van i, −1, −i, 2, 2i.
+- **Deel 14 – Som-, verschil- en verdubbelingsformules** (leerplandoel 04.04): cos/sin van 75°, 105°, 15°… via de bijzondere hoeken, en cos 2θ / sin 2θ uit cos θ en sin θ.
