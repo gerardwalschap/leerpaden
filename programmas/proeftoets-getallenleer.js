@@ -107,9 +107,11 @@ Leerpaden.registreer({
   buitenTotaal: true, // telt niet mee in de totaalscore van het afdrukcentrum
   allesOpen: true, // alle stukken staan open: in elke volgorde, over verschillende dagen
   herhaalbaar: true, // ook na slagen mag een stuk opnieuw gemaakt worden (met nieuwe vragen)
+  nietOpRapport: true, // oefentoets: niet in het afdrukcentrum (puntenlijst, synthese, totaalscore) en dus niet voor Skore/rapport
   intro: `<p>Dit is de <b>grote proeftoets</b> van getallenleer: rekenen in ℕ, ℤ, ℚ en ℝ. Je krijgt van elke soort oefening die je in de leerpaden gemaakt hebt één vraag.</p>
     <p>De proeftoets bestaat uit <b>5 stukken</b>. <b>Alle stukken staan open</b> en je mag ze <b>over verschillende dagen spreiden</b>, in de volgorde die jij wil.
-    Eén stuk maak je wel <b>in één keer</b> (reken op 20 à 30 minuten): eens je een stuk start, telt je poging.</p>
+    Eén stuk maak je wel <b>in één keer</b> (reken op 20 à 30 minuten): eens je een stuk start, moet je het afwerken.</p>
+    <p><b>Dit is een oefentoets.</b> Je ziet telkens je score, maar die telt <b>niet mee voor je rapport</b>. Je mag elk stuk zo vaak opnieuw maken als je wil, telkens met nieuwe vragen.</p>
     <ul><li>Stuk 1 tot 4: <b>zonder rekenmachine</b>. Stuk 5: <b>met rekenmachine</b>.</li>
     <li>Bij elk stuk zie je in het tabblad <i>Theorie</i> welke delen van de leerpaden erin zitten. In <i>Oefenen</i> kan je eerst proberen.</li>
     <li>Na het indienen zie je je verbetering. Zo weet je wat je nog moet herhalen.</li></ul>`,

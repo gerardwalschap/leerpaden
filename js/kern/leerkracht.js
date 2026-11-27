@@ -835,7 +835,7 @@
   const afdLeerlingen = () => (S.alle || []).filter(l => AFD().klassen.has(l.klas));
   function afdProgs() { // leerpaden met minstens één gekoppelde leerling in de gekozen klassen
     const ll = afdLeerlingen();
-    return Leerpaden.lijst.filter(P => !P.instaptoets).map(P => ({ P, n: ll.filter(l => l.programmas.includes(P.code)).length })).filter(x => x.n > 0); // instaptoets: eigen resultatenlijst, telt niet voor Skore
+    return Leerpaden.lijst.filter(P => !P.instaptoets && !P.nietOpRapport).map(P => ({ P, n: ll.filter(l => l.programmas.includes(P.code)).length })).filter(x => x.n > 0); // instaptoets: eigen resultatenlijst; nietOpRapport (proeftoets): oefentoets — tellen niet voor Skore
   }
   const klaarDelen = (P) => P.delen.filter(d => d.klaar);
   const ingediendVan = (st, nr) => st.testen.filter(t => t.deel === nr && t.status === 'ingediend').sort((a, b) => String(a.ingediend).localeCompare(String(b.ingediend)));

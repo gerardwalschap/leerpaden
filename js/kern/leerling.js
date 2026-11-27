@@ -467,7 +467,7 @@
       <ul class="regels">
         <li>De test bestaat uit <b>${aantal} vragen</b>.</li>
         <li>Je hebt minstens <b>${nodig(aantal)}/${aantal}</b> (${S.status.drempel}%) nodig ${S.P.allesOpen ? 'om te slagen' : 'om naar het volgende deel te gaan'}.</li>
-        <li>Zodra je start, telt je poging, ook als je de pagina sluit. <b>Elke poging telt mee</b> voor je punten.</li>
+        ${S.P.nietOpRapport ? '<li>Dit is een <b>oefentoets</b>: je ziet je score, maar die telt <b>niet mee voor je rapport</b>. Je mag opnieuw proberen zo vaak je wil.</li>' : '<li>Zodra je start, telt je poging, ook als je de pagina sluit. <b>Elke poging telt mee</b> voor je punten.</li>'}
         <li>Niet geslaagd? Bekijk je fouten, oefen verder en probeer de test daarna opnieuw (met nieuwe vragen).</li>
         <li>${d.rekenmachine === true ? 'Je mag je <b>rekenmachine</b> gebruiken. ' : d.rekenmachine === false ? 'Gebruik <b>geen rekenmachine</b>. ' : ''}Neem een kladblad om je tussenstappen te noteren.</li>
         ${(d.testRegels || []).map(r => `<li>${r}</li>`).join('')}
