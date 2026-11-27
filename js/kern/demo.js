@@ -84,7 +84,7 @@ const Demo = (() => {
         const gebruikt = db.testen.filter(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel).length;
         const tg = db.toegang.find(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel);
         if (gebruikt >= (tg ? tg.pogingen : 1)) fout('AL_GEMAAKT');
-      } else if (db.testen.some(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel && t.geslaagd)) fout('AL_GESLAAGD');
+      } else if (!((typeof Leerpaden !== 'undefined' ? Leerpaden.lijst : []).find(x => x.code === p_programma) || {}).herhaalbaar && db.testen.some(t => t.ll === l.id && t.prog === p_programma && t.deel === p_deel && t.geslaagd)) fout('AL_GESLAAGD');
       const t = { id: db.volg++, ll: l.id, prog: p_programma, deel: p_deel, vragen: p_vragen, antwoorden: null, score: null, max_score: null, geslaagd: null, status: 'bezig', gestart: nu(), ingediend: null };
       db.testen.push(t); return { id: t.id, vragen: t.vragen, gestart: t.gestart };
     },

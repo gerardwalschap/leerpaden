@@ -23,7 +23,7 @@
     const bezig = testen.find(t => t.status === 'bezig');
     const ingediend = testen.filter(t => t.status === 'ingediend');
     // Niet geslaagd? De test gaat automatisch opnieuw open (nieuwe vragen); elke poging telt.
-    const over = geslaagd ? 0 : Infinity;
+    const over = geslaagd && !S.P.herhaalbaar ? 0 : Infinity; // herhaalbaar: ook na slagen opnieuw te maken
     const oef = st.oefeningen[nr] || { aantal: 0, juist: 0 };
     const beste = ingediend.reduce((b, t) => (!b || t.score > b.score ? t : b), null);
     return { d, geslaagd, open, testen, bezig, ingediend, over, oef, beste, laatste: ingediend[ingediend.length - 1] };
@@ -443,7 +443,7 @@
     const t = S.test && S.test.deel === d.nr ? S.test : null;
     if (t && t.resultaat) return vResultaat(d, t);
     if (t) return vTestBezig(d, t);
-    if (i.geslaagd) {
+    if (i.geslaagd && !S.P.herhaalbaar) {
       const volgende = deelVan(d.nr + 1);
       return `<div class="kaart midden"><div class="score-groot j">${i.beste.score}/${i.beste.max}</div>
         <p>Je bent geslaagd voor de test van dit deel. Goed gedaan!</p>
@@ -473,6 +473,7 @@
         ${(d.testRegels || []).map(r => `<li>${r}</li>`).join('')}
         <li>Een antwoord dat klopt maar niet in de gevraagde vorm staat (bv. niet vereenvoudigd of niet afgerond zoals gevraagd), telt als fout.</li>
       </ul>
+      ${i.geslaagd ? `<div class="melding ok">✓ Je bent al geslaagd voor dit stuk (beste score ${i.beste.score}/${i.beste.max}). Je mag het zo vaak opnieuw maken als je wil, telkens met nieuwe vragen.</div>` : ''}
       ${i.ingediend.length ? `<p class="klein">Dit wordt je <b>poging ${i.ingediend.length + 1}</b>. Vorige score: ${i.laatste.score}/${i.laatste.max}.</p>` : ''}
       <div class="melding info">Twijfel je nog? <button class="link" data-a="tab" data-tab="oefenen">Oefen eerst nog wat</button>.</div>
       <div class="knoppen"><button class="oranje" data-a="teststart">Start de test</button></div></div>

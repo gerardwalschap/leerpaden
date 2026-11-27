@@ -106,6 +106,7 @@ Leerpaden.registreer({
   drempel: 50,
   buitenTotaal: true, // telt niet mee in de totaalscore van het afdrukcentrum
   allesOpen: true, // alle stukken staan open: in elke volgorde, over verschillende dagen
+  herhaalbaar: true, // ook na slagen mag een stuk opnieuw gemaakt worden (met nieuwe vragen)
   intro: `<p>Dit is de <b>grote proeftoets</b> van getallenleer: rekenen in ℕ, ℤ, ℚ en ℝ. Je krijgt van elke soort oefening die je in de leerpaden gemaakt hebt één vraag.</p>
     <p>De proeftoets bestaat uit <b>5 stukken</b>. <b>Alle stukken staan open</b> en je mag ze <b>over verschillende dagen spreiden</b>, in de volgorde die jij wil.
     Eén stuk maak je wel <b>in één keer</b> (reken op 20 à 30 minuten): eens je een stuk start, telt je poging.</p>
