@@ -466,3 +466,7 @@ Achteraan toegevoegd (groep **G · Verdieping**), zodat de nummers en resultaten
 - Nieuw **deel 8** in `afgeleiden-rekenregels` (aˣ, eˣ, logₐ x, ln x, √x, ⁿ√x, met kettingregel en productregel); Toepassingen is nu deel 9, de eindtest deel 10 (er waren nog geen leerlingen gekoppeld).
 - Rekenkern `js/kern/functie.js`: het getal `e`, de functie `ln`, en exponenten die geen geheel getal zijn (`2^x`, `e^(3x)`, `x^(1/2)`, `x^-1`).
 - Eindtermen: WD3_06.04.18 nu volledig afgedekt.
+
+## 5a. Toegepaste wiskunde 4BW: hoofdstuk 4 De functie c/x — november 2026
+
+Leerpad `functie-c-op-x` (9 delen): omgekeerd evenredig verband, grafiek en tabel van waarden, invloed van c, domein/bereik/nulwaarden, tekenverloop en stijgen/dalen, symmetrie en asymptoten, functieoverzicht, toepassingen, eindtest. Grafieken (hyperbolen) worden in het leerpad zelf getekend.
