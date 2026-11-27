@@ -11,6 +11,7 @@
 //  Een knop:
 //    { leerpad: 'code',                 // het leerpad achter de knop
 //      groep: 0,                        // (optioneel) enkel groep A (0), B (1), … van dat leerpad
+//      delen: [3],                      // (optioneel) enkel deze delen van het leerpad (bv. één stuk per knop)
 //      titel: '…', sub: '…',            // (optioneel) anders: titel van het leerpad
 //      plus: true / ster: true,         // (optioneel) +-versie of ★-knop
 //      spellen: ['spel-…'] }            // spellen bij deze knop (mag leeg: later aan te vullen)
@@ -42,10 +43,17 @@ window.MENUS = {
 
       { id: 'functieleer', nr: 3, icoon: '📈', titel: 'Functieleer', sub: 'Functies · ax + b · Exponentiële functies',
         knoppen: [
-          { leerpad: 'functieleer', groep: 0, titel: 'Wat is een functie?', sub: 'Functiewaarden · Domein en bereik · Tekentabel en verloop', doelen: ['BV3_06.03', 'BV3_06.04'], spellen: [] },
-          { leerpad: 'functieleer', groep: 1, titel: 'Eerstegraadsfuncties', sub: 'f(x) = ax + b · Voorschrift opstellen · Grafisch oplossen · Helling', doelen: ['BV3_06.05', 'BV3_06.06', 'BV3_06.07', 'BV3_06.17'], spellen: [] },
-          { leerpad: 'functieleer', groep: 2, titel: 'Exponentiële functies', sub: 'Lineair of exponentieel', doelen: ['BV3_06.09', 'BV3_06.15', 'BV3_06.17'], spellen: [] },
-          { leerpad: 'functieleer', groep: 3, titel: 'Eindtest functieleer', sub: 'Alles door elkaar', ster: true, doelen: ['BV3_06.03', 'BV3_06.04', 'BV3_06.05', 'BV3_06.06', 'BV3_06.07', 'BV3_06.09', 'BV3_06.15', 'BV3_06.17'], spellen: [] },
+          { leerpad: 'functieleer', delen: [1], teken: '1', titel: 'Wat zijn reële functies?', sub: 'Functie herkennen · Vier voorstellingen', doelen: ['BV3_06.03'], spellen: [] },
+          { leerpad: 'functieleer', delen: [2], teken: '2', titel: 'Functiewaarden en functiewaardentabel', sub: 'Berekenen · Aflezen · Tabel', doelen: ['BV3_06.03', 'BV3_06.04'], spellen: [] },
+          { leerpad: 'functieleer', delen: [3], teken: '3', titel: 'Domein en bereik', sub: 'Aflezen uit de grafiek', doelen: ['BV3_06.04'], spellen: [] },
+          { leerpad: 'functieleer', delen: [4], teken: '4', titel: 'Tekentabel en verloopschema', sub: 'Nulwaarden · Stijgen en dalen · Extrema', doelen: ['BV3_06.04'], spellen: [] },
+          { leerpad: 'functieleer', delen: [5], teken: '5', titel: 'De functies f(x) = c en f(x) = ax', sub: 'Constante functie · Rechte door de oorsprong', doelen: ['BV3_06.05', 'BV3_06.06'], spellen: [] },
+          { leerpad: 'functieleer', delen: [6], teken: '6', titel: 'De functie f(x) = ax + b', sub: 'Richtingscoëfficiënt · Snijpunt met de y-as · Nulwaarde', doelen: ['BV3_06.05', 'BV3_06.06'], spellen: [] },
+          { leerpad: 'functieleer', delen: [7], teken: '7', titel: 'Functievoorschrift opstellen', sub: 'Uit twee punten · Uit de grafiek', doelen: ['BV3_06.05'], spellen: [] },
+          { leerpad: 'functieleer', delen: [8], teken: '8', titel: 'Vergelijkingen en ongelijkheden grafisch oplossen', sub: 'Snijpunt aflezen', doelen: ['BV3_06.07'], spellen: [] },
+          { leerpad: 'functieleer', delen: [9], teken: '9', titel: 'Differentiecoëfficiënt en hellingshoek', sub: 'dq = Δy : Δx · a = tan α', doelen: ['BV3_06.06', 'BV3_06.17'], spellen: [] },
+          { leerpad: 'functieleer', delen: [10], teken: '10', titel: 'Exponentiële functies', sub: 'Lineair of exponentieel · Beginwaarde en groeifactor', doelen: ['BV3_06.09', 'BV3_06.15', 'BV3_06.17'], spellen: [] },
+          { leerpad: 'functieleer', delen: [11], ster: true, titel: 'Eindtest functieleer', sub: 'Alles door elkaar', doelen: ['BV3_06.03', 'BV3_06.04', 'BV3_06.05', 'BV3_06.06', 'BV3_06.07', 'BV3_06.09', 'BV3_06.15', 'BV3_06.17'], spellen: [] },
         ] },
 
       { id: 'kansrekenen', nr: 4, icoon: '🎲', titel: 'Telproblemen en kansrekenen', sub: 'Tellen · Kansen bepalen',

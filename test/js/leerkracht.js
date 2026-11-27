@@ -453,7 +453,7 @@
       <div class="pad">${T.knoppen.map((k, i) => {
         const P = k.leerpad ? Leerpaden.vind(k.leerpad) : null;
         const titel = k.titel || (P ? P.titel : k.leerpad);
-        const delen = P && k.groep != null ? ((P.groepen || [])[k.groep] || { delen: [] }).delen : null;
+        const delen = P && k.delen ? k.delen : P && k.groep != null ? ((P.groepen || [])[k.groep] || { delen: [] }).delen : null;
         const regels = [];
         if (k.leerpad) {
           if (!gezien.has(k.leerpad)) { gezien.add(k.leerpad); regels.push(lpRegel(k.leerpad, klas.code, vak, ll)); }

@@ -84,7 +84,7 @@
     return { vak: c.vak, T, k };
   }
   const knopTitel = (k) => { const P = k.leerpad && Leerpaden.vind(k.leerpad); return k.titel || (P ? P.titel : ''); };
-  const knopDelen = (k, P) => k.groep != null ? ((P.groepen || [])[k.groep] || { delen: [] }).delen : P.delen.map(d => d.nr);
+  const knopDelen = (k, P) => k.delen ? k.delen : k.groep != null ? ((P.groepen || [])[k.groep] || { delen: [] }).delen : P.delen.map(d => d.nr);
   function bewaarPlek() {
     API.sessie.set('ll-menu', JSON.stringify({ vak: S.vak, menu: S.menu, knop: S.knop }));
     API.sessie.set('ll-ctx', JSON.stringify(S.ctx || null));
@@ -315,13 +315,13 @@
     const st = S.status, P = S.P, c = ctxInfo(), k = c && c.k;
     const totaal = DELEN().filter(d => d.klaar).length;
     const alle = P.groepen || [{ titel: '', delen: DELEN().map(d => d.nr) }];
-    const groepen = k && k.groep != null ? [alle[k.groep]].filter(Boolean) : alle;  // knop voor één groep: enkel die delen
+    const groepen = k && k.delen ? [{ titel: '', delen: k.delen }] : k && k.groep != null ? [alle[k.groep]].filter(Boolean) : alle;  // knop voor één groep: enkel die delen
     const nrs = groepen.flatMap(g => g.delen), ok = nrs.filter(nr => st.geslaagd.includes(nr)).length;
-    const standaard = `<p>Werk de delen één voor één af: lees de theorie, bekijk de voorbeelden, oefen zoveel je wil en maak dan de test.
+    const standaard = `<p>${nrs.length === 1 ? 'Lees' : 'Werk de delen één voor één af: lees'} de theorie, bekijk de voorbeelden, oefen zoveel je wil en maak dan de test.
       Haal je <b>${st.drempel}%</b>, dan gaat het volgende deel open.</p>`;
     const sp = k ? knopSpellen(k) : '';
     return `${c ? `${kruimel(c, k ? knopTitel(k) : P.titel)}<h1>${esc(k ? knopTitel(k) : P.titel)}</h1>` : `<h1>Dag ${esc(S.leerling.voornaam)}!</h1>`}
-      ${k && k.groep ? standaard : (P.intro || standaard)}
+      ${k && (k.groep || (k.delen && k.delen[0] !== 1)) ? standaard : (P.intro || standaard)}
       ${P.afspraken || ''}
       ${sp ? '<h2 class="menu-blok">📘 Leerpad</h2>' : ''}
       <p class="klein">Geslaagd: ${ok} van ${nrs.length} delen${totaal < DELEN().length ? ' · nog niet alle delen zijn beschikbaar' : ''}.</p>

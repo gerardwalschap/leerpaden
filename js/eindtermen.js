@@ -36,7 +36,7 @@ window.Eindtermen = (() => {
   };
   // Korte kolomkoppen (de tegel staat erboven); volledige naam bij aanwijzen.
   const KORT = { 'proeftoets getallenleer': 'Proef\u00adtoets', 'wat is een functie?': 'Functies', 'eerstegraadsfuncties': 'Eerste\u00adgraads', 'exponentiële functies': 'Expo\u00adnentieel',
-    'eindtest functieleer': 'Test', 'eindtest': 'Test', 'telproblemen': 'Tellen', 'kansrekenen': 'Kansen', 'steekproeven': 'Steek\u00adproef', 'gegevens verwerken': 'Gege\u00advens', 'de normale verdeling': 'Normaal' };
+    'eindtest functieleer': 'Test', 'wat zijn reële functies?': 'Functies', 'functiewaarden en functiewaardentabel': 'Functie\u00adwaarden', 'domein en bereik': 'Domein', 'tekentabel en verloopschema': 'Teken/\u00adverloop', 'de functies f(x) = c en f(x) = ax': 'c en ax', 'de functie f(x) = ax + b': 'ax + b', 'functievoorschrift opstellen': 'Voor\u00adschrift', 'vergelijkingen en ongelijkheden grafisch oplossen': 'Grafisch oplossen', 'differentiecoëfficiënt en hellingshoek': 'Helling', 'eindtest': 'Test', 'telproblemen': 'Tellen', 'kansrekenen': 'Kansen', 'steekproeven': 'Steek\u00adproef', 'gegevens verwerken': 'Gege\u00advens', 'de normale verdeling': 'Normaal' };
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const heeft = (vak) => !!(DOELEN[vak] && window.MENUS && window.MENUS[vak]);
 
@@ -49,7 +49,7 @@ window.Eindtermen = (() => {
       groepen.push({ titel: `${T.nr}. ${T.titel}`, kol: kn.map(k => {
         const P = k.leerpad && typeof Leerpaden !== 'undefined' ? Leerpaden.vind(k.leerpad) : null;
         let naam = k.titel || (P ? P.titel : k.leerpad);
-        if (k.teken) naam = `In ${k.teken}`;
+        if (k.teken && !k.titel) naam = `In ${k.teken}`;
         naam = KORT[String(naam).toLowerCase()] || naam;
         return { naam: (k.ster ? '★ ' : '') + naam, volledig: k.titel || (P ? P.titel : ''), doelen: k.doelen, plus: (T.knoppen || []).some(x => x.plus && x.teken && x.teken === k.teken) };
       }) });
