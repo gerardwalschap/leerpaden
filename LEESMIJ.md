@@ -472,3 +472,4 @@ Achteraan toegevoegd (groep **G · Verdieping**), zodat de nummers en resultaten
 Leerpad `functie-c-op-x` (9 delen): omgekeerd evenredig verband, grafiek en tabel van waarden, invloed van c, domein/bereik/nulwaarden, tekenverloop en stijgen/dalen, symmetrie en asymptoten, functieoverzicht, toepassingen, eindtest. Grafieken (hyperbolen) worden in het leerpad zelf getekend.
 - Leerpad `homothetie` (8 delen): wat is een homothetie, beeld van een punt (rooster), eigenschappen, beeld van een figuur, coördinaten, factor bepalen, toepassingen (schaal), eindtest.
 - Leerpad `thales` (7 delen): de stelling (verband homothetie), driehoeksvorm, vlindervorm, omgekeerde stelling, middenparallel, toepassingen, eindtest.
+- Leerpad `goniometrische-formules` (7 delen): goniometrische cirkel, kwadranten en tekens, grote en negatieve hoeken, grondformule, verwante hoeken, vereenvoudigen, eindtest.
