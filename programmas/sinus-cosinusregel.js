@@ -61,7 +61,7 @@ const D1 = {
       <p>$\\alpha = 40°$, $\\beta = 65°$, $a = 12$ cm. Bereken $b$ en $c$.</p>
       <p class="midden">$\\gamma = 180° - 40° - 65° = 75° \\qquad b = a \\cdot \\dfrac{\\sin \\beta}{\\sin \\alpha} = 12 \\cdot \\dfrac{\\sin 65°}{\\sin 40°} \\approx 16{,}92 \\text{ cm} \\qquad c = 12 \\cdot \\dfrac{\\sin 75°}{\\sin 40°} \\approx 18{,}03 \\text{ cm}$</p></div>${AFSPRAAK}`,
   voorbeelden: [
-    { tex: '\\alpha = 50°, \\; \\beta = 60°, \\; a = 10 \\text{ cm}', stappen: ['\\gamma = 180° - 50° - 60° = 70°', 'b = 10 \\cdot \\frac{\\sin 60°}{\\sin 50°} \\approx 11{,}31 \\text{ cm}', 'c = 10 \\cdot \\frac{\\sin 70°}{\\sin 50°} \\approx 12{,}27 \\text{ cm}'] },
+    { tex: '\\alpha = 45°, \\; \\beta = 70°, \\; a = 9 \\text{ cm}', stappen: ['\\gamma = 180° - 45° - 70° = 65°', 'b = 9 \\cdot \\frac{\\sin 70°}{\\sin 45°} \\approx 11{,}96 \\text{ cm}', 'c = 9 \\cdot \\frac{\\sin 65°}{\\sin 45°} \\approx 11{,}54 \\text{ cm}'] },
   ],
   soorten: {
     zijde: { naam: 'Twee hoeken en een zijde', gen() {
@@ -97,7 +97,7 @@ const D2 = {
       <p>$a = 8$, $b = 10$, $\\gamma = 55°$. Bereken $c$.</p>
       <p class="midden">$c^2 = 8^2 + 10^2 - 2 \\cdot 8 \\cdot 10 \\cdot \\cos 55° \\approx 72{,}23 \\;\\Rightarrow\\; c \\approx 8{,}50$</p></div>${AFSPRAAK}`,
   voorbeelden: [
-    { tex: 'a = 5, \\; b = 7, \\; \\gamma = 60°', stappen: ['c^2 = 25 + 49 - 2 \\cdot 5 \\cdot 7 \\cdot \\cos 60° = 74 - 35 = 39', 'c = \\sqrt{39} \\approx 6{,}24'] },
+    { tex: 'a = 6, \\; b = 9, \\; \\gamma = 50°', stappen: ['c^2 = 36 + 81 - 2 \\cdot 6 \\cdot 9 \\cdot \\cos 50° \\approx 47{,}58', 'c \\approx 6{,}90'] },
   ],
   soorten: {
     derde: { naam: 'Derde zijde', gen() {
@@ -123,7 +123,7 @@ const D3 = {
       <p>Daarna de inverse cosinus ($\\cos^{-1}$). Is $\\cos \\gamma$ negatief, dan is $\\gamma$ stomp.</p></div>
     <div class="kader werk"><div class="kader-titel">Voorbeeld</div><p>$a = 6$, $b = 9$, $c = 11$: $\\cos \\gamma = \\dfrac{36 + 81 - 121}{108} \\approx -0{,}0370$, dus $\\gamma \\approx 92{,}12°$.</p></div>${AFSPRAAK}`,
   voorbeelden: [
-    { tex: 'a = b = c = 8', stappen: ['\\cos \\alpha = \\frac{64 + 64 - 64}{2 \\cdot 8 \\cdot 8} = \\frac{1}{2}', '\\alpha = 60° \\text{ (en zo ook } \\beta \\text{ en } \\gamma\\text{: gelijkzijdig)}'] },
+    { tex: 'a = b = 5, \\; c = 8', stappen: ['\\cos \\gamma = \\frac{25 + 25 - 64}{2 \\cdot 5 \\cdot 5} = -0{,}28', '\\gamma \\approx 106{,}26°, \\quad \\alpha = \\beta \\approx 36{,}87° \\text{ (gelijkbenig)}'] },
   ],
   soorten: {
     hoek: { naam: 'Hoek uit drie zijden', gen() {
