@@ -108,7 +108,7 @@ const D2 = {
     ${hyperbool([6], { punten: [[1, 6], [2, 3], [3, 2], [6, 1], [-2, -3]] })}
     <div class="kader eig"><div class="kader-titel">De hyperbool</div><p>De grafiek bestaat uit <b>twee gescheiden takken</b>. Ze nadert de $x$-as en de $y$-as, maar raakt ze nooit.</p></div>`,
   voorbeelden: [
-    { tex: 'f(x) = \\dfrac{8}{x}, \\; f(-4) = ?', stappen: ['f(-4) = \\dfrac{8}{-4} = -2'] },
+    { tex: 'f(x) = \\dfrac{16}{x}, \\; f(-4) = ?', stappen: ['f(-4) = \\dfrac{16}{-4} = -4'] },
     { tex: 'f(x) = \\dfrac{12}{x}: \\text{ voor welke } x \\text{ is } f(x) = 3?', stappen: ['\\dfrac{12}{x} = 3 \\Rightarrow x = \\dfrac{12}{3} = 4'] },
   ],
   soorten: {
@@ -143,8 +143,8 @@ const D3 = {
       <p>Hoe <b>groter</b> $|c|$, hoe <b>verder</b> de takken van de oorsprong liggen. Hoe kleiner $|c|$, hoe dichter bij de oorsprong (en dus ook dichter bij de assen).</p></div>
     ${hyperbool([1, 4, 12], { namen: ['c = 1', 'c = 4', 'c = 12'] })}`,
   voorbeelden: [
-    { tex: 'f(x) = -\\dfrac{5}{x}', stappen: ['c = -5 < 0', '\\text{de takken liggen in kwadrant II en IV}'] },
-    { tex: 'f(x) = \\dfrac{3}{x} \\text{ en } g(x) = \\dfrac{15}{x}', stappen: ['|3| < |15|', '\\text{de takken van } f \\text{ liggen dichter bij de oorsprong}'] },
+    { tex: 'f(x) = -\\dfrac{7}{x}', stappen: ['c = -7 < 0', '\\text{de takken liggen in kwadrant II en IV}'] },
+    { tex: 'f(x) = \\dfrac{2}{x} \\text{ en } g(x) = \\dfrac{10}{x}', stappen: ['|2| < |10|', '\\text{de takken van } f \\text{ liggen dichter bij de oorsprong}'] },
   ],
   soorten: {
     kwadrant: { naam: 'In welke kwadranten?', gen() {
@@ -179,7 +179,7 @@ const D4 = {
       <p>$f(x) = \\frac{c}{x}$ kan nooit 0 worden (een breuk met teller $c \\neq 0$ is nooit 0): het <b>bereik</b> is ook $\\mathbb{R}_0$.</p></div>
     <div class="kader def"><div class="kader-titel">Nulwaarden</div>
       <p>$f(x) = \\frac{c}{x}$ heeft <b>geen nulwaarden</b>: $\\frac{c}{x} = 0$ heeft geen oplossing, want een breuk is enkel 0 als de teller 0 is, en $c \\neq 0$.</p></div>`,
-  voorbeelden: [{ tex: 'f(x) = \\dfrac{10}{x}', stappen: ['\\text{dom } f = \\mathbb{R}_0', '\\text{ber } f = \\mathbb{R}_0', '\\text{geen nulwaarden}'] }],
+  voorbeelden: [{ tex: 'f(x) = \\dfrac{9}{x}', stappen: ['\\text{dom } f = \\mathbb{R}_0', '\\text{ber } f = \\mathbb{R}_0', '\\text{geen nulwaarden}'] }],
   soorten: {
     domein: { naam: 'Domein', gen() { const c = kiesC(); return { soort: 'domein', tex: ftex(c), html: vraag('Wat is het domein van f?'), sleutel: `do${c}`, antw: texKeuze(VERZ.map(v => `\\text{dom } f = ${v}`), '\\text{dom } f = \\mathbb{R}_0'), uitleg: ['x = 0 \\text{ mag niet (delen door 0)}', '\\text{dom } f = \\mathbb{R}_0'] }; } },
     bereik: { naam: 'Bereik', gen() { const c = kiesC(); return { soort: 'bereik', tex: ftex(c), html: vraag('Wat is het bereik van f?'), sleutel: `be${c}`, antw: texKeuze(VERZ.map(v => `\\text{ber } f = ${v}`), '\\text{ber } f = \\mathbb{R}_0'), uitleg: [`\\dfrac{${tg(c)}}{x} \\text{ wordt nooit 0}`, '\\text{ber } f = \\mathbb{R}_0'] }; } },
@@ -201,7 +201,7 @@ const D5 = {
       <p class="klein">Let op: je spreekt over stijgen/dalen <b>per deelinterval</b>. Het domein bestaat uit twee gescheiden stukken door de onderbreking in $x = 0$.</p></div>
     <div class="kader eig"><div class="kader-titel">Afnemende stijging/daling</div>
       <p>Hoe verder $x$ van 0, hoe trager $f(x)$ verandert: de daling/stijging is <b>afnemend</b>. Bij een tweedegraadsfunctie was dat net toenemend.</p></div>`,
-  voorbeelden: [{ tex: 'f(x) = -\\dfrac{3}{x}', stappen: ['c = -3 < 0', 'f(x) > 0 \\text{ voor } x < 0 \\text{ en } f(x) < 0 \\text{ voor } x > 0', '\\text{stijgend op } ]-\\infty, 0[ \\text{ en op } ]0, +\\infty['] }],
+  voorbeelden: [{ tex: 'f(x) = -\\dfrac{2}{x}', stappen: ['c = -2 < 0', 'f(x) > 0 \\text{ voor } x < 0 \\text{ en } f(x) < 0 \\text{ voor } x > 0', '\\text{stijgend op } ]-\\infty, 0[ \\text{ en op } ]0, +\\infty['] }],
   soorten: {
     teken: { naam: 'Positief of negatief?', gen() { const c = kiesC(), a = nz(-9, 9), pos = c / a > 0; return { soort: 'teken', tex: `${ftex(c)}, \\quad x = ${tg(a)}`, html: vraag(`Is f(${kg(a)}) positief of negatief?`), sleutel: `te${c}${a}`,
       antw: tekstKeuze(['positief', 'negatief'], pos ? 'positief' : 'negatief'), uitleg: [`f(${tg(a)}) = \\dfrac{${tg(c)}}{${a < 0 ? `(${tg(a)})` : tg(a)}}: \\text{ ${pos ? 'zelfde' : 'verschillend'} teken}`, tx(pos ? 'positief' : 'negatief')] }; } },
@@ -276,13 +276,13 @@ const D8 = {
       <p><b>Snelheid en tijd:</b> voor een vaste afstand van 120 km geldt $t(v) = \\dfrac{120}{v}$ ($t$ in uur, $v$ in km/u). Hoe hoger de snelheid, hoe korter de rit.</p>
       <p><b>Druk en volume (wet van Boyle):</b> bij een vaste temperatuur geldt $p \\cdot V = $ constant, dus $p(V) = \\dfrac{c}{V}$. Pers je het volume samen, dan stijgt de druk.</p>
       <p><b>Kostenverdeling:</b> verdeel je een vaste kost van $c$ euro onder $x$ personen, dan betaalt elke persoon $\\dfrac{c}{x}$ euro.</p></div>`,
-  voorbeelden: [{ tex: '\\text{huis van 840 euro, } x \\text{ personen}', stappen: ['k(x) = \\dfrac{840}{x}', 'k(4) = 210, \\; k(6) = 140, \\; k(8) = 105 \\text{ euro}', '\\text{dalende functie: meer personen, minder kost per persoon}'] }],
+  voorbeelden: [{ tex: '\\text{zaal van 600 euro, } x \\text{ personen}', stappen: ['k(x) = \\dfrac{600}{x}', 'k(5) = 120, \\; k(10) = 60, \\; k(20) = 30 \\text{ euro}', '\\text{dalende functie: meer personen, minder kost per persoon}'] }],
   soorten: {
     rit: { naam: 'Snelheid en tijd', gen() { const s = kies([60, 90, 120, 150, 180, 240]), v = kies([30, 40, 45, 60, 80, 90, 100, 120].filter(v => (s / v * 60) % 1 === 0));
       return { soort: 'rit', html: opgave(`Een afstand van ${s} km wordt afgelegd met een constante snelheid van v km/u.`) + vraag(`Hoe lang duurt de rit (in uur) bij ${v} km/u?`), sleutel: `r${s}${v}`, antw: getal(W.rond(s / v, 2), { dec: 2, na: '\\text{ uur}' }), uitleg: [`t(v) = \\dfrac{${s}}{v}`, `t(${v}) = \\dfrac{${s}}{${v}} = ${tg(W.rond(s / v, 2))} \\text{ uur}`] }; } },
     boyle: { naam: 'Wet van Boyle', gen() { const p = kies([1, 2, 3, 4]), V = kies([6, 8, 12, 24]), c = p * V, V2 = kies(deler(c).filter(k => k !== V && k > 1 && k <= 24));
       return { soort: 'boyle', html: opgave(`Een gas heeft bij een vaste temperatuur een druk van ${p} bar bij een volume van ${V} liter. Er geldt p · V = constant.`) + vraag(`Wat is de druk als het volume ${V2} liter wordt?`), sleutel: `b${p}${V}${V2}`, antw: getal(c / V2, { na: '\\text{ bar}' }), uitleg: [`c = ${p} \\cdot ${V} = ${c}`, `p = \\dfrac{${c}}{${V2}} = ${tg(c / V2)} \\text{ bar}`] }; } },
-    kost: { naam: 'Kostenverdeling', gen() { const c = kies([480, 600, 720, 840, 960, 1200]), x = kies(deler(c).filter(k => k >= 3 && k <= 12));
+    kost: { naam: 'Kostenverdeling', gen() { const c = kies([480, 720, 960, 1200, 1500]), x = kies(deler(c).filter(k => k >= 3 && k <= 12));
       return { soort: 'kost', html: opgave(`Een groep vrienden huurt samen een vakantiehuis van ${c} euro en verdeelt de kost eerlijk.`) + vraag(`Hoeveel betaalt elke persoon met ${x} personen?`), sleutel: `k${c}${x}`, antw: getal(c / x, { na: '\\text{ euro}' }), uitleg: [`k(x) = \\dfrac{${c}}{x}`, `k(${x}) = ${tg(c / x)} \\text{ euro}`] }; } },
     verband: { naam: 'Stijgend of dalend?', gen() { const L = [['de reistijd als functie van de snelheid (vaste afstand)', 'dalend'], ['de druk van een gas als functie van het volume (wet van Boyle)', 'dalend'], ['de kost per persoon als functie van het aantal personen', 'dalend']], [t, w] = kies(L);
       return { soort: 'verband', html: vraag(`Is ${t} een stijgende of een dalende functie?`), sleutel: `v${t}`, antw: tekstKeuze(['stijgend', 'dalend'], w), uitleg: [tx('Omgekeerd evenredig met c > 0: als x groter wordt, wordt y kleiner.'), tx(w)] }; } },
