@@ -477,3 +477,6 @@ Leerpad `functie-c-op-x` (9 delen): omgekeerd evenredig verband, grafiek en tabe
 - Leerpad `vectoren-coordinaten` (7 delen): componenten, lengte, rekenen met vectoren, midden van een lijnstuk, evenwijdige vectoren, toepassingen (parallellogram, collineair), eindtest.
 - Leerpad `meetkundige-constructies` (6 delen): de tien constructies herkennen (SVG-figuren met constructiebogen), stappen en eigenschappen, lijnstuk verdelen (Thales), zeshoek, eindtest. Het construeren zelf gebeurt in de werkbundel.
 - Leerpad `spreidingsdiagrammen` (6 delen): aflezen, soorten verbanden, vorm en sterkte, trendlijn (interpoleren/extrapoleren), uitschieters en correlatie versus causaliteit, eindtest.
+- Leerpad `telproblemen` (Wiskunde 4BW-MWW, 5 delen): boomdiagram en vermenigvuldigingsregel, venndiagram met 2 en 3 verzamelingen, welke methode, eindtest.
+- Leerpad `ruimtemeetkunde` (Wiskunde 4BW-MWW, 4 delen): liggingen op de kubus ABCD-EFGH (berekend uit coördinaten): twee rechten, twee vlakken (snijlijn), rechte en vlak, eindtest.
+- Leerpad `statistiek-gegroepeerd` (Wiskunde 4BW-MWW, 6 delen): herhaling, klassen (√n), gegroepeerde frequentietabel, modale klasse/mediaanklasse/gewogen gemiddelde/standaardafwijking, histogram, eindtest.
