@@ -57,7 +57,8 @@ window.CATALOGUS = {
           leerpaden: ['vectoren'] },
         { nr: 5, titel: 'Telproblemen' },
         { nr: 6, titel: 'Ruimtemeetkunde' },
-        { nr: 7, titel: 'Statistiek' },
+        { nr: 7, titel: 'Statistiek', sub: 'Populatie en steekproef · Randomisatie · Representativiteit · Samenhang en causaliteit · Valkuilen · Cases ontleden',
+          leerpaden: ['steekproeven-samenhang'] },
       ],
     },
     'twisk-5bcw': {
@@ -87,7 +88,8 @@ window.CATALOGUS = {
           leerpaden: ['sinusfunctie'] },
         { nr: 6, titel: 'Afgeleiden', sub: 'Differentiequotiënt · Afgeleide als limiet · Rico van de raaklijn · Verband f en f \' · Zorg en welzijn',
           leerpaden: ['afgeleiden'] },
-        { nr: 7, titel: 'Statistiek' },
+        { nr: 7, titel: 'Statistiek', sub: 'Populatie en steekproef · Randomisatie · Representativiteit · Samenhang en causaliteit · Valkuilen · Cases ontleden',
+          leerpaden: ['steekproeven-samenhang'] },
       ],
     },
     'wisk-7vjho': {

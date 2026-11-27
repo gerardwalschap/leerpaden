@@ -293,6 +293,17 @@ Alles grafisch en conceptueel: nergens worden afgeleiden met rekenregels bereken
 
 Bron: `bron/afgeleiden/0-alles.js`, bouwen met `sh bron/bouw.sh afgeleiden`.
 
+## 4v. Het leerpad Steekproeven en samenhang (5WW / 5BCW, wiskunde, hoofdstuk 7 statistiek) — november 2026
+
+7 delen volgens de cursus en de PWP *7. Steekproeven en samenhang*, slaagdrempel **70%**, telkens een test van **10 vragen**.
+Volledig conceptueel (geen berekeningen): grote banken met situaties uit de zorg en welzijn, meerkeuze.
+
+* **A** (1–3): populatie en steekproef (ook "mag je dit besluiten?") · randomisatie (is dit aselect? wie maakt geen kans?) · representativiteit (zelfselectie, bereikbaarheid, te kleine steekproef).
+* **B** (4–5): samenhang of causaliteit (signaalwoorden), "mag je dat besluiten?" · valkuilen: derde factor, omgekeerde causaliteit, toeval.
+* **C** (6): cases ontleden in 5 stappen. **D** (7): eindtest.
+
+Bron: `bron/steekproeven-samenhang/0-alles.js`, bouwen met `sh bron/bouw.sh steekproeven-samenhang`.
+
 ## 4n. Het rekenblad (een klein "Excel" in het leerpad) — november 2026
 
 Nieuwe antwoordsoort `rekenblad` (rekenkern `js/kern/rekenblad.js`, opmaak in `css/platform.css`). Gegevens staan in kolom A (A1 = titel),
