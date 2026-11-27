@@ -48,7 +48,8 @@ window.CATALOGUS = {
           leerpaden: ['vectoren-coordinaten'] },
         { nr: 10, titel: 'Meetkundige constructies', sub: 'Middelloodlijn · Bissectrice · Loodlijn · Evenwijdige · Hoek overbrengen · Lijnstuk verdelen · Om- en ingeschreven cirkel · Zeshoek · Raaklijn',
           leerpaden: ['meetkundige-constructies'] },
-        { nr: 11, titel: 'Statistiek (uitdieping)' },
+        { nr: 11, titel: 'Statistiek (uitdieping)', sub: 'Spreidingsdiagram · Soorten verbanden · Vorm en sterkte · Trendlijn · Uitschieters · Correlatie en causaliteit',
+          leerpaden: ['spreidingsdiagrammen'] },
       ],
     },
     'wisk-4bw-mww': {

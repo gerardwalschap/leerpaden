@@ -476,3 +476,4 @@ Leerpad `functie-c-op-x` (9 delen): omgekeerd evenredig verband, grafiek en tabe
 - Leerpad `sinus-cosinusregel-4bw` (7 delen): sinusregel (zijde), sinusregel (hoek, dubbelzinnig geval), cosinusregel (zijde), cosinusregel (hoek), welke regel, toepassingen, eindtest.
 - Leerpad `vectoren-coordinaten` (7 delen): componenten, lengte, rekenen met vectoren, midden van een lijnstuk, evenwijdige vectoren, toepassingen (parallellogram, collineair), eindtest.
 - Leerpad `meetkundige-constructies` (6 delen): de tien constructies herkennen (SVG-figuren met constructiebogen), stappen en eigenschappen, lijnstuk verdelen (Thales), zeshoek, eindtest. Het construeren zelf gebeurt in de werkbundel.
+- Leerpad `spreidingsdiagrammen` (6 delen): aflezen, soorten verbanden, vorm en sterkte, trendlijn (interpoleren/extrapoleren), uitschieters en correlatie versus causaliteit, eindtest.
