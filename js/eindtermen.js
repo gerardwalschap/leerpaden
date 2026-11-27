@@ -88,7 +88,7 @@ window.Eindtermen = (() => {
         'complexe-getallen': ['WD3_06.04.01', 'WD3_06.04.02', 'WD3_06.04.03', 'WD3_06.04.04', 'WD3_06.04.05'],
         'matrices-stelsels': ['WD3_06.04.06', 'WD3_06.04.07', 'WD3_06.04.08'],
         'sinus-cosinusregel': ['WD3_06.04.34'],
-        'afgeleiden-rekenregels': ['WD3_06.04.17', 'WD3_06.04.18*'],   // * = gedeeltelijk: exponentiële en logaritmische functies afleiden volgt in het 6de jaar
+        'afgeleiden-rekenregels': ['WD3_06.04.17', 'WD3_06.04.18'],
       },
     },
   };

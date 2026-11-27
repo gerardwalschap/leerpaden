@@ -46,6 +46,7 @@ if (typeof document !== 'undefined' && document.head && !document.getElementById
 const INTYPEN = `<div class="kader"><div class="kader-titel">Zo typ je een afgeleide</div>
   <ul><li>Typ enkel het rechterlid, bv. <code>12x^3 - 4x</code> of <code>2x·sin x + x²·cos x</code>.</li>
   <li>Een breuk met <code>/</code> en haakjes: <code>-7/(x - 2)^2</code>. Goniometrisch: <code>cos(2x)</code>, <code>sin x</code>, <code>1/cos²x</code> (of <code>1/cos(x)^2</code>).</li>
+  <li>Exponentieel en logaritmisch: <code>e^x</code>, <code>e^(3x)</code>, <code>2^x·ln 2</code>, <code>ln x</code>, <code>1/(x·ln 3)</code>. Wortels: <code>√x</code> of <code>x^(1/2)</code>.</li>
   <li>Je hoeft niet te vereenvoudigen: elke juiste vorm wordt aanvaard. Onder het vakje zie je hoe je antwoord gelezen wordt.</li></ul></div>`;
 const TABEL = `<table class="tabel"><tr><th>Regel</th><th>$f(x)$</th><th>$f'(x)$</th></tr>
   <tr><td>constante</td><td>$c$</td><td>$0$</td></tr><tr><td>macht</td><td>$x^n$</td><td>$n \\cdot x^{n-1}$</td></tr>
@@ -275,8 +276,68 @@ const D7 = {
   test: [['basis', 3], ['ketting', 4], ['samengesteld', 3]], testSchudden: true,
 };
 
+const DX = {
+  nr: 8, titel: 'Exponentiële, logaritmische en irrationale functies', kort: "(eˣ)' = eˣ · (aˣ)' = aˣ·ln a · (ln x)' = 1/x · (√x)' = 1/(2√x)", rekenmachine: true,
+  theorie: `<div class="kader eig"><div class="kader-titel">Afgeleiden van de standaardfuncties (vervolg)</div>
+      <table class="tabel"><tr><th>Functietype</th><th>$f(x)$</th><th>$f'(x)$</th></tr>
+      <tr><td rowspan="2">irrationale functie</td><td>$\\sqrt{x}$</td><td>$\\dfrac{1}{2\\sqrt{x}}$</td></tr><tr><td>$\\sqrt[n]{x} = x^{\\frac{1}{n}}$</td><td>$\\frac{1}{n} \\cdot x^{\\frac{1}{n} - 1}$</td></tr>
+      <tr><td rowspan="2">exponentiële functie</td><td>$a^x$</td><td>$a^x \\cdot \\ln a$</td></tr><tr><td>$e^x$</td><td>$e^x$</td></tr>
+      <tr><td rowspan="2">logaritmische functie</td><td>$\\log_a x$</td><td>$\\dfrac{1}{x \\cdot \\ln a}$</td></tr><tr><td>$\\ln x$</td><td>$\\dfrac{1}{x}$</td></tr></table></div>
+    <div class="kader def"><div class="kader-titel">Het getal e en de natuurlijke logaritme</div>
+      <p>Het getal $e \\approx 2{,}718$ is een bijzonder grondtal: $e^x$ is gelijk aan haar eigen afgeleide. De logaritme met grondtal $e$ heet de <b>natuurlijke logaritme</b>: $\\ln x = \\log_e x$. Je vindt $e$ en $\\ln$ op je rekenmachine.</p>
+      <p>Een <b>wortel</b> schrijf je als macht met rationale exponent: $\\sqrt{x} = x^{\\frac{1}{2}}$, dan geldt de machtsregel: $(\\sqrt{x})' = \\frac{1}{2} x^{-\\frac{1}{2}} = \\dfrac{1}{2\\sqrt{x}}$.</p></div>
+    <div class="kader werk"><div class="kader-titel">Samen met de kettingregel</div>
+      <p class="midden">$(e^{3x})' = 3e^{3x} \\qquad (\\ln(x^2 + 1))' = \\dfrac{2x}{x^2 + 1} \\qquad (\\sqrt{4x + 1})' = \\dfrac{4}{2\\sqrt{4x + 1}} = \\dfrac{2}{\\sqrt{4x + 1}}$</p></div>
+    <div class="kader"><div class="kader-titel">Zo typ je deze afgeleiden</div>
+      <ul><li>$e^x$: <code>e^x</code> · $e^{3x}$: <code>e^(3x)</code> (met haakjes!) · $2^x$: <code>2^x</code></li>
+      <li>$\\ln x$: <code>ln x</code> of <code>ln(5x - 2)</code> · $\\ln 3$: <code>ln 3</code></li>
+      <li>wortel: <code>√x</code>, <code>1/(2√x)</code> of een macht: <code>x^(1/2)</code>, <code>x^(-2/3)</code></li></ul></div>${INTYPEN}`,
+  voorbeelden: [
+    { tex: 'f(x) = 4e^x - \\ln x', stappen: ["f'(x) = 4e^x - \\dfrac{1}{x}"] },
+    { tex: 'f(x) = 3^x + \\log_2 x', stappen: ["f'(x) = 3^x \\cdot \\ln 3 + \\dfrac{1}{x \\cdot \\ln 2}"] },
+    { tex: 'f(x) = \\sqrt{x^2 + 9}', stappen: ["f'(x) = \\dfrac{1}{2\\sqrt{x^2 + 9}} \\cdot 2x", '= \\dfrac{x}{\\sqrt{x^2 + 9}}'] },
+  ],
+  soorten: {
+    exp: { naam: 'aˣ en eˣ', gen() {
+      const c = kies([1, 2, 3, 4, 5, -2, -3]), a = kies(['e', 2, 3, 5, 10]), ct = c === 1 ? '' : c === -1 ? '-' : tg(c);
+      const e = a === 'e' ? `(${c})·e^x` : `(${c})·${a}^x·ln(${a})`;
+      const fx = a === 'e' ? `${ct}e^{x}` : c === 1 ? `${a}^{x}` : `${ct} \\cdot ${a}^{x}`;
+      return { soort: 'exp', opdracht: 'Gebruik de tabel.', tex: `f(x) = ${fx}`, _f: `(${c})·${a}^x`, sleutel: `${c}${a}`, antw: afg(e),
+        uitleg: [a === 'e' ? `f'(x) = ${ct}e^{x}` : `f'(x) = ${fx} \\cdot \\ln ${a}`] };
+    } },
+    log: { naam: 'ln x en logₐ x', gen() {
+      const c = kies([1, 2, 3, 5, -4]), a = kies(['e', 'e', 2, 3, 10]), ct = c === 1 ? '' : c === -1 ? '-' : tg(c), f = a === 'e' ? '\\ln x' : `\\log_{${a}} x`;
+      const e = a === 'e' ? `${c}/x` : `${c}/(x·ln(${a}))`;
+      return { soort: 'log', opdracht: 'Gebruik de tabel.', tex: `f(x) = ${ct}${f}`, _f: a === 'e' ? `(${c})·ln(x)` : `(${c})·ln(x)/ln(${a})`, sleutel: `l${c}${a}`, antw: afg(e),
+        uitleg: [a === 'e' ? `f'(x) = \\dfrac{${c}}{x}` : `f'(x) = \\dfrac{${c}}{x \\cdot \\ln ${a}}`] };
+    } },
+    wortel: { naam: '√x en ⁿ√x', gen() {
+      const n = kies([2, 2, 3, 4]), c = n * kies([1, 1, 2, 3]), ct = c === 1 ? '' : tg(c), q = c / n;
+      const f = n === 2 ? `${ct}\\sqrt{x}` : `${ct}\\sqrt[${n}]{x}`;
+      return { soort: 'wortel', opdracht: 'Schrijf de wortel eventueel als macht met rationale exponent.', tex: `f(x) = ${f}`, _f: `(${c})·x^(1/${n})`, sleutel: `w${n}${c}`, antw: afg(`(${c}/${n})·x^((1-${n})/${n})`),
+        uitleg: [n === 2 ? `f(x) = ${ct}x^{\\frac{1}{2}}` : `f(x) = ${ct}x^{\\frac{1}{${n}}}`, n === 2 ? `f'(x) = ${tg(c / 2)} \\cdot x^{-\\frac{1}{2}} = \\dfrac{${c}}{2\\sqrt{x}}` : `f'(x) = \\frac{${c}}{${n}} x^{\\frac{1}{${n}} - 1} = ${q === 1 ? '' : tg(q)}x^{-\\frac{${n - 1}}{${n}}}`] };
+    } },
+    ketting: { naam: 'Met de kettingregel', gen() {
+      const t = kies(['e', 'ln', 'w']), a = nz(-4, 5), b = rnd(-5, 6), bin = ptex(lin(a, b)), be = `(${a}x+(${b}))`;
+      if (t === 'e') return { soort: 'ketting', opdracht: 'Buitenfunctie e^iets, binnenfunctie de veelterm.', tex: `f(x) = e^{${bin}}`, _f: `e^${be}`, sleutel: `ke${a}${b}`, antw: afg(`(${a})·e^${be}`), uitleg: [`f'(x) = e^{${bin}} \\cdot ${hk(tg(a))} = ${a === 1 ? '' : a === -1 ? '-' : tg(a)}e^{${bin}}`] };
+      if (t === 'ln') return { soort: 'ketting', opdracht: 'Buitenfunctie ln, binnenfunctie de veelterm.', tex: `f(x) = \\ln${hk(bin)}`, _f: `ln${be}`, sleutel: `kl${a}${b}`, antw: afg(`${a}/${be}`), uitleg: [`f'(x) = \\dfrac{1}{${bin}} \\cdot ${hk(tg(a))} = \\dfrac{${a}}{${bin}}`] };
+      return { soort: 'ketting', opdracht: 'Buitenfunctie √, binnenfunctie de veelterm.', tex: `f(x) = \\sqrt{${bin}}`, _f: `√${be}`, sleutel: `kw${a}${b}`, antw: afg(`(${a})/(2√${be})`), uitleg: [`f'(x) = \\dfrac{1}{2\\sqrt{${bin}}} \\cdot ${hk(tg(a))} = \\dfrac{${a}}{2\\sqrt{${bin}}}`] };
+    } },
+    product: { naam: 'Product en kettingregel samen', gen() {
+      const t = kies(['xe', 'xln', 'e2x']), n = kies([1, 2, 3]), xn = n === 1 ? 'x' : `x^{${n}}`;
+      if (t === 'xe') return { soort: 'product', opdracht: 'Productregel.', tex: `f(x) = ${xn} \\cdot e^{x}`, _f: `x^${n}·e^x`, sleutel: `pe${n}`, antw: afg(`${n}·x^${n - 1}·e^x+x^${n}·e^x`), uitleg: [`f'(x) = ${n === 1 ? '1' : `${n}x${n === 2 ? '' : `^{${n - 1}}`}`} \\cdot e^{x} + ${xn} \\cdot e^{x}`] };
+      if (t === 'xln') return { soort: 'product', opdracht: 'Productregel.', tex: `f(x) = ${xn} \\cdot \\ln x`, _f: `x^${n}·ln(x)`, sleutel: `pl${n}`, antw: afg(`${n}·x^${n - 1}·ln(x)+x^${n}·(1/x)`), uitleg: [`f'(x) = ${n === 1 ? '1' : `${n}x${n === 2 ? '' : `^{${n - 1}}`}`} \\cdot \\ln x + ${xn} \\cdot \\dfrac{1}{x}`] };
+      const k = kies([2, 3]), g = kies(['sin', 'cos']);
+      return { soort: 'product', opdracht: 'Productregel, met de kettingregel voor e^(kx).', tex: `f(x) = e^{${k}x} \\cdot \\${g} x`, _f: `e^(${k}x)·${g}(x)`, sleutel: `pg${k}${g}`, antw: afg(`${k}·e^(${k}x)·${g}(x)+e^(${k}x)·${g === 'sin' ? 'cos(x)' : '(-sin(x))'}`),
+        uitleg: [`f'(x) = ${k}e^{${k}x} \\cdot \\${g} x + e^{${k}x} \\cdot ${g === 'sin' ? '\\cos x' : '(-\\sin x)'}`] };
+    } },
+  },
+  oefenMix: [['exp', 2], ['log', 2], ['wortel', 2], ['ketting', 3], ['product', 1]],
+  test: [['exp', 2], ['log', 2], ['wortel', 2], ['ketting', 3], ['product', 1]], testSchudden: true,
+};
+
 const D8 = {
-  nr: 8, titel: 'Toepassingen', kort: 'Raaklijn opstellen en snelheid als afgeleide.', rekenmachine: true,
+  nr: 9, titel: 'Toepassingen', kort: 'Raaklijn opstellen en snelheid als afgeleide.', rekenmachine: true,
   theorie: `<div class="kader eig"><div class="kader-titel">Vergelijking van de raaklijn</div>
       <p>De raaklijn in het punt met $x = a$ gaat door $(a, f(a))$ en heeft rico $m = f'(a)$:</p>
       <p class="midden">$y - f(a) = f'(a) \\cdot (x - a)$</p>
@@ -310,16 +371,17 @@ const D8 = {
 
 const mix = (D, s, naam) => ({ naam, gen() { const v = D.soorten[s].gen(); return { ...v, soort: 'D' + D.nr + s }; } });
 const D9 = {
-  nr: 9, titel: 'Eindtest afgeleiden', kort: 'Alles door elkaar.', rekenmachine: true,
+  nr: 10, titel: 'Eindtest afgeleiden', kort: 'Alles door elkaar.', rekenmachine: true,
   theorie: `<div class="kader"><div class="kader-titel">Alles samen</div><p>In deze eindtest komen alle soorten vragen door elkaar. Herken eerst het type (som, product, quotiënt, samengesteld) vóór je een regel toepast.</p></div>${TABEL}${INTYPEN}`,
   voorbeelden: [],
   soorten: { e1: mix(D1, 'definitie', 'Met de definitie'), e2: mix(D2, 'wnw', 'Continuïteit en afleidbaarheid'), e3: mix(D3, 'poly', 'Basisregels'), e4: mix(D4, 'lin', 'Productregel'), e5: mix(D4, 'gonio', 'Productregel (gonio)'),
-    e6: mix(D5, 'lin', 'Quotiëntregel'), e7: mix(D6, 'lin', 'Kettingregel'), e8: mix(D6, 'kwadr', 'Kettingregel (veelterm)'), e9: mix(D7, 'ketting', 'Goniometrisch'), e10: mix(D8, 'raaklijn', 'Raaklijn') },
-  oefenMix: [['e1', 1], ['e2', 1], ['e3', 1], ['e4', 1], ['e5', 1], ['e6', 1], ['e7', 1], ['e8', 1], ['e9', 1], ['e10', 1]],
-  test: [['e1', 1], ['e2', 1], ['e3', 1], ['e4', 1], ['e5', 1], ['e6', 1], ['e7', 1], ['e8', 1], ['e9', 1], ['e10', 1]], testSchudden: true,
+    e6: mix(D5, 'lin', 'Quotiëntregel'), e7: mix(D6, 'lin', 'Kettingregel'), e8: mix(D6, 'kwadr', 'Kettingregel (veelterm)'), e9: mix(D7, 'ketting', 'Goniometrisch'), e10: mix(D8, 'raaklijn', 'Raaklijn'),
+    e11: mix(DX, 'exp', 'Exponentieel'), e12: mix(DX, 'log', 'Logaritmisch'), e13: mix(DX, 'ketting', 'Exp/ln/wortel + kettingregel') },
+  oefenMix: [['e1', 1], ['e2', 1], ['e3', 1], ['e4', 1], ['e5', 1], ['e6', 1], ['e7', 1], ['e8', 1], ['e9', 1], ['e10', 1], ['e11', 1], ['e12', 1], ['e13', 1]],
+  test: [['e1', 1], ['e2', 1], ['e3', 1], ['e4', 1], ['e6', 1], ['e7', 1], ['e9', 1], ['e10', 1], ['e11', 1], ['e13', 1]], testSchudden: true,
 };
 
-for (const D of [D1, D2, D3, D4, D5, D6, D7, D8, D9]) {
+for (const D of [D1, D2, D3, D4, D5, D6, D7, DX, D8, D9]) {
   for (const s of Object.values(D.soorten)) {
     const g = s.gen.bind(s);
     s.gen = () => {
@@ -343,14 +405,14 @@ Leerpaden.registreer({
   klas: '5BCW',
   drempel: 70,
   intro: `<p>Je leert de <b>afgeleide in een punt</b> en de <b>afgeleide functie</b> definiëren, het verband tussen <b>continuïteit en afleidbaarheid</b>, en vooral: afgeleiden <b>berekenen</b>
-    met de rekenregels (som, product, quotiënt en de kettingregel) voor veeltermfuncties, rationale functies en goniometrische functies. Alles volgt de cursus, de PowerPoint en de werkbundel.</p>
+    met de rekenregels (som, product, quotiënt en de kettingregel) voor veeltermfuncties, rationale functies, irrationale functies, exponentiële en logaritmische functies en goniometrische functies. Alles volgt de cursus, de PowerPoint en de werkbundel.</p>
     <p>Lees de theorie, bekijk de voorbeelden, oefen zoveel je wil en maak dan de test van 10 vragen. Haal je <b>7 op 10</b>, dan gaat het volgende deel open.</p>
     <p>Je hoeft een afgeleide niet te vereenvoudigen: elke juiste vorm wordt aanvaard.</p>`,
   groepen: [
     { titel: 'A · Definitie', delen: [1, 2] },
-    { titel: 'B · Rekenregels', delen: [3, 4, 5, 6, 7] },
-    { titel: 'C · Toepassen', delen: [8] },
-    { titel: 'D · Eindtest', delen: [9] },
+    { titel: 'B · Rekenregels', delen: [3, 4, 5, 6, 7, 8] },
+    { titel: 'C · Toepassen', delen: [9] },
+    { titel: 'D · Eindtest', delen: [10] },
   ],
-  delen: [D1, D2, D3, D4, D5, D6, D7, D8, D9],
+  delen: [D1, D2, D3, D4, D5, D6, D7, DX, D8, D9],
 });

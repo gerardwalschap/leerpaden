@@ -460,3 +460,9 @@ Achteraan toegevoegd (groep **G · Verdieping**), zodat de nummers en resultaten
 - Leerkrachtpagina: één knop **🎯 Eindtermen**; in het venster kies je de klas en het vak (Wiskunde 7VJHO, Wiskunde 5BCW · 5WW, Toegepaste wiskunde 5BCW). Ook op de pagina van een vak (🏫 Klassen en leerpaden) staat een knop.
 - Leerlingenpagina: op de lijst met leerpaden van een vak staat een knop **🎯 Eindtermen** voor dat vak.
 - 5BCW/5WW: enkel de doelen van het 5de jaar (BV3 voor wiskunde, WD3 voor toegepaste wiskunde). Welke doelen bij welk leerpad horen, staat in `js/eindtermen.js` bij `perLeerpad`; een code met `*` = gedeeltelijk (rest in het 6de jaar).
+
+## 4z. Afgeleiden TWisk 5BCW: exponentiële, logaritmische en irrationale functies — november 2026
+
+- Nieuw **deel 8** in `afgeleiden-rekenregels` (aˣ, eˣ, logₐ x, ln x, √x, ⁿ√x, met kettingregel en productregel); Toepassingen is nu deel 9, de eindtest deel 10 (er waren nog geen leerlingen gekoppeld).
+- Rekenkern `js/kern/functie.js`: het getal `e`, de functie `ln`, en exponenten die geen geheel getal zijn (`2^x`, `e^(3x)`, `x^(1/2)`, `x^-1`).
+- Eindtermen: WD3_06.04.18 nu volledig afgedekt.

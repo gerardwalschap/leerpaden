@@ -72,7 +72,7 @@ window.CATALOGUS = {
           leerpaden: ['matrices-stelsels'] },
         { nr: 4, titel: 'Sinus- en cosinusregel', sub: 'Sinusregel · Cosinusregel · Welke regel? · Toepassingen',
           leerpaden: ['sinus-cosinusregel'] },
-        { nr: 5, titel: 'Afgeleiden', sub: 'Definitie · Continuïteit en afleidbaarheid · Som-, product-, quotiënt- en kettingregel · Goniometrisch · Toepassingen',
+        { nr: 5, titel: 'Afgeleiden', sub: 'Definitie · Continuïteit en afleidbaarheid · Som-, product-, quotiënt- en kettingregel · Goniometrisch · Exponentieel, logaritmisch en irrationaal · Toepassingen',
           leerpaden: ['afgeleiden-rekenregels'] },
       ],
     },

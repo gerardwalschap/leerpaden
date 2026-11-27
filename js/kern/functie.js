@@ -14,10 +14,11 @@ const FX = (() => {
       if (c === ' ') { k++; continue; }
       const m = s.slice(k).match(/^\d+(?:[.,]\d+)?/);
       if (m) { t.push({ t: 'n', v: parseFloat(m[0].replace(',', '.')), s: m[0] }); k += m[0].length; continue; }
-      const fn = s.slice(k).match(/^(sin|cos|tan|tg)/i);
+      const fn = s.slice(k).match(/^(sin|cos|tan|tg|ln)/i);
       if (fn) { t.push({ t: 'fn', naam: fn[1].toLowerCase() === 'tg' ? 'tan' : fn[1].toLowerCase() }); k += fn[1].length; continue; }
+      if (c === 'e') { t.push({ t: 'n', v: Math.E, s: 'e' }); k++; continue; }   // het getal e
       if ('+-·/()^²³√x'.includes(c)) { t.push({ t: c }); k++; continue; }
-      if (/[a-z]/i.test(c)) throw new Fout(`De letter "${c}" ken ik niet. Gebruik enkel x (en sin, cos, tan).`);
+      if (/[a-z]/i.test(c)) throw new Fout(`De letter "${c}" ken ik niet. Gebruik enkel x (en e, sin, cos, tan, ln).`);
       throw new Fout(`Het teken "${c}" kan ik niet lezen.`);
     }
     return t;
@@ -48,7 +49,11 @@ const FX = (() => {
       for (;;) {
         if (neem('²')) b = { op: 'macht', b, e: 2 };
         else if (neem('³')) b = { op: 'macht', b, e: 3 };
-        else if (neem('^')) { const x = t[p++]; if (!x || x.t !== 'n' || !Number.isInteger(x.v)) throw new Fout('Een exponent moet een geheel getal zijn.'); b = { op: 'macht', b, e: x.v }; }
+        else if (neem('^')) {   // geheel getal, of een willekeurige exponent: x^(1/2), 2^x, e^(3x), x^-1
+          const x = kijk(); if (!x) throw new Fout('Na ^ hoort een exponent.');
+          if (x.t === 'n' && Number.isInteger(x.v) && x.s !== 'e') { p++; b = { op: 'macht', b, e: x.v }; }
+          else b = { op: 'macht', b, ek: primair() };
+        }
         else break;
       }
       return b;
@@ -90,14 +95,14 @@ const FX = (() => {
       case 'haak': return waarde(k.k, x);
       case 'neg': return -waarde(k.k, x);
       case 'wortel': { const w = waarde(k.k, x); return w < -1e-12 ? NaN : Math.sqrt(Math.max(0, w)); }
-      case 'fn': { const w = waarde(k.k, x); return k.naam === 'sin' ? Math.sin(w) : k.naam === 'cos' ? Math.cos(w) : Math.abs(Math.cos(w)) < 1e-9 ? NaN : Math.tan(w); }
-      case 'macht': return Math.pow(waarde(k.b, x), k.e);
+      case 'fn': { const w = waarde(k.k, x); if (k.naam === 'ln') return w > 1e-12 ? Math.log(w) : NaN; return k.naam === 'sin' ? Math.sin(w) : k.naam === 'cos' ? Math.cos(w) : Math.abs(Math.cos(w)) < 1e-9 ? NaN : Math.tan(w); }
+      case 'macht': return Math.pow(waarde(k.b, x), k.ek ? waarde(k.ek, x) : k.e);
       case 'som': return k.termen.reduce((a, t) => a + t.teken * waarde(t.k, x), 0);
       case 'prod': return k.f.reduce((a, f, j) => { const w = waarde(f.k, x); if (j === 0) return w; if (f.deel) return Math.abs(w) < 1e-12 ? NaN : a / w; return a * w; }, 0);
     }
     return NaN;
   }
-  const heeftX = (k) => k.op === 'x' || (k.k && heeftX(k.k)) || (k.b && heeftX(k.b)) || (k.f && k.f.some(f => heeftX(f.k))) || (k.termen && k.termen.some(t => heeftX(t.k)));
+  const heeftX = (k) => k.op === 'x' || (k.k && heeftX(k.k)) || (k.b && heeftX(k.b)) || (k.ek && heeftX(k.ek)) || (k.f && k.f.some(f => heeftX(f.k))) || (k.termen && k.termen.some(t => heeftX(t.k)));
 
   // staat het voorschrift in de topvorm a(x − h)² + k ?
   function isKwadraatterm(k) {
@@ -134,7 +139,8 @@ const FX = (() => {
       case 'neg': return `-${tex(k.k)}`;
       case 'wortel': return `\\sqrt{${k.k.op === 'haak' ? tex(k.k.k) : tex(k.k)}}`;
       case 'fn': return `\\${k.naam}${k.k.op === 'haak' ? tex(k.k) : ' ' + tex(k.k)}`;
-      case 'macht': return k.b.op === 'fn' ? `\\${k.b.naam}^{${k.e}}${k.b.k.op === 'haak' ? tex(k.b.k) : ' ' + tex(k.b.k)}` : `${tex(k.b)}^{${k.e}}`;
+      case 'macht': if (k.ek) return `${tex(k.b)}^{${(k.ek.op === 'haak' ? tex(k.ek.k) : tex(k.ek)).replace(/\\dfrac/g, '\\frac')}}`;
+        return k.b.op === 'fn' ? `\\${k.b.naam}^{${k.e}}${k.b.k.op === 'haak' ? tex(k.b.k) : ' ' + tex(k.b.k)}` : `${tex(k.b)}^{${k.e}}`;
       case 'som': return k.termen.map((x, j) => (x.teken < 0 ? '-' : j ? '+' : '') + tex(x.k)).join(' ');
       case 'prod': {
         let uit = '';
