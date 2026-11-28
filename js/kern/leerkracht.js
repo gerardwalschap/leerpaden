@@ -251,7 +251,7 @@
             ${m.opmerking ? `<div style="margin-top:6px">💬 <i>${esc(m.opmerking)}</i></div>` : '<div class="klein" style="margin-top:6px">(geen uitleg van de leerling)</div>'}
             ${vraagVoorbeeld(m)}
             ${m.reactie ? `<div class="reactie"><b>Claude:</b> ${esc(m.reactie)}</div>` : ''}
-            ${['opgelost', 'geen_fout'].includes(m.status) ? `<div class="knoppen" style="margin-top:8px"><button class="licht klein-knop" data-a="mgelezen" data-id="${m.id}">✓ Gelezen</button></div>` : ''}
+            ${m.status !== 'bekeken' ? `<div class="knoppen" style="margin-top:8px"><button class="licht klein-knop" data-a="mgelezen" data-id="${m.id}" title="${m.status === 'nieuw' ? 'Zelf afgehandeld: Claude bekijkt deze melding dan niet meer' : 'Gelezen'}">✓ ${m.status === 'nieuw' ? 'Zelf afgehandeld' : 'Gelezen'}</button></div>` : ''}
           </div>`;
         }).join('') : `<div class="kaart"><p>${alle.length ? 'Alles gelezen. Kies <i>Alle meldingen</i> om oudere meldingen te zien.' : 'Nog geen meldingen.'}</p></div>`}`;
     }
