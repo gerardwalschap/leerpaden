@@ -1,0 +1,44 @@
+# Houdt de gratis Supabase-databank wakker (Supabase pauzeert een gratis project na 7 dagen zonder gebruik).
+# Elke 3 dagen om ±6u (Belgische tijd) een kleine oproep naar de functie ping() — ook in de vakanties.
+# Eén keer per maand maakt deze actie ook een mini-commit (.github/wakker.txt), anders zet GitHub
+# geplande acties stil na 60 dagen zonder activiteit in de repo (bv. in de zomervakantie).
+name: Databank wakker houden
+
+on:
+  schedule:
+    - cron: '17 5 */3 * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          URL=$(grep -oP "SUPABASE_URL:\s*'\K[^']+" <(curl -fsS https://raw.githubusercontent.com/${{ github.repository }}/main/js/config.js))
+          KEY=$(grep -oP "SUPABASE_ANON_KEY:\s*'\K[^']+" <(curl -fsS https://raw.githubusercontent.com/${{ github.repository }}/main/js/config.js))
+          for poging in 1 2 3; do
+            ANTWOORD=$(curl -sS -X POST "$URL/rest/v1/rpc/ping" -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}' || true)
+            echo "Antwoord: $ANTWOORD"
+            [ "$ANTWOORD" = '"ok"' ] && exit 0
+            sleep 30
+          done
+          echo "::error::De databank antwoordt niet. Is het project gepauzeerd? Open https://supabase.com/dashboard en klik op Restore."
+          exit 1
+
+      - name: Maandelijkse mini-commit (houdt de geplande actie actief)
+        if: github.event_name == 'schedule'
+        run: |
+          DAG=$(date -u +%d)
+          if [ "$DAG" -le 3 ]; then
+            git clone --depth 1 "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" repo
+            cd repo
+            date -u +"Laatste maandelijkse controle: %Y-%m-%d %H:%M UTC" > .github/wakker.txt
+            git config user.name "leerpaden-wakker"
+            git config user.email "actions@users.noreply.github.com"
+            git add .github/wakker.txt
+            git commit -m "Maandelijkse controle databank" && git push || echo "niets te doen"
+          fi
