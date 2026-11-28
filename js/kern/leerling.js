@@ -3,6 +3,7 @@
   const app = document.getElementById('app');
   const esc = W.esc, T = (s, d) => W.tex(s, d);
   const urlProg = new URLSearchParams(location.search).get('p');
+  const urlDeel = +new URLSearchParams(location.search).get('d') || 0; // diepe link uit een PowerPoint: ?p=code&d=nr
 
   const S = {
     token: API.sessie.get('ll-token'),
@@ -204,6 +205,8 @@
     S.ctx = keuze ? leesSessie('ll-ctx') : null;
     if (keuze) await openProgramma(keuze.code);
     else S.view = 'kies';
+    // diepe link: open meteen het gevraagde deel, als het voor deze leerling al open staat (anders blijft het leerpadoverzicht staan)
+    if (keuze && keuze.code === urlProg && urlDeel && deelVan(urlDeel) && info(urlDeel).open && !S.P.instaptoets) Object.assign(S, { view: 'deel', deel: urlDeel, tab: 'theorie' });
     laadStatussen().then(() => { if (S.view === 'kies') render(); });
   }
 
