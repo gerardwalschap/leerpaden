@@ -480,3 +480,35 @@ Leerpad `functie-c-op-x` (9 delen): omgekeerd evenredig verband, grafiek en tabe
 - Leerpad `telproblemen` (Wiskunde 4BW-MWW, 5 delen): boomdiagram en vermenigvuldigingsregel, venndiagram met 2 en 3 verzamelingen, welke methode, eindtest.
 - Leerpad `ruimtemeetkunde` (Wiskunde 4BW-MWW, 4 delen): liggingen op de kubus ABCD-EFGH (berekend uit coördinaten): twee rechten, twee vlakken (snijlijn), rechte en vlak, eindtest.
 - Leerpad `statistiek-gegroepeerd` (Wiskunde 4BW-MWW, 6 delen): herhaling, klassen (√n), gegroepeerde frequentietabel, modale klasse/mediaanklasse/gewogen gemiddelde/standaardafwijking, histogram, eindtest.
+
+## 8. Beheer: ping, automatische back-up, archief en schooljaar afsluiten — 28 november 2026
+
+**Databank wakker houden (ping).** `.github/workflows/ping.yml` roept elke 3 dagen de functie `ping()` op, zodat Supabase het
+gratis project nooit pauzeert (ook niet in de kerst- en zomervakantie). Eén keer per maand maakt de actie ook een mini-commit
+(`.github/wakker.txt`), anders zet GitHub geplande acties stil na 60 dagen zonder activiteit. Opvolgen: GitHub → repo *leerpaden* →
+**Actions → Databank wakker houden** (groen vinkje = ok), of op de leerkrachtpagina bij **🗂️ Beheer** (*Laatste ping*).
+Verschijnt er een rode balk "de ping houdt de databank niet meer wakker", kijk dan in Actions; klik eventueel op **Run workflow**.
+
+**Automatische back-up.** Leerkrachtpagina → **🗂️ Beheer → 📁 Map kiezen** (bv. OneDrive › *Backups leerpaden*) en kies bij de vraag van
+de browser **Toestaan bij elk bezoek**. Is de laatste back-up ouder dan een week, dan schrijft de site bij het aanmelden vanzelf een nieuw
+bestand in die map. Werkt in Chrome en Edge (niet in Safari: daar komt het bestand in Downloads). Doe dit op elke computer waarop je werkt.
+Lukt het niet automatisch, dan verschijnt er een oranje balk met een knop **Nu back-up maken**.
+
+**Archief.** **📦 Nu archiveren** bewaart een volledige kopie in de databank (tabel `archief`); er wordt niets gewist. Handig op het einde
+van elke evaluatieperiode. Elk archief is later te downloaden als Excel (alle testpogingen, ook herrekend op 5) of als back-upbestand.
+
+**Schooljaar afsluiten.** Maakt eerst een back-upbestand en een archief, wist daarna alle testen, oefeningen, vrijgaven, spelresultaten en
+koppelingen. Leerlingaccounts: behouden, uitschakelen of verwijderen. Bevestigen door AFSLUITEN te typen.
+
+## 9. Foutje melden — 28 november 2026
+
+Na het nakijken van een oefening en in de verbetering van een test staat onder elke vraag **🐞 Klopt er iets niet? Meld een foutje**
+(niet tijdens een lopende test en niet bij de instaptoets). De melding bewaart de vraag zoals de leerling ze zag, het antwoord van de
+leerling en zijn uitleg (tabel `meldingen`, max. 15 per leerling per dag).
+
+Claude bekijkt elke ochtend de nieuwe meldingen (geplande taak): is het een echte fout in het leerpad, dan past Claude het programmabestand
+aan, zet het in deze repo en schrijft bij de melding wat er misliep en wat er veranderd werd (status *opgelost*); is het geen fout, dan
+staat er waarom niet (status *geen fout*). Gerard krijgt daarvan een melding en ziet alles op de leerkrachtpagina bij **🐞 Meldingen**
+(knop **✓ Gelezen**).
+
+Databank: `supabase/update-ping-archief-meldingen.sql` (al uitgevoerd op 28/11/2026).

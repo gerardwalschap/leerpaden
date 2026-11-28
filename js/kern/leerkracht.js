@@ -92,19 +92,242 @@
     const progs = Leerpaden.lijst;
     return `${API.DEMO ? '<div class="demo-band">DEMO — gegevens blijven enkel in deze browser · leerkracht-wachtwoord: demo · <a href="index.html">naar de leerlingenpagina</a></div>' : ''}
       <header class="balk"><div class="schoollogo" role="img" aria-label="De Resonant"></div>
-        <div class="logo">${esc(CONFIG.TITEL || 'Leerpaden')}<small>Leerkracht${S.P && !['alle', 'boom', 'afdruk', 'spellen', 'spel'].includes(S.view) ? ' · ' + esc(S.P.titel) : ''}</small></div>
+        <div class="logo">${esc(CONFIG.TITEL || 'Leerpaden')}<small>Leerkracht${S.P && !['alle', 'boom', 'afdruk', 'spellen', 'spel', 'beheer', 'meldingen'].includes(S.view) ? ' · ' + esc(S.P.titel) : ''}</small></div>
         <div class="auteur" title="Gerard Walschap"><span class="auteur-foto" role="img" aria-label="Gerard Walschap"></span><span class="auteur-naam">Gerard Walschap</span></div>
         ${S.token ? `<div class="rechts"><button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>
       ${S.token && S.view !== 'login' ? `<nav class="progtabs">
         <button class="ptab ${S.view === 'boom' ? 'actief' : ''}" data-a="boom" data-niveau="${S.boomVak ? 'vak' : S.boomKlas ? 'klas' : 'klassen'}" data-klas="${esc(S.boomKlas || '')}" data-vak="${esc(S.boomVak || '')}">🏫 Klassen en leerpaden</button>
-        ${S.P && !['boom', 'alle', 'afdruk', 'spellen', 'spel'].includes(S.view) ? `<button class="ptab actief" data-a="overzicht">${esc(S.P.titel)}</button>` : ''}
+        ${S.P && !['boom', 'alle', 'afdruk', 'spellen', 'spel', 'beheer', 'meldingen'].includes(S.view) ? `<button class="ptab actief" data-a="overzicht">${esc(S.P.titel)}</button>` : ''}
         ${S.view === 'spel' && spelVind(S.spel) ? `<button class="ptab actief" data-a="openspel" data-code="${esc(S.spel)}">${esc(progTitel(S.spel))}</button>` : ''}
         <button class="ptab ${S.view === 'alle' ? 'actief' : ''}" data-a="alle">👥 Alle leerlingen</button>
         ${SPELLEN().length ? `<button class="ptab ${S.view === 'spellen' ? 'actief' : ''}" data-a="spellen">🎮 Spellen</button>` : ''}
         <button class="ptab ${S.view === 'afdruk' ? 'actief' : ''}" data-a="afdruk">🖨️ Afdrukcentrum</button>
+        <button class="ptab ${S.view === 'meldingen' ? 'actief' : ''}" data-a="meldingen" title="Foutjes die leerlingen meldden, met de uitleg wat er aangepast werd">🐞 Meldingen${S.binfo && (S.binfo.nieuwe_meldingen + S.binfo.ongelezen_reacties) ? `<span class="tabteller">${S.binfo.nieuwe_meldingen + S.binfo.ongelezen_reacties}</span>` : ''}</button>
+        <button class="ptab ${S.view === 'beheer' ? 'actief' : ''}" data-a="beheer" title="Back-ups, archief en het schooljaar afsluiten">🗂️ Beheer</button>
         ${window.Eindtermen && Eindtermen.vakken().length ? `<button class="ptab" data-eindtermen="" title="Welke wiskundedoelen komen in welk leerpad aan bod? Kies daarna de klas.">🎯 Eindtermen</button>` : ''}</nav>` : ''}`;
   }
+
+  // ====================================================================
+  //  BEHEER (nov 2026): automatische back-up naar een gekozen map, archief, schooljaar afsluiten,
+  //  en de meldingen ("foutje melden") van leerlingen met de uitleg wat er aangepast werd.
+  // ====================================================================
+  const Beheer = (() => {
+    const DAGEN_TUSSEN_BACKUPS = 7;
+    const dagenGeleden = (iso) => iso ? Math.floor((Date.now() - new Date(iso).getTime()) / 86400000) : Infinity;
+    const kanMap = () => typeof window.showDirectoryPicker === 'function';
+    // kleine opslag in de browser voor de gekozen map (een map-handle kan niet in localStorage)
+    const KV = {
+      open: () => new Promise((res, rej) => { const r = indexedDB.open('leerpaden-leerkracht', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }),
+      async get(k) { try { const d = await KV.open(); return await new Promise(res => { const q = d.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); } catch (e) { return null; } },
+      async set(k, v) { try { const d = await KV.open(); await new Promise(res => { const t = d.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = res; }); } catch (e) { /* geen opslag */ } },
+    };
+    const B = { map: null, mapNaam: '', bezig: false, archieven: null, meldingen: null, mFilter: 'open' };
+
+    async function laadInfo() { try { S.binfo = await roep('lk_backup_info', {}); } catch (e) { S.binfo = null; } }
+    async function mapToestemming(vragen) {
+      if (!B.map) return false;
+      try {
+        let p = await B.map.queryPermission({ mode: 'readwrite' });
+        if (p !== 'granted' && vragen) p = await B.map.requestPermission({ mode: 'readwrite' });
+        return p === 'granted';
+      } catch (e) { return false; }
+    }
+    // stil = zonder klik van de leerkracht (enkel als de browser de map al mag gebruiken)
+    async function maakBackup(stil) {
+      const inMap = await mapToestemming(!stil);
+      if (stil && !inMap) return null;
+      const b = await roep('lk_backup', {});
+      const tekst = JSON.stringify(b);
+      const naam = `Backup_leerpaden_${vandaag()}_${new Date().toTimeString().slice(0, 5).replace(':', 'u')}.json`;
+      const kb = Math.max(1, Math.round(tekst.length / 1024));
+      if (inMap) {
+        const f = await B.map.getFileHandle(naam, { create: true });
+        const w = await f.createWritable(); await w.write(tekst); await w.close();
+      } else download(naam, tekst, 'application/json');
+      await laadInfo();
+      return { naam, kb, waar: inMap ? B.map.name : null, n: (b.leerlingen || []).length, t: (b.testen || []).length };
+    }
+    function backupMelding(r) {
+      return r.waar ? `💾 Back-up bewaard in je map <b>${esc(r.waar)}</b>: ${esc(r.naam)} (${r.kb} kB).`
+        : `💾 Back-up gedownload: ${esc(r.naam)} (${r.kb} kB, ${r.n} accounts, ${r.t} testen). Zet het bestand in je OneDrive-map <i>Backups leerpaden</i>.`;
+    }
+    async function naLogin() {
+      B.map = await KV.get('backupmap'); B.mapNaam = B.map ? B.map.name : '';
+      await laadInfo(); render();
+      if (S.binfo && dagenGeleden(S.binfo.laatste_backup) >= DAGEN_TUSSEN_BACKUPS) {
+        try { const r = await maakBackup(true); if (r) { S.melding = backupMelding(r) + ' (automatisch: de vorige was ouder dan een week)'; render(); } } catch (e) { /* banner blijft staan */ }
+      }
+    }
+    function banner() {
+      const i = S.binfo; if (!i) return '';
+      const d = dagenGeleden(i.laatste_backup), p = dagenGeleden(i.laatste_ping);
+      let h = '';
+      if (d >= DAGEN_TUSSEN_BACKUPS) h += `<div class="melding let">💾 ${i.laatste_backup ? `De laatste back-up is <b>${d} dagen</b> oud.` : 'Er is nog geen back-up gemaakt met de nieuwe knop.'}
+        <button class="licht klein-knop" data-a="backupnu">Nu back-up maken</button>${kanMap() && !B.map ? ` <button class="link" data-a="kiesmap">Kies een vaste map voor automatische back-ups</button>` : ''}</div>`;
+      if (i.laatste_ping && p >= 5) h += `<div class="melding fout">⚠ De automatische ping houdt de databank niet meer wakker (laatste ping: ${datum(i.laatste_ping)}). Kijk op GitHub bij <b>Actions → Databank wakker houden</b>.</div>`;
+      return h;
+    }
+
+    // ---------- archief
+    async function laadArchieven() { B.archieven = await roep('lk_archieven', {}); }
+    function archiefCSV(inh) {
+      const ll = new Map((inh.leerlingen || []).map(l => [l.id, l]));
+      const tit = (c) => { const P = Leerpaden.vind(c); const d = (inh.programmas || []).find(x => x.code === c); return P ? P.titel : d ? d.titel : c; };
+      const tel = {};
+      const rijen = (inh.testen || []).filter(t => t.status === 'ingediend').sort((a, b) => String(a.ingediend).localeCompare(String(b.ingediend))).map(t => {
+        const l = ll.get(t.leerling_id) || {}; const k = `${t.leerling_id}|${t.programma}|${t.deel}`; tel[k] = (tel[k] || 0) + 1;
+        return [l.klas || '', l.naam || '', l.voornaam || '', tit(t.programma), t.deel, tel[k], t.score, t.max_score, t.max_score ? Math.round(50 * t.score / t.max_score) / 10 : '', t.geslaagd ? 'ja' : 'nee', datum(t.ingediend)];
+      }).sort((a, b) => (a[0] + a[1] + a[2] + a[3]).localeCompare(b[0] + b[1] + b[2] + b[3]) || a[4] - b[4] || a[5] - b[5]);
+      return csv([['Klas', 'Naam', 'Voornaam', 'Leerpad', 'Deel', 'Poging', 'Score', 'Max', 'Op 5', 'Geslaagd', 'Ingediend'], ...rijen]);
+    }
+
+    function vBeheer() {
+      const i = S.binfo || {};
+      const d = dagenGeleden(i.laatste_backup);
+      const arch = B.archieven || [];
+      return `<h1>🗂️ Beheer</h1>
+        <div class="kaart beheer-blok"><h2>💾 Back-ups</h2>
+          <div class="statusrij">
+            <span class="st ${d < DAGEN_TUSSEN_BACKUPS ? 'ok' : 'let'}">Laatste back-up: <b>${i.laatste_backup ? datum(i.laatste_backup) : 'nog geen'}</b></span>
+            <span class="st ${dagenGeleden(i.laatste_ping) < 5 ? 'ok' : 'let'}">Laatste ping (databank wakker houden): <b>${i.laatste_ping ? datum(i.laatste_ping) : 'nog geen'}</b></span>
+            <span class="st">Map voor back-ups: <b>${B.map ? esc(B.mapNaam) : kanMap() ? 'nog niet gekozen' : 'niet mogelijk in deze browser'}</b></span>
+          </div>
+          <p class="klein">Is de laatste back-up ouder dan een week, dan maakt de site bij het aanmelden <b>vanzelf</b> een nieuwe in je gekozen map
+            (bv. OneDrive › <i>Backups leerpaden</i>). Vraagt de browser om toestemming, kies dan <b>Toestaan bij elk bezoek</b>.
+            ${kanMap() ? '' : 'In Safari kan de site niet zelf in een map schrijven: het bestand komt dan in Downloads. Gebruik Chrome of Edge voor automatische back-ups.'}
+            Elke 3 dagen roept GitHub de databank op (de <i>ping</i>), zodat Supabase ze nooit pauzeert, ook niet in de vakanties.</p>
+          <div class="knoppen"><button data-a="backupnu">💾 Nu back-up maken</button>
+            ${kanMap() ? `<button class="licht" data-a="kiesmap">📁 ${B.map ? 'Andere map kiezen' : 'Map kiezen'}</button>` : ''}
+            ${B.map ? `<button class="licht" data-a="vergeetmap">Map vergeten</button>` : ''}</div></div>
+
+        <div class="kaart beheer-blok"><h2>📦 Archief</h2>
+          <p class="klein">Archiveren bewaart een volledige kopie van alle accounts, koppelingen en resultaten <b>in de databank zelf</b>. Er wordt niets gewist.
+            Handig op het einde van elke evaluatieperiode, naast je gewone puntenoverdracht naar Skore. Een archief kan je later downloaden als Excel (alle testpogingen) of als back-upbestand.</p>
+          <div class="knoppen"><button data-a="archiveer">📦 Nu archiveren</button></div>
+          ${B.archieven === null ? '<p class="klein">Archief laden…</p>' : arch.length ? `<div class="tabelwrap"><table class="lijst">
+            <tr><th>Naam</th><th>Soort</th><th>Gemaakt</th><th>Inhoud</th><th></th></tr>
+            ${arch.map(x => `<tr><td><b>${esc(x.label)}</b></td><td>${x.soort === 'schooljaar' ? '🎓 schooljaar afgesloten' : 'tussentijds'}</td><td class="klein">${datum(x.gemaakt)}</td>
+              <td class="klein">${x.samenvatting ? `${x.samenvatting.leerlingen} leerlingen · ${x.samenvatting.testen} testen · ${x.samenvatting.oefeningen} oefeningen` : ''} · ${x.kb} kB</td>
+              <td><button class="licht klein-knop" data-a="archcsv" data-id="${x.id}">Excel</button> <button class="licht klein-knop" data-a="archjson" data-id="${x.id}">Back-upbestand</button></td></tr>`).join('')}
+          </table></div>` : '<p class="klein">Nog geen archieven.</p>'}</div>
+
+        <div class="kaart beheer-blok gevaar-zone"><h2>🎓 Schooljaar afsluiten</h2>
+          <p>Enkel op het einde van het schooljaar. In één keer:</p>
+          <ol><li>een <b>back-upbestand</b> wordt gemaakt (in je map of in Downloads) én alles wordt <b>gearchiveerd</b> in de databank;</li>
+            <li>alle <b>testen, oefeningen, vrijgaven, spelresultaten</b> en <b>koppelingen</b> worden gewist: alle leerlingen staan uit alle leerpaden;</li>
+            <li>je kiest wat er met de leerlingaccounts gebeurt (behouden, uitschakelen of verwijderen).</li></ol>
+          <p class="klein">De leerpaden zelf, je wachtwoord, de meldingen en het archief blijven staan. In september voeg je de nieuwe klassen toe zoals altijd.</p>
+          <div class="knoppen"><button class="rood" data-a="afsluiten">🎓 Schooljaar afsluiten…</button></div></div>`;
+    }
+
+    // ---------- meldingen
+    async function laadMeldingen() { B.meldingen = await roep('lk_meldingen', {}); }
+    const STATUS = { nieuw: ['oranje', '⏳ Nog niet behandeld'], opgelost: ['groen', '✓ Opgelost'], geen_fout: ['blauw', 'ℹ Geen fout in het leerpad'], bekeken: ['grijs', 'Gelezen'] };
+    function vraagVoorbeeld(m) {
+      const v = m.vraag || {};
+      try {
+        const P = Leerpaden.vind(m.programma), d = P && P.delen.find(x => x.nr === m.deel);
+        const opdr = v.opdracht || (d && d.opdracht) || '';
+        return `<div class="vraagvoorbeeld">${opdr ? `<div class="klein">${esc(opdr)}</div>` : ''}<div>${W.opgave(v)}</div>
+          <div class="klein">Juiste antwoord volgens het leerpad: ${v.antw ? Antwoord.juistHTML(v.antw) : '—'}</div>
+          <div class="klein">Antwoord van de leerling: ${m.antwoord && (m.antwoord.tekst || m.antwoord.tex || m.antwoord.html || m.antwoord.delen) ? Antwoord.gegevenHTML(m.antwoord) : '—'}</div></div>`;
+      } catch (e) { return `<div class="vraagvoorbeeld klein">${esc(v.tex || v.sleutel || '(vraag kan niet getoond worden)')}</div>`; }
+    }
+    function vMeldingen() {
+      const alle = B.meldingen || [];
+      const lijst = alle.filter(m => B.mFilter === 'alle' || m.status !== 'bekeken');
+      return `<div class="werkbalk"><h1 class="vul" style="margin:0">🐞 Meldingen van leerlingen</h1>
+          <select id="mfilter" aria-label="Filter"><option value="open" ${B.mFilter === 'open' ? 'selected' : ''}>Nog niet gelezen</option><option value="alle" ${B.mFilter === 'alle' ? 'selected' : ''}>Alle meldingen</option></select>
+          <button class="licht" data-a="meldingen">↻ Vernieuwen</button></div>
+        <p class="klein">Leerlingen kunnen na het nakijken van een oefening of test een foutje melden (🐞 onder de vraag). Claude bekijkt nieuwe meldingen elke dag,
+          past het leerpad aan als er echt een fout in zit en schrijft hier wat er misliep en wat er veranderd werd. Je krijgt daarvan ook een melding.</p>
+        ${B.meldingen === null ? '<p class="klein">Laden…</p>' : lijst.length ? lijst.map(m => {
+          const [kl, tekst] = STATUS[m.status] || STATUS.nieuw;
+          return `<div class="melding-kaart ${esc(m.status)}">
+            <div class="werkbalk" style="margin:0"><span class="vul"><span class="etiket ${kl}">${tekst}</span>
+              <b>${esc(progTitel(m.programma))}</b> · deel ${m.deel} · ${m.plaats === 'test' ? 'test' : 'oefenen'}</span>
+              <span class="klein">${esc(m.leerling)} (${esc(m.klas || '')}) · ${datum(m.gemeld)}</span></div>
+            ${m.opmerking ? `<div style="margin-top:6px">💬 <i>${esc(m.opmerking)}</i></div>` : '<div class="klein" style="margin-top:6px">(geen uitleg van de leerling)</div>'}
+            ${vraagVoorbeeld(m)}
+            ${m.reactie ? `<div class="reactie"><b>Claude:</b> ${esc(m.reactie)}</div>` : ''}
+            ${['opgelost', 'geen_fout'].includes(m.status) ? `<div class="knoppen" style="margin-top:8px"><button class="licht klein-knop" data-a="mgelezen" data-id="${m.id}">✓ Gelezen</button></div>` : ''}
+          </div>`;
+        }).join('') : `<div class="kaart"><p>${alle.length ? 'Alles gelezen. Kies <i>Alle meldingen</i> om oudere meldingen te zien.' : 'Nog geen meldingen.'}</p></div>`}`;
+    }
+
+    async function klik(a, el) {
+      if (a === 'beheer') { S.view = 'beheer'; render(); await Promise.all([laadInfo(), laadArchieven()]); render(); window.scrollTo(0, 0); return true; }
+      if (a === 'meldingen') { S.view = 'meldingen'; B.meldingen = null; render(); await Promise.all([laadInfo(), laadMeldingen()]); render(); window.scrollTo(0, 0); return true; }
+      if (a === 'mgelezen') { await roep('lk_melding_status', { p_id: +el.dataset.id, p_status: 'bekeken' }); await Promise.all([laadInfo(), laadMeldingen()]); render(); return true; }
+      if (a === 'kiesmap') {
+        try { B.map = await window.showDirectoryPicker({ id: 'leerpaden-backups', mode: 'readwrite' }); }
+        catch (e) { return true; } // geannuleerd
+        B.mapNaam = B.map.name; await KV.set('backupmap', B.map);
+        await mapToestemming(true);
+        S.melding = `📁 Back-ups komen voortaan in de map <b>${esc(B.mapNaam)}</b>. Kies bij de vraag van de browser <b>Toestaan bij elk bezoek</b>, dan gebeurt het vanzelf.`;
+        render(); return true;
+      }
+      if (a === 'vergeetmap') { B.map = null; B.mapNaam = ''; await KV.set('backupmap', null); render(); return true; }
+      if (a === 'backupnu') {
+        const t = el.textContent; el.disabled = true; el.textContent = 'Back-up wordt gemaakt…';
+        try { const r = await maakBackup(false); S.melding = backupMelding(r); }
+        finally { el.disabled = false; el.textContent = t; }
+        if (S.view === 'beheer') await laadArchieven();
+        render(); return true;
+      }
+      if (a === 'archiveer') {
+        const nu = new Date(), sj = nu.getMonth() >= 7 ? `${nu.getFullYear()}-${nu.getFullYear() + 1}` : `${nu.getFullYear() - 1}-${nu.getFullYear()}`;
+        const label = await modaal('📦 Archiveren', `<p>Er wordt een volledige kopie bewaard. Er wordt niets gewist.</p>
+          <label for="alabel">Naam van het archief</label><input type="text" id="alabel" value="Archief ${esc(datum(nu.toISOString(), false))} (${sj})">`,
+          [['Annuleren', null, 'licht'], ['Archiveren', (m) => m.querySelector('#alabel').value]]);
+        if (!label) return true;
+        el.disabled = true;
+        const r = await roep('lk_archiveren', { p_label: label });
+        await laadArchieven();
+        S.melding = `📦 Gearchiveerd als <b>${esc(r.label)}</b>: ${r.leerlingen} leerlingen, ${r.testen} testen, ${r.oefeningen} oefeningen.`;
+        render(); return true;
+      }
+      if (a === 'archcsv' || a === 'archjson') {
+        const x = (B.archieven || []).find(y => y.id === +el.dataset.id); const t = el.textContent; el.disabled = true; el.textContent = 'Bezig…';
+        try {
+          const inh = await roep('lk_archief_ophalen', { p_id: +el.dataset.id });
+          const naam = bestandsnaam((x ? x.label : 'Archief') || 'Archief');
+          if (a === 'archcsv') download(`${naam}_testen.csv`, archiefCSV(inh), 'text/csv;charset=utf-8');
+          else download(`${naam}_backup.json`, JSON.stringify(inh), 'application/json');
+        } finally { el.disabled = false; el.textContent = t; }
+        return true;
+      }
+      if (a === 'afsluiten') {
+        const nu = new Date(), sj = nu.getMonth() >= 7 ? `${nu.getFullYear()}-${nu.getFullYear() + 1}` : `${nu.getFullYear() - 1}-${nu.getFullYear()}`;
+        const keuze = await modaal('🎓 Schooljaar afsluiten', `<p><b>Let op:</b> daarna staan alle leerlingen uit alle leerpaden en zijn alle resultaten uit de leerpaden gewist.
+            Alles blijft wel bewaard in het archief en in een back-upbestand.</p>
+          <label for="slabel">Naam van het archief</label><input type="text" id="slabel" value="Schooljaar ${sj}">
+          <label>Wat met de leerlingaccounts?</label>
+          <div><label class="inline"><input type="radio" name="sacc" value="behouden" checked> Behouden (zonder leerpaden; handig als ze volgend jaar weer bij jou zitten)</label></div>
+          <div><label class="inline"><input type="radio" name="sacc" value="deactiveren"> Uitschakelen (kunnen niet meer aanmelden; later weer aan te zetten)</label></div>
+          <div><label class="inline"><input type="radio" name="sacc" value="verwijderen"> Verwijderen (enkel nog in het archief)</label></div>
+          <label for="sbev">Typ <b>AFSLUITEN</b> om te bevestigen</label><input type="text" id="sbev" autocomplete="off">`,
+          [['Annuleren', null, 'licht'], ['Schooljaar afsluiten', (m) => ({ label: m.querySelector('#slabel').value, acc: (m.querySelector('input[name=sacc]:checked') || {}).value, bev: m.querySelector('#sbev').value.trim() }), 'rood']]);
+        if (!keuze) return true;
+        if (keuze.bev !== 'AFSLUITEN') { await modaal('Niet afgesloten', '<p>Je typte niet AFSLUITEN. Er is niets gewist.</p>', [['OK', 1]]); return true; }
+        el.disabled = true; el.textContent = 'Back-up wordt gemaakt…';
+        const bk = await maakBackup(false); // eerst een bestand, voor de zekerheid
+        el.textContent = 'Bezig met afsluiten…';
+        const r = await roep('lk_schooljaar_afsluiten', { p_label: keuze.label, p_accounts: keuze.acc, p_bevestiging: 'AFSLUITEN' });
+        await laadAlle(); await laadProgrammas(); await laadArchieven(); await laadInfo();
+        S.melding = `🎓 Schooljaar afgesloten en gearchiveerd als <b>${esc(r.label)}</b> (${r.testen} testen, ${r.oefeningen} oefeningen). Accounts: ${esc(r.accounts)}. ${backupMelding(bk)}`;
+        render(); return true;
+      }
+      return false;
+    }
+    function koppelExtra() {
+      const mf = document.getElementById('mfilter');
+      if (mf) mf.onchange = () => { B.mFilter = mf.value; render(); };
+    }
+    return { naLogin, banner, vBeheer, vMeldingen, klik, koppelExtra };
+  })();
+
   function render() {
     let h = '';
     if (S.view === 'login') h = vLogin();
@@ -116,7 +339,9 @@
     if (S.view === 'afdruk') h = vAfdruk();
     if (S.view === 'spellen') h = vSpellen();
     if (S.view === 'spel') h = vSpel();
-    app.innerHTML = kop() + `<main class="breed">${S.melding ? `<div class="melding ok">${S.melding}</div>` : ''}${h}</main>`;
+    if (S.view === 'beheer') h = Beheer.vBeheer();
+    if (S.view === 'meldingen') h = Beheer.vMeldingen();
+    app.innerHTML = kop() + `<main class="breed">${S.token && S.view !== 'login' ? Beheer.banner() : ''}${S.melding ? `<div class="melding ok">${S.melding}</div>` : ''}${h}</main>`;
     S.melding = '';
     W.renderIn(app);
     koppel();
@@ -702,7 +927,7 @@
         <button class="licht" data-a="bulk" data-aan="0" ${sel.length ? '' : 'disabled'}>Ontkoppelen</button>
         <button class="licht" data-a="bulkreset" ${sel.length ? '' : 'disabled'}>Nieuwe wachtwoorden + inlogbrieven</button>
         <button class="licht" data-a="allecsv">Lijst (Excel)</button>
-        <button class="licht" data-a="backup" title="Alle accounts, koppelingen en resultaten van alle leerpaden in één bestand">💾 Backup databank</button>
+        <button class="licht" data-a="backupnu" title="Alle accounts, koppelingen en resultaten van alle leerpaden in één bestand">💾 Backup databank</button>
       </div>
       <div class="kaart tabelwrap"><table class="lijst alle-ll">
         <tr><th><input type="checkbox" id="allesel" aria-label="alles selecteren" ${ll.length && ll.every(l => S.selectie.has(l.id)) ? 'checked' : ''}></th><th></th><th>Leerling</th><th>Klas</th><th>Gebruikersnaam</th><th>Gekoppelde leerpaden</th><th>Laatst actief</th></tr>
@@ -1080,6 +1305,7 @@
           const r = await API.call('lk_login', { p_wachtwoord: document.getElementById('pw').value });
           S.token = r.token; API.sessie.set('lk-token', r.token); S.fout = '';
           await laadProgrammas(); await laadAlle(); S.view = 'boom';
+          Beheer.naLogin();
         } catch (err) { S.fout = err.message; }
         render();
       };
@@ -1097,6 +1323,7 @@
     if (zk) zk.oninput = () => { S.zoek = zk.value; const pos = zk.selectionStart; render(); const z = document.getElementById('zoek'); z.focus(); z.setSelectionRange(pos, pos); };
 
     koppelAfdruk();
+    Beheer.koppelExtra();
     // Alle leerlingen: selectie en inschrijvingen
     app.querySelectorAll('input.sel').forEach(c => c.onchange = () => { c.checked ? S.selectie.add(c.dataset.id) : S.selectie.delete(c.dataset.id); render(); });
     const as = document.getElementById('allesel');
@@ -1147,6 +1374,7 @@
           await laadAlle(); S.melding = `${nieuw.length} leerling(en) van ${esc(k)} gekoppeld aan ${esc(progTitel(code))}.`; return render();
         }
         if (a.startsWith('afd')) return afdActie(a, el);
+        if (await Beheer.klik(a, el)) return;
         if (a === 'spellen') { await laadSpellen(); S.view = 'spellen'; render(); return window.scrollTo(0, 0); }
         if (a === 'openspel') { S.spel = el.dataset.code; API.sessie.set('lk-spel', S.spel); await laadSpellen(); S.view = 'spel'; render(); return window.scrollTo(0, 0); }
         if (a === 'speldagen') return await spelDagen(el.dataset.id, el.dataset.code);
@@ -1302,7 +1530,7 @@
   }
 
   (async () => {
-    if (S.token) { try { await laadProgrammas(); await laadAlle(); S.view = 'boom'; } catch (e) { S.token = null; S.view = 'login'; } }
+    if (S.token) { try { await laadProgrammas(); await laadAlle(); S.view = 'boom'; Beheer.naLogin(); } catch (e) { S.token = null; S.view = 'login'; } }
     render();
   })();
 })();

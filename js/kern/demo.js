@@ -179,9 +179,51 @@ const Demo = (() => {
     },
     lk_backup(db, { p_token }) {
       leerkracht(db, p_token);
-      const { sessies, ...rest } = db; void sessies;
+      db.laatste_backup = nu();
+      const { sessies, archief, ...rest } = db; void sessies; void archief;
       return { soort: 'leerpaden-backup', versie: 1, gemaakt: new Date().toISOString(), demo: true, ...JSON.parse(JSON.stringify(rest)) };
     },
+    // --- back-up-info, archief en meldingen (demo)
+    lk_backup_info(db, { p_token }) {
+      leerkracht(db, p_token);
+      const m = db.meldingen || [];
+      return { laatste_backup: db.laatste_backup || null, laatste_ping: nu(), nieuwe_meldingen: m.filter(x => x.status === 'nieuw').length, ongelezen_reacties: m.filter(x => ['opgelost', 'geen_fout'].includes(x.status)).length };
+    },
+    lk_archiveren(db, { p_token, p_label }) {
+      leerkracht(db, p_token);
+      if (!String(p_label || '').trim()) fout('Geef het archief een naam (bv. Rapport 1 2026-2027).');
+      const { sessies, archief, ...rest } = db; void sessies; void archief;
+      const s = { leerlingen: db.leerlingen.length, koppelingen: db.inschrijvingen.length, testen: (db.testen || []).filter(t => t.status === 'ingediend').length, oefeningen: db.oefeningen.length, klassen: [...new Set(db.leerlingen.map(l => l.klas).filter(Boolean))] };
+      db.archief = db.archief || [];
+      const id = db.archief.length + 1;
+      db.archief.push({ id, label: String(p_label).trim(), soort: 'tussentijds', gemaakt: nu(), samenvatting: s, inhoud: JSON.parse(JSON.stringify(rest)) });
+      return { ...s, id, label: String(p_label).trim(), soort: 'tussentijds' };
+    },
+    lk_archieven(db, { p_token }) {
+      leerkracht(db, p_token);
+      return (db.archief || []).slice().reverse().map(({ inhoud, ...a }) => ({ ...a, kb: Math.round(JSON.stringify(inhoud).length / 1024) }));
+    },
+    lk_archief_ophalen(db, { p_token, p_id }) { leerkracht(db, p_token); const a = (db.archief || []).find(x => x.id === p_id); return a ? a.inhoud : null; },
+    lk_schooljaar_afsluiten(db, { p_token, p_label, p_accounts, p_bevestiging }) {
+      leerkracht(db, p_token);
+      if (p_bevestiging !== 'AFSLUITEN') fout('Typ AFSLUITEN om te bevestigen.');
+      const s = F.lk_archiveren(db, { p_token, p_label }); db.archief[db.archief.length - 1].soort = 'schooljaar';
+      db.testen = []; db.oefeningen = []; db.toegang = []; db.inschrijvingen = []; db.spelstaat = []; db.speltijd = [];
+      db.sessies = db.sessies.filter(x => !x.ll);
+      if (p_accounts === 'deactiveren') db.leerlingen.forEach(l => { l.actief = false; });
+      if (p_accounts === 'verwijderen') db.leerlingen = [];
+      return { ...s, soort: 'schooljaar', accounts: p_accounts };
+    },
+    ll_melden(db, { p_token, p_programma, p_deel, p_soort, p_plaats, p_vraag, p_antwoord, p_opmerking }) {
+      const l = leerling(db, p_token); ingeschreven(db, l.id, p_programma);
+      db.meldingen = db.meldingen || [];
+      db.meldingen.push({ id: db.meldingen.length + 1, ll: l.id, programma: p_programma, deel: p_deel, soort: p_soort, plaats: p_plaats, vraag: p_vraag, antwoord: p_antwoord, opmerking: p_opmerking || '', status: 'nieuw', reactie: null, gemeld: nu(), behandeld: null });
+    },
+    lk_meldingen(db, { p_token }) {
+      leerkracht(db, p_token);
+      return (db.meldingen || []).slice().reverse().map(m => { const l = db.leerlingen.find(x => x.id === m.ll); return { ...m, leerling: l ? l.voornaam + ' ' + l.naam : '(verwijderd)', klas: l ? l.klas : '' }; });
+    },
+    lk_melding_status(db, { p_token, p_id, p_status }) { leerkracht(db, p_token); const m = (db.meldingen || []).find(x => x.id === p_id); if (m) { m.status = p_status; m.behandeld = m.behandeld || nu(); } },
     lk_alle_leerlingen(db, { p_token }) {
       leerkracht(db, p_token);
       return db.leerlingen.slice().sort((a, b) => (a.klas + a.naam + a.voornaam).localeCompare(b.klas + b.naam + b.voornaam))

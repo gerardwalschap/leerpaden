@@ -55,10 +55,10 @@
       const k = m.querySelector('.knoppen');
       knoppen.forEach(([tekst, waarde, klasse]) => {
         const b = document.createElement('button'); b.textContent = tekst; if (klasse) b.className = klasse;
-        b.onclick = () => { m.remove(); res(waarde); }; k.appendChild(b);
+        b.onclick = () => { const w = typeof waarde === 'function' ? waarde(m) : waarde; m.remove(); res(w); }; k.appendChild(b);
       });
       document.body.appendChild(m); W.renderIn(m);
-      k.lastChild.focus();
+      const eerste = m.querySelector('textarea'); (eerste || k.lastChild).focus();
     });
   }
 
@@ -405,6 +405,7 @@
         ${kbd ? Antwoord.toetsenbord(Antwoord.toetsen(v.antw)) : ''}
         ${o.melding ? `<div class="melding let midden">${esc(o.melding)}</div>` : ''}
         ${fb}
+        ${n ? meldLink('oefenen', -1) : ''}
         <div class="knoppen">${n ? '<button class="oranje" data-a="volgende" id="volgende">Volgende oefening →</button>' : '<button data-a="controleer">Controleer</button>'}</div>
       </div>
       <p class="klein midden">Je hebt in totaal al ${i.oef.aantal} oefeningen van dit deel gemaakt.</p>`;
@@ -421,6 +422,29 @@
     render();
     const knop = document.getElementById('volgende'); if (knop) knop.focus({ preventScroll: true });
     roep('ll_oefening', { p_programma: S.prog, p_deel: d.nr, p_soort: v.soort, p_juist: juist }).catch(() => {});
+  }
+
+  // ---------- foutje melden: de leerling ziet het juiste antwoord en denkt dat er iets niet klopt
+  const meldLink = (plaats, k) => S.P && !S.P.instaptoets
+    ? `<div class="meldlink"><button class="link klein" data-a="melden" data-plaats="${plaats}" data-k="${k}" title="Denk je dat de vraag, het juiste antwoord of de uitleg fout is? Laat het weten.">🐞 Klopt er iets niet? Meld een foutje</button></div>` : '';
+  async function melden(el) {
+    const d = deelVan(S.deel), plaats = el.dataset.plaats, k = +el.dataset.k;
+    let v, antw;
+    if (plaats === 'oefenen') { const o = S.oef[d.nr]; v = o.vraag; try { antw = Antwoord.gegeven(v.antw, o.w); } catch (e) { antw = o.w; } }
+    else { v = S.test.vragen[k]; const a = ((S.test.resultaat || {}).details || [])[k] || {}; antw = a.g || a.gegeven || null; }
+    const tekst = await modaal('🐞 Foutje melden', `<p>Denk je dat er iets fout is aan deze vraag, aan het juiste antwoord of aan de uitleg? Je leerkracht kijkt het na.</p>
+      <label for="meldtekst">Wat klopt er volgens jou niet? <span class="klein">(mag kort)</span></label>
+      <textarea id="meldtekst" rows="4" maxlength="1000" style="width:100%" placeholder="bv. Mijn antwoord is ook juist, want …"></textarea>`,
+      [['Annuleren', null, 'licht'], ['Verstuur melding', () => (document.getElementById('meldtekst') || {}).value || '', 'oranje']]);
+    if (tekst === null || tekst === undefined) return;
+    el.disabled = true;
+    try {
+      await roep('ll_melden', { p_programma: S.prog, p_deel: d.nr, p_soort: v.soort || '', p_plaats: plaats, p_vraag: v, p_antwoord: antw === undefined ? null : antw, p_opmerking: String(tekst).trim() });
+      el.outerHTML = '<span class="klein ok-tekst">✓ Bedankt! Je melding is verstuurd.</span>';
+    } catch (e) {
+      el.disabled = false;
+      modaal('Dat lukte niet', `<p>${esc(e.code === 'TE_VEEL_MELDINGEN' || /TE_VEEL/.test(e.message) ? 'Je hebt vandaag al veel meldingen gestuurd. Probeer morgen opnieuw of vraag het aan je leerkracht.' : e.message)}</p>`, [['OK', 1]]);
+    }
   }
 
   // ---------- test
@@ -502,7 +526,7 @@
           <div class="inhoud-blok"><div class="klein">${k + 1}. ${esc(opdracht(d, v))}</div><div class="opg">${opgave(v)}</div>
           <div>Juiste antwoord: ${Antwoord.juistHTML(v.antw)}</div>
           <div class="klein">Jouw antwoord: ${jouw}${a.bericht ? ` · <i>${esc(a.bericht)}</i>` : ''}</div>
-          ${a.juist ? '' : `<div class="klein">${uitlegHTML(v)}</div>`}</div></div>`;
+          ${a.juist ? '' : `<div class="klein">${uitlegHTML(v)}</div>`}${meldLink('test', k)}</div></div>`;
       }).join('')}</div>`;
   }
 
@@ -797,6 +821,7 @@
         if (a === 'bekijk') return await bekijk(+el.dataset.id);
         if (a === 'terugtest') { S.test = null; render(); return window.scrollTo(0, 0); }
         if (a === 'pdf') return await downloadPDF(el);
+        if (a === 'melden') return await melden(el);
       } catch (e) { if (e.code !== 'SESSIE_VERLOPEN') modaal('Dat lukte niet', `<p>${esc(e.message)}</p>`, [['OK', true]]); }
     });
   }

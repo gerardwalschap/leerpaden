@@ -170,3 +170,28 @@ header.balk .auteur { margin-left: auto; display: flex; align-items: center; gap
 header.balk .auteur + .rechts { margin-left: 18px; }
 header.balk .auteur-foto { width: 38px; height: 38px; border-radius: 50%; background: #fff url(../img/walschap.svg) no-repeat center / cover; box-shadow: 0 0 0 2px rgba(255,255,255,.7); flex: 0 0 38px; }
 @media (max-width: 760px) { header.balk .auteur-naam { display: none; } }
+
+/* ---------- foutje melden (leerling) en meldingen/beheer (leerkracht) — nov 2026 */
+.meldlink { margin-top: 6px; text-align: right; }
+.meldlink .link { color: #6b7685; font-size: 13px; }
+.meldlink .link:hover { color: var(--oranje, #e8711a); }
+.ok-tekst { color: #2e7d4f; }
+.beheer-blok { margin-bottom: 18px; }
+.beheer-blok h2 { margin-top: 0; }
+.statusrij { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 6px 0 10px; }
+.statusrij .st { padding: 6px 12px; border-radius: 8px; background: #f1f4f8; }
+.statusrij .st.ok { background: #eef7f1; }
+.statusrij .st.let { background: #fdf3e6; }
+.melding-kaart { border-left: 4px solid #ccd3dd; padding: 10px 14px; margin-bottom: 12px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.melding-kaart.nieuw { border-left-color: #e8711a; }
+.melding-kaart.opgelost { border-left-color: #2e7d4f; }
+.melding-kaart.geen_fout { border-left-color: #3b6ea8; }
+.melding-kaart .reactie { background: #f4f8fd; border-radius: 8px; padding: 8px 12px; margin-top: 8px; white-space: pre-wrap; }
+.melding-kaart .vraagvoorbeeld { background: #fafbfc; border: 1px dashed #ccd3dd; border-radius: 8px; padding: 8px 12px; margin-top: 8px; overflow-x: auto; }
+.gevaar-zone { border: 2px solid #b83a2e; }
+.gevaar-zone h2 { color: #b83a2e; }
+.tabteller { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: #e8711a; color: #fff; font-size: 12px; line-height: 18px; text-align: center; }
+.etiket.blauw { background: #e8f0fa; color: #2c5c93; }
+.modaal label.inline { display: inline; font-weight: normal; }
+.modaal label.inline input { width: auto; margin-right: 6px; }
+.modaal textarea { font: inherit; padding: 8px; border: 1px solid #ccd3dd; border-radius: 8px; box-sizing: border-box; }
