@@ -101,7 +101,6 @@
         ${S.P && !['boom', 'alle', 'afdruk', 'spellen', 'spel', 'beheer', 'meldingen'].includes(S.view) ? `<button class="ptab actief" data-a="overzicht">${esc(S.P.titel)}</button>` : ''}
         ${S.view === 'spel' && spelVind(S.spel) ? `<button class="ptab actief" data-a="openspel" data-code="${esc(S.spel)}">${esc(progTitel(S.spel))}</button>` : ''}
         <button class="ptab ${S.view === 'alle' ? 'actief' : ''}" data-a="alle">👥 Alle leerlingen</button>
-        ${SPELLEN().length ? `<button class="ptab ${S.view === 'spellen' ? 'actief' : ''}" data-a="spellen">🎮 Spellen</button>` : ''}
         <button class="ptab ${S.view === 'afdruk' ? 'actief' : ''}" data-a="afdruk">🖨️ Afdrukcentrum</button>
         <button class="ptab ${S.view === 'meldingen' ? 'actief' : ''}" data-a="meldingen" title="Foutjes die leerlingen meldden, met de uitleg wat er aangepast werd">🐞 Meldingen${S.binfo && (S.binfo.nieuwe_meldingen + S.binfo.ongelezen_reacties) ? `<span class="tabteller">${S.binfo.nieuwe_meldingen + S.binfo.ongelezen_reacties}</span>` : ''}</button>
         <button class="ptab ${S.view === 'beheer' ? 'actief' : ''}" data-a="beheer" title="Back-ups, archief en het schooljaar afsluiten">🗂️ Beheer</button>
@@ -601,12 +600,11 @@
           ...(h.spellen || []).filter(spelVind).map(code => {
             const SP = spelVind(code), g = gekoppeld(code, ll), tot = (S.alle || []).filter(l => l.programmas.includes(code)).length;
             return `<div class="lp-regel">
-              <button class="link vet" data-a="openspel" data-code="${esc(code)}">${SP.icoon} ${esc(SP.titel)}</button>
+              <span class="vet">${SP.icoon} ${esc(SP.titel)}</span>
               <span class="etiket ${g ? 'groen' : 'grijs'}">${g ? `${g}/${ll.length} van ${esc(klas.code)} gekoppeld` : `niemand van ${esc(klas.code)} gekoppeld`}</span>
               ${tot > g ? `<span class="klein">(${tot} in totaal)</span>` : ''}
               <span class="vul"></span>
-              ${ll.length && g < ll.length ? `<button class="licht klein-knop" data-a="klaskoppel" data-code="${esc(code)}" data-klas="${esc(klas.code)}">Hele ${esc(klas.code)} koppelen</button>` : ''}
-              <button class="licht klein-knop" data-a="openspel" data-code="${esc(code)}">Speeltijd →</button></div>`;
+              ${ll.length && g < ll.length ? `<button class="licht klein-knop" data-a="klaskoppel" data-code="${esc(code)}" data-klas="${esc(klas.code)}">Hele ${esc(klas.code)} koppelen</button>` : ''}</div>`;
           }),
           ...(h.extern || []).map(e => `<div class="lp-regel"><a href="${esc(e.url)}" target="_blank" rel="noopener" class="vet">${esc(e.titel)}</a>
               <span class="etiket oranje">oud platform</span> <span class="klein">${esc(e.opm || '')}</span></div>`),
@@ -638,12 +636,11 @@
     const SP = spelVind(code); if (!SP) return '';
     const g = gekoppeld(code, ll), tot = (S.alle || []).filter(l => l.programmas.includes(code)).length;
     return `<div class="lp-regel">
-      <button class="link vet" data-a="openspel" data-code="${esc(code)}">${SP.icoon} ${esc(SP.titel)}</button>
+      <span class="vet">${SP.icoon} ${esc(SP.titel)}</span>
       <span class="etiket ${g ? 'groen' : 'grijs'}">${g ? `${g}/${ll.length} van ${esc(k)} gekoppeld` : `niemand van ${esc(k)} gekoppeld`}</span>
       ${tot > g ? `<span class="klein">(${tot} in totaal)</span>` : ''}
       <span class="vul"></span>
-      ${ll.length && g < ll.length ? `<button class="licht klein-knop" data-a="klaskoppel" data-code="${esc(code)}" data-klas="${esc(k)}">Hele ${esc(k)} koppelen</button>` : ''}
-      <button class="licht klein-knop" data-a="openspel" data-code="${esc(code)}">Speeltijd →</button></div>`;
+      ${ll.length && g < ll.length ? `<button class="licht klein-knop" data-a="klaskoppel" data-code="${esc(code)}" data-klas="${esc(k)}">Hele ${esc(k)} koppelen</button>` : ''}</div>`;
   }
   // Vak met menu: niveau A = tegels, niveau B = knoppen van één tegel (zoals de leerling het ziet).
   function vBoomMenu(klas, vak) {
