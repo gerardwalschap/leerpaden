@@ -195,3 +195,15 @@ header.balk .auteur-foto { width: 38px; height: 38px; border-radius: 50%; backgr
 .modaal label.inline { display: inline; font-weight: normal; }
 .modaal label.inline input { width: auto; margin-right: 6px; }
 .modaal textarea { font: inherit; padding: 8px; border: 1px solid #ccd3dd; border-radius: 8px; box-sizing: border-box; }
+
+/* ---------- breuk-knop: venster met teller en noemer (nov 2026) */
+.breukvenster-achter { position: fixed; inset: 0; background: rgba(20, 30, 45, .35); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.breukvenster { background: #fff; border-radius: 12px; padding: 18px 22px; box-shadow: 0 8px 30px rgba(0,0,0,.25); width: min(360px, 92vw); }
+.bv-titel { font-weight: 700; color: #1c4e8a; font-size: 17px; margin-bottom: 12px; }
+.bv-breuk { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bv-breuk input { width: 100%; text-align: center; font-size: 20px; padding: 8px 10px; border: 1.5px solid #b9c6d2; border-radius: 8px; box-sizing: border-box; }
+.bv-breuk input:focus { border-color: #e8711a; outline: none; box-shadow: 0 0 0 3px rgba(232,113,26,.15); }
+.bv-streep { width: 100%; height: 3px; background: #1f2733; border-radius: 2px; }
+.bv-uitleg { margin-top: 10px; color: #6b7685; }
+.bv-wordt { margin-top: 4px; color: #2e7d4f; min-height: 1.2em; font-family: ui-monospace, Menlo, monospace; }
+.breukvenster .knoppen { margin-top: 12px; justify-content: flex-end; }

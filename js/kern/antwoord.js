@@ -331,6 +331,8 @@ const Antwoord = (() => {
     if (a.soort === 'verzameling') set.add('verzameling');
     if (a.soort === 'breuk') set.add('breuk');
     if (a.soort === 'vgl') { set.add('veelterm'); set.add('editor'); }
+    // breuk-knop ook bij een getal of V = {…} met een exacte, niet-gehele uitkomst (die kan als breuk ingevuld worden)
+    if ((a.soort === 'getal' || a.soort === 'V') && (a.dec === undefined || a.dec === null) && typeof a.waarde === 'number' && !Number.isInteger(a.waarde)) set.add('breukknop');
     if (a.soort === 'delen') a.delen.forEach(d => toetsen(d.antw, set));
     if (a.editor) set.add('editor');
     if (a.toetsen) a.toetsen.forEach(t => set.add(t));
@@ -357,13 +359,62 @@ const Antwoord = (() => {
       + k('ℝ', 'ℝ', 'alle reële getallen') + k('∅', '∅', 'lege verzameling') + k(' \\ ', '\\', 'zonder') + k('{}', '{ }', 'accolades');
     if (s.has('functie')) h += k('x', '<i>x</i>', 'x') + k('²', 'x²', 'kwadraat') + k('³', 'x³', 'derde macht') + k('√()', '√', 'vierkantswortel') + k('()', '( )', 'haakjes') + k('/', '/', 'breukstreep');
     if (s.has('editor')) { const kb = k('/', '<span class="tk-breuk"><span>a</span><span>b</span></span>', 'breuk'); h = h.includes('data-ins="/"') ? h.replace(/<button[^>]*data-ins="\/"[^>]*>[^<]*<\/button>/, kb) : kb + h; }
+    // breuk-knop (nov 2026): teller en noemer apart invullen; de schuine streep blijft bestaan
+    if (!s.has('editor') && (s.has('breukknop') || h.includes('data-ins="/"'))) {
+      const bk = k('BREUK', '<span class="tk-breuk"><span>&#9633;</span><span>&#9633;</span></span>', 'breuk: vul de teller en de noemer apart in');
+      h = h.includes('data-ins="/"') ? h.replace(/<button type="button" class="tk" data-ins="\/"/, bk + '<button type="button" class="tk" data-ins="/"') : bk + h;
+    }
     if (!h) return '';
     // dubbele toetsen weglaten (bv. een test met wortels én veeltermen: één keer ( ), ·, /, xⁿ)
     const gezien = new Set();
     h = h.replace(/<button type="button" class="tk" data-ins="([^"]*)"[^>]*>.*?<\/button>/g, (m, ins) => gezien.has(ins) ? '' : (gezien.add(ins), m));
     return `<div class="toetsenbord" role="toolbar" aria-label="Wiskundige tekens">${h}${k('⌫', '⌫', 'wis laatste teken')}</div>`;
   }
+  // ---------- breuk-knop: klein venster met teller boven, noemer onder; voegt (teller)/(noemer) in het gewone invoervak in
+  // teller zonder haakjes als er geen bewerking in staat; noemer zonder haakjes enkel bij één getal of één letter
+  function breukTekst(t, n) {
+    t = t.trim(); n = n.trim();
+    const heeftBewerking = (x) => /[+·*/:\s]/.test(x) || /.[-−–]/.test(x);
+    const tt = heeftBewerking(t) ? `(${t})` : t;
+    const nn = /^[-−]?[\d.,]+$/.test(n) || /^[a-zA-Zπ]$/.test(n) ? n : `(${n})`;
+    return `${tt}/${nn}`;
+  }
+  function breukVenster(el) {
+    const oud = document.querySelector('.breukvenster-achter'); if (oud) oud.remove();
+    const begin = el.selectionStart ?? el.value.length, eind = el.selectionEnd ?? el.value.length;
+    const m = document.createElement('div');
+    m.className = 'breukvenster-achter';
+    m.innerHTML = `<div class="breukvenster" role="dialog" aria-label="Breuk invullen">
+        <div class="bv-titel">Breuk invullen</div>
+        <div class="bv-breuk"><input type="text" class="bv-t" aria-label="teller" placeholder="teller" autocomplete="off" autocapitalize="none" spellcheck="false">
+          <div class="bv-streep"></div>
+          <input type="text" class="bv-n" aria-label="noemer" placeholder="noemer" autocomplete="off" autocapitalize="none" spellcheck="false"></div>
+        <div class="bv-uitleg klein">Typ de teller en de noemer. Haakjes zijn niet nodig: die zet de site zelf.</div>
+        <div class="bv-wordt klein"></div>
+        <div class="knoppen"><button type="button" class="licht bv-nee">Annuleren</button><button type="button" class="bv-ok">Invoegen</button></div></div>`;
+    document.body.appendChild(m);
+    const t = m.querySelector('.bv-t'), n = m.querySelector('.bv-n'), wordt = m.querySelector('.bv-wordt');
+    const toon = () => { wordt.textContent = t.value.trim() && n.value.trim() ? 'Wordt ingevuld als: ' + breukTekst(t.value, n.value) : ''; };
+    const sluit = () => { m.remove(); el.focus(); };
+    const ok = () => {
+      if (!t.value.trim()) return t.focus();
+      if (!n.value.trim()) return n.focus();
+      const txt = breukTekst(t.value, n.value);
+      el.value = el.value.slice(0, begin) + txt + el.value.slice(eind);
+      m.remove(); el.focus(); el.setSelectionRange(begin + txt.length, begin + txt.length);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    t.oninput = n.oninput = toon;
+    t.onkeydown = (e) => { if (e.key === 'Enter' || (e.key === 'ArrowDown')) { e.preventDefault(); n.focus(); } if (e.key === 'Escape') sluit(); };
+    n.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); ok(); } if (e.key === 'ArrowUp') { e.preventDefault(); t.focus(); } if (e.key === 'Escape') sluit(); };
+    m.querySelector('.bv-ok').onclick = ok;
+    m.querySelector('.bv-nee').onclick = sluit;
+    m.onclick = (e) => { if (e.target === m) sluit(); };
+    // geselecteerde tekst in het invoervak wordt meteen de teller
+    if (eind > begin) { t.value = el.value.slice(begin, eind); toon(); n.focus(); } else t.focus();
+  }
   function voegIn(el, txt) {
+    if (txt === 'BREUK') { if (el.tagName === 'MATH-FIELD') txt = '/'; else return breukVenster(el); }
     if (el.tagName === 'MATH-FIELD') {
       const L = { '/': '\\frac{#@}{#?}', '()': '\\left(#0\\right)', '²': '^2', '³': '^3', '^()': '^{#0}', '·': '\\cdot ', '√()': '\\sqrt{#0}' };
       if (txt === '⌫') el.executeCommand('deleteBackward'); else el.executeCommand(['insert', L[txt] ?? txt]);
