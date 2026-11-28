@@ -208,12 +208,6 @@
   }
 
   // ---------- weergave
-  // Vak van de klas van de leerling met een eindtermenoverzicht (js/eindtermen.js), of null.
-  function etVak() {
-    if (!window.Eindtermen || !S.leerling || !window.Catalogus) return null;
-    const kl = Catalogus.klasVan(S.leerling.klas);
-    return kl ? (kl.vakken.find(v => Eindtermen.heeft(v)) || null) : null;
-  }
   function kop() {
     const naam = S.leerling ? `${esc(S.leerling.voornaam)} ${esc(S.leerling.naam)}` : '';
     const titel = S.P ? S.P.titel : (CONFIG.TITEL || 'Leerpaden');
@@ -225,7 +219,6 @@
         ${S.leerling ? `<div class="rechts"><span>${naam}</span>
           ${S.view === 'deel' && !(S.P && S.P.instaptoets) ? '<button class="licht" data-a="pad">Leerpad</button>' : ''}
           ${S.P && beschikbaar().length + mijnSpellen().length > 1 ? `<button class="licht" data-a="kies">${ctxInfo() ? '🏠 Start' : mijnSpellen().length ? 'Leerpaden en spellen' : 'Andere leerpaden'}</button>` : ''}
-          ${etVak() ? `<button class="licht" data-eindtermen="${esc(etVak())}" title="Welke wiskundedoelen komen in welk leerpad aan bod?">🎯 Eindtermen</button>` : ''}
           <button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>`;
   }

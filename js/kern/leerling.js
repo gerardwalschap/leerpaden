@@ -211,13 +211,6 @@
   }
 
   // ---------- weergave
-  // Vak van de klas van de leerling met een eindtermenoverzicht (js/eindtermen.js), of null.
-  function etVak() {
-    if (!window.Eindtermen || !S.leerling || !window.Catalogus) return null;
-    if (S.vak && Eindtermen.heeft(S.vak)) return S.vak;   // het vak dat de leerling nu bekijkt
-    const kl = Catalogus.klasVan(S.leerling.klas);
-    return kl ? (kl.vakken.find(v => Eindtermen.heeft(v)) || null) : null;
-  }
   function kop() {
     const naam = S.leerling ? `${esc(S.leerling.voornaam)} ${esc(S.leerling.naam)}` : '';
     const titel = S.P ? S.P.titel : (CONFIG.TITEL || 'Leerpaden');
@@ -229,7 +222,6 @@
         ${S.leerling ? `<div class="rechts"><span>${naam}</span>
           ${S.view === 'deel' && !(S.P && S.P.instaptoets) ? '<button class="licht" data-a="pad">Leerpad</button>' : ''}
           ${S.P && beschikbaar().length + mijnSpellen().length > 1 ? `<button class="licht" data-a="kies">${ctxInfo() ? '🏠 Start' : mijnSpellen().length ? 'Leerpaden en spellen' : 'Andere leerpaden'}</button>` : ''}
-          ${etVak() ? `<button class="licht" data-eindtermen="${esc(etVak())}" title="Welke wiskundedoelen komen in welk leerpad aan bod?">🎯 Eindtermen</button>` : ''}
           <button class="licht" data-a="afmelden">Afmelden</button></div>` : ''}
       </header>`;
   }
@@ -295,7 +287,7 @@
         <div class="tegel-titel">${esc(x.titel)}</div><div class="klein">${MENUS[x.vak] ? 'Leerpaden en spellen' : `${x.items.length} leerpad${x.items.length === 1 ? '' : 'en'}`}</div></button>`).join('')}</div>${spellenBlok()}`;
     return `${groepen.length > 1 ? '<p class="klein"><button class="link" data-a="vak" data-vak="">← Alle vakken</button></p>' : ''}
       <h1>${groepen.length > 1 ? esc(g.titel) : `Dag ${esc(S.leerling.voornaam)}!`}${klasTekst}</h1>
-      <p>Kies een leerpad${groepen.length > 1 ? '' : ` · ${esc(g.titel)}`}.${window.Eindtermen && Eindtermen.heeft(g.vak) ? ` <button class="licht" data-eindtermen="${esc(g.vak)}" title="Welke wiskundedoelen komen in welk leerpad aan bod?">🎯 Eindtermen ${esc(g.titel)}</button>` : ''}</p>
+      <p>Kies een leerpad${groepen.length > 1 ? '' : ` · ${esc(g.titel)}`}.</p>
       <div class="pad">${g.items.map(leerpadKnop).join('')}</div>${groepen.length === 1 ? spellenBlok() : ''}`;
   }
 

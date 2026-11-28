@@ -6,7 +6,7 @@
 //  een tabel (doelen × leerpaden) in een venster, met een knop om er een PDF van te maken.
 //
 //  Een knop met  data-eindtermen="wisk-7vjho"  opent het overzicht van dat vak
-//  (werkt op de leerlingen- én de leerkrachtpagina).
+//  (enkel op de leerkrachtpagina; leerlingen zien dit overzicht niet).
 // ====================================================================
 window.Eindtermen = (() => {
   // Bron: 7_wiskundedoelen_VJHO.xlsx (basisvorming wiskunde BV3 — Voorbereidend Jaar Hoger Onderwijs)
@@ -61,6 +61,7 @@ window.Eindtermen = (() => {
         'machtswortelfuncties': ['BV3_06.01', 'BV3_06.02', 'BV3_06.18', 'BV3_06.20'],
         'sinusfunctie': ['BV3_06.02', 'BV3_06.08', 'BV3_06.09', 'BV3_06.10', 'BV3_06.11', 'BV3_06.18', 'BV3_06.21'],
         'afgeleiden': ['BV3_06.03', 'BV3_06.04', 'BV3_06.18', 'BV3_06.20'],
+        'statistiek-gegroepeerd': ['BV3_06.18', 'BV3_06.21'],
         'steekproeven-samenhang': ['BV3_06.14', 'BV3_06.15', 'BV3_06.18', 'BV3_06.19'],
       },
     },
@@ -91,6 +92,70 @@ window.Eindtermen = (() => {
         'afgeleiden-rekenregels': ['WD3_06.04.17', 'WD3_06.04.18'],
       },
     },
+    // Bron: 3en4_wiskundedoelen_biotechnologische_wetenschappen.xlsx — basisvorming BV2, enkel de doelen die in het 4de jaar aan bod komen
+    // (de andere BV2-doelen kwamen in het 3de jaar aan bod).
+    'wisk-4bw-mww': {
+      titel: 'Wiskundedoelen 4BW · 4MWW — wiskunde', bron: 'Basisvorming wiskunde (BV2) — 2de graad doorstroom · doelen van het 4de jaar',
+      lijst: [
+        ["BV2_06.04", "De leerlingen bepalen de onderlinge ligging van twee rechten, twee vlakken en een rechte en een vlak in ruimtelijke situaties."],
+        ["BV2_06.09", "De leerlingen tekenen in het vlak de som van vectoren en de vermenigvuldiging van een vector met een getal."],
+        ["BV2_06.10", "De leerlingen lossen eerstegraadsvergelijkingen en -ongelijkheden in één onbekende algebraïsch en grafisch op."],
+        ["BV2_06.15", "De leerlingen analyseren kenmerken van tweedegraadsfuncties van de vorm f(x)=ax²: domein, bereik, nulwaarden, tekenverloop, stijgen/dalen, extremum, toenemende/afnemende stijging/daling en symmetrie ten opzichte van een verticale rechte."],
+        ["BV2_06.16", "De leerlingen lossen stelsels van twee eerstegraadsvergelijkingen in twee onbekenden algebraïsch en grafisch op."],
+        ["BV2_06.17", "De leerlingen lossen telproblemen op met behulp van boomdiagrammen en venndiagrammen."],
+        ["BV2_06.18", "De leerlingen analyseren statistische gegevens aan de hand van voorstellingswijzen en centrum- en spreidingsmaten."],
+        ["BV2_06.19", "De leerlingen bepalen de waarheidswaarde van logische uitspraken met behulp van waarheidstabellen."],
+        ["BV2_06.20", "De leerlingen beargumenteren wiskundige redeneringen en maken daarbij ook gebruik van eigenschappen of van een tegenvoorbeeld."],
+        ["BV2_06.21", "De leerlingen beschrijven fenomenen uit de realiteit aan de hand van wiskundige concepten uit de tweede graad."],
+        ["BV2_06.22", "De leerlingen lossen vraagstukken en problemen op door te mathematiseren en demathematiseren en door gebruik te maken van heuristieken."],
+        ["BV2_06.23", "De leerlingen gebruiken ICT om berekeningen uit te voeren en grafische voorstellingen te maken."],
+      ],
+      perLeerpad: {
+        'logica': ['BV2_06.19', 'BV2_06.20'],
+        'stelsels': ['BV2_06.16', 'BV2_06.21', 'BV2_06.22'],
+        'remediering-vergelijkingen': ['BV2_06.10'],
+        'tweedegraadsfuncties-ax2': ['BV2_06.15', 'BV2_06.21'],
+        'tweedegraadsfuncties-contexten': ['BV2_06.15', 'BV2_06.21', 'BV2_06.22'],
+        'tweedegraadsfuncties-contexten-plus': ['BV2_06.15', 'BV2_06.20', 'BV2_06.21', 'BV2_06.22'],
+        'vectoren': ['BV2_06.09', 'BV2_06.21'],
+        'telproblemen': ['BV2_06.17', 'BV2_06.22'],
+        'ruimtemeetkunde': ['BV2_06.04', 'BV2_06.20'],
+        'statistiek-gegroepeerd': ['BV2_06.18', 'BV2_06.23'],
+        'steekproeven-samenhang': ['BV2_06.18', 'BV2_06.20', 'BV2_06.21'],
+      },
+    },
+    // Bron: 3en4_wiskundedoelen_biotechnologische_wetenschappen.xlsx — uitbreiding WD2 (specifiek Biotechnologische Wetenschappen)
+    'twisk-4bw': {
+      titel: 'Wiskundedoelen 4BW — toegepaste wiskunde', bron: 'Uitbreiding wiskunde (WD2) — Biotechnologische Wetenschappen',
+      lijst: [
+        ["WD2_06.04.01", "De leerlingen bepalen het beeld van een vlakke figuur onder een homothetie."],
+        ["WD2_06.04.02", "De leerlingen gebruiken de stelling van Thales om meetkundige problemen op te lossen."],
+        ["WD2_06.04.03", "De leerlingen gebruiken goniometrische formules om uitdrukkingen te vereenvoudigen."],
+        ["WD2_06.04.04", "De leerlingen gebruiken de sinus- en cosinusregel om meetkundige problemen op te lossen."],
+        ["WD2_06.04.05", "De leerlingen rekenen met vectoren in het vlak."],
+        ["WD2_06.04.06", "De leerlingen voeren meetkundige constructies uit met passer en lineaal."],
+        ["WD2_06.04.07", "De leerlingen lossen tweedegraadsvergelijkingen in één onbekende in de verzameling van de reële getallen algebraïsch en grafisch op."],
+        ["WD2_06.04.08", "De leerlingen lossen tweedegraadsongelijkheden in één onbekende algebraïsch en grafisch op."],
+        ["WD2_06.04.09", "De leerlingen gebruiken transformaties f(x)+k, f(x+k) en k·f(x) om grafieken op te bouwen vanuit de grafieken van f(x)=x², f(x)=1/x, f(x)=√x en f(x)=x³."],
+        ["WD2_06.04.10", "De leerlingen bepalen het voorschrift of de grafiek van een tweedegraadsfunctie als de andere representatie gegeven is."],
+        ["WD2_06.04.11", "De leerlingen analyseren kenmerken van tweedegraadsfuncties: domein, bereik, nulwaarden, tekenverloop, stijgen/dalen, extremum, toenemende/afnemende stijging/daling en symmetrie ten opzichte van een verticale rechte."],
+        ["WD2_06.04.12", "De leerlingen leggen het verband tussen de grafiek van de functie f(x)=c/x en haar kenmerken: domein, bereik, nulwaarden, tekenverloop, stijgen/dalen, toenemende/afnemende stijging/daling, symmetrie, horizontaal en verticaal asymptotisch gedrag."],
+        ["WD2_06.04.13", "De leerlingen analyseren het verband tussen twee numerieke grootheden in een dataset met behulp van een spreidingsdiagram."],
+      ],
+      perLeerpad: {
+        'merkwaardige-producten-ontbinden': ['WD2_06.04.07'],
+        'tweedegraadsongelijkheden': ['WD2_06.04.08'],
+        'tweedegraadsfuncties-transformaties': ['WD2_06.04.09', 'WD2_06.04.10', 'WD2_06.04.11'],
+        'functie-c-op-x': ['WD2_06.04.09', 'WD2_06.04.12'],
+        'homothetie': ['WD2_06.04.01'],
+        'thales': ['WD2_06.04.02'],
+        'goniometrische-formules': ['WD2_06.04.03'],
+        'sinus-cosinusregel-4bw': ['WD2_06.04.04'],
+        'vectoren-coordinaten': ['WD2_06.04.05'],
+        'meetkundige-constructies': ['WD2_06.04.06'],
+        'spreidingsdiagrammen': ['WD2_06.04.13'],
+      },
+    },
   };
   // Korte kolomkoppen (de tegel staat erboven); volledige naam bij aanwijzen.
   const KORT = { 'proeftoets getallenleer': 'Proef\u00adtoets', 'wat is een functie?': 'Functies', 'eerstegraadsfuncties': 'Eerste\u00adgraads', 'exponentiële functies': 'Expo\u00adnentieel',
@@ -116,6 +181,15 @@ window.Eindtermen = (() => {
     return groepen;
   }
 
+  // Korte kolomkoppen voor leerpaden uit de catalogus (volledige titel bij aanwijzen).
+  const KORTL = { 'merkwaardige-producten-ontbinden': 'Verge\u00adlijkingen', 'tweedegraadsongelijkheden': 'Onge\u00adlijkheden', 'tweedegraadsfuncties-transformaties': 'Trans\u00adformaties',
+    'functie-c-op-x': 'f(x) = c/x', 'homothetie': 'Homo\u00adthetie', 'thales': 'Thales', 'goniometrische-formules': 'Gonio\u00adformules', 'sinus-cosinusregel-4bw': 'Sinus- en cosinus\u00adregel',
+    'vectoren-coordinaten': 'Vectoren', 'meetkundige-constructies': 'Construc\u00adties', 'spreidingsdiagrammen': 'Sprei\u00addings\u00addiagram',
+    'logica': 'Logica', 'stelsels': 'Stelsels', 'remediering-vergelijkingen': 'Remedi\u00adëring verge\u00adlijkingen', 'tweedegraadsfuncties-ax2': 'f(x) = ax²',
+    'tweedegraadsfuncties-contexten': 'Con\u00adtexten', 'tweedegraadsfuncties-contexten-plus': 'Con\u00adtexten', 'vectoren': 'Vectoren', 'telproblemen': 'Tel\u00adproblemen',
+    'ruimtemeetkunde': 'Ruimte\u00admeet\u00adkunde', 'statistiek-gegroepeerd': 'Gegroe\u00adpeerde gegevens', 'steekproeven-samenhang': 'Steek\u00adproeven',
+    'veeltermfuncties-context': 'Veelterm\u00adfuncties', 'rationale-functies-context': 'Rationale functies', 'machtswortelfuncties': 'Machts\u00adwortel\u00adfuncties', 'sinusfunctie': 'Sinus\u00adfuncties' };
+
   // Kolommen voor een vak zonder menu: per hoofdstuk (catalogus) de leerpaden en externe links met doelen.
   function kolommenCatalogus(vak) {
     const D = DOELEN[vak], V = window.CATALOGUS.vakken[vak], kol = [];
@@ -124,7 +198,7 @@ window.Eindtermen = (() => {
         ...(h.leerpaden || []).map(c => { const P = typeof Leerpaden !== 'undefined' ? Leerpaden.vind(c) : null; return { sleutel: c, naam: P ? P.titel : c }; })];
       for (const it of items) {
         const doelen = D.perLeerpad[it.sleutel];
-        if (doelen && doelen.length) kol.push({ naam: `${h.nr}. ${h.titel}`, volledig: it.naam, doelen, plus: false });
+        if (doelen && doelen.length) kol.push({ naam: `${h.nr}. ${KORTL[it.sleutel] || (items.length > 1 ? it.naam : h.titel)}`, volledig: it.naam, doelen, plus: /-plus$/.test(it.sleutel) });
       }
     }
     return [{ titel: 'Leerpaden per hoofdstuk', kol }];
